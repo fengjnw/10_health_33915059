@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <section class="hero">
+                    <h1>Welcome to Health & Fitness Tracker</h1>
+                    <p class="hero-subtitle">Track your fitness journey, monitor your progress, and achieve your health
+                        goals</p>
+                </section>
+
+                <section class="features">
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>Track Activities</h3>
+                            <p>Log your daily fitness activities including running, cycling, swimming, and more</p>
+                            <% if (user) { %>
+                                <a href="/add-activity" class="btn btn-primary">Add Activity</a>
+                                <% } else { %>
+                                    <a href="/auth/register" class="btn btn-primary">Get Started</a>
+                                    <% } %>
+                        </div>
+
+                        <div class="feature-card">
+                            <h3>Search & Analyze</h3>
+                            <p>Search through your fitness history and analyze your performance over time</p>
+                            <a href="/search" class="btn btn-secondary">Search Activities</a>
+                        </div>
+
+                        <div class="feature-card">
+                            <h3>Monitor Progress</h3>
+                            <p>View all your activities and track your fitness achievements</p>
+                            <% if (user) { %>
+                                <a href="/my-activities" class="btn btn-secondary">My Activities</a>
+                                <% } else { %>
+                                    <a href="/auth/login" class="btn btn-secondary">Login</a>
+                                    <% } %>
+                        </div>
+                    </div>
+                </section>
+
+                <% if (user) { %>
+                    <section class="welcome-message">
+                        <h2>Welcome back, <%= user.first_name %>!</h2>
+                        <p>Ready to log your fitness activities today?</p>
+                    </section>
+                    <% } %>
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+</body>
+
+</html>

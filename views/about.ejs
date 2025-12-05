@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <section class="about-section">
+                    <h1>About Health & Fitness Tracker</h1>
+
+                    <div class="about-content">
+                        <h2>Our Mission</h2>
+                        <p>
+                            Health & Fitness Tracker is designed to help individuals monitor and improve their
+                            fitness journey. Whether you're a beginner or an experienced athlete, our platform
+                            provides the tools you need to track your progress and achieve your health goals.
+                        </p>
+
+                        <h2>Features</h2>
+                        <ul class="features-list">
+                            <li><strong>Activity Logging:</strong> Record various types of fitness activities including
+                                running, cycling, swimming, gym sessions, and more</li>
+                            <li><strong>Progress Tracking:</strong> Monitor your fitness achievements over time with
+                                detailed activity history</li>
+                            <li><strong>Search Functionality:</strong> Easily find and filter your activities by type,
+                                date range, and other criteria</li>
+                            <li><strong>Personal Dashboard:</strong> View all your activities in one place and track
+                                your fitness journey</li>
+                        </ul>
+
+                        <h2>How It Works</h2>
+                        <ol class="steps-list">
+                            <li>Create a free account to get started</li>
+                            <li>Log your fitness activities with details like duration, distance, and calories burned
+                            </li>
+                            <li>Search and filter your activity history to analyze your progress</li>
+                            <li>Stay motivated by tracking your achievements over time</li>
+                        </ol>
+
+                        <h2>Technology Stack</h2>
+                        <p>
+                            This application is built using modern web technologies including Node.js, Express,
+                            EJS templating, and MySQL database to provide a reliable and efficient user experience.
+                        </p>
+
+                        <div class="cta-section">
+                            <h3>Ready to Start Your Fitness Journey?</h3>
+                            <% if (!user) { %>
+                                <a href="/auth/register" class="btn btn-primary">Register Now</a>
+                                <a href="/auth/login" class="btn btn-secondary">Login</a>
+                                <% } else { %>
+                                    <a href="/add-activity" class="btn btn-primary">Add Your First Activity</a>
+                                    <% } %>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+</body>
+
+</html>

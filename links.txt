@@ -1,0 +1,7 @@
+home=http://localhost:8000/
+about=http://localhost:8000/about
+search=http://localhost:8000/search
+register=http://localhost:8000/auth/register
+login=http://localhost:8000/auth/login
+add_activity=http://localhost:8000/add-activity
+my_activities=http://localhost:8000/my-activities

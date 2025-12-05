@@ -23,13 +23,20 @@ header {
     background: #fff;
     border-bottom: 3px solid #1abc9c;
     padding: 1.2rem 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.nav-brand {
+    flex-shrink: 0;
 }
 
 .nav-brand a {
@@ -44,6 +51,7 @@ header {
     display: flex;
     list-style: none;
     gap: 2rem;
+    margin-left: auto;
 }
 
 .nav-menu li a {
@@ -52,6 +60,7 @@ header {
     font-size: 0.95rem;
     font-weight: 600;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .nav-menu li a:hover {
@@ -72,7 +81,7 @@ main {
     background: linear-gradient(135deg, #16a085 0%, #1abc9c 50%, #48c9b0 100%);
     color: white;
     border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(22,160,133,0.3);
+    box-shadow: 0 6px 20px rgba(22, 160, 133, 0.3);
     position: relative;
     overflow: hidden;
 }
@@ -84,7 +93,7 @@ main {
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
 }
 
 .hero h1 {
@@ -94,12 +103,12 @@ main {
     letter-spacing: -1px;
     position: relative;
     z-index: 1;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hero-subtitle {
     font-size: 1.1rem;
-    color: rgba(255,255,255,0.95);
+    color: rgba(255, 255, 255, 0.95);
     font-weight: 400;
     letter-spacing: 0.3px;
     position: relative;
@@ -125,11 +134,14 @@ main {
     border-left: 5px solid #16a085;
     border-radius: 8px;
     transition: all 0.3s;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
 }
 
 .feature-card:hover {
-    box-shadow: 0 8px 24px rgba(22,160,133,0.25);
+    box-shadow: 0 8px 24px rgba(22, 160, 133, 0.25);
     transform: translateY(-5px);
     border-left-color: #1abc9c;
 }
@@ -143,9 +155,13 @@ main {
 
 .feature-card p {
     color: #7f8c8d;
-    margin-bottom: 1.5rem;
+    margin-bottom: auto;
     font-size: 0.95rem;
     line-height: 1.7;
+}
+
+.feature-card .btn {
+    margin-top: 1.5rem;
 }
 
 /* Buttons */
@@ -161,20 +177,20 @@ main {
     font-weight: 700;
     border-radius: 6px;
     transition: all 0.3s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .btn-primary {
     background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
     color: #fff;
     border-color: #16a085;
-    box-shadow: 0 4px 12px rgba(22,160,133,0.3);
+    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
 }
 
 .btn-primary:hover {
     background: linear-gradient(135deg, #138d75 0%, #16a085 100%);
     border-color: #138d75;
-    box-shadow: 0 6px 16px rgba(22,160,133,0.4);
+    box-shadow: 0 6px 16px rgba(22, 160, 133, 0.4);
     transform: translateY(-2px);
 }
 
@@ -197,7 +213,7 @@ main {
     background: #fff;
     border: 1px solid #d5e8e4;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
@@ -236,7 +252,7 @@ main {
 .form-group textarea:focus {
     outline: none;
     border-color: #1abc9c;
-    box-shadow: 0 0 0 4px rgba(26,188,156,0.12);
+    box-shadow: 0 0 0 4px rgba(26, 188, 156, 0.12);
     background: #fff;
 }
 
@@ -278,7 +294,7 @@ main {
     border-left: 4px solid;
     background: #fff;
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .alert-error {
@@ -304,7 +320,7 @@ main {
     background: #fff;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .activities-table th {
@@ -341,7 +357,7 @@ main {
     border: 1px solid #d5e8e4;
     border-radius: 8px;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .search-form {
@@ -374,7 +390,7 @@ main {
     margin-top: 2rem;
     border-radius: 8px;
     border: 2px solid #a3d9c7;
-    box-shadow: 0 4px 16px rgba(22,160,133,0.15);
+    box-shadow: 0 4px 16px rgba(22, 160, 133, 0.15);
 }
 
 .welcome-message h2 {
@@ -396,7 +412,7 @@ main {
     padding: 2.8rem;
     border: 1px solid #d5e8e4;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .about-content h1 {
@@ -436,7 +452,7 @@ main {
     background: linear-gradient(135deg, #d5f4e6 0%, #c8edd8 50%, #a3d9c7 100%);
     border-radius: 8px;
     border: 2px solid #8fccb8;
-    box-shadow: 0 6px 20px rgba(22,160,133,0.2);
+    box-shadow: 0 6px 20px rgba(22, 160, 133, 0.2);
 }
 
 .cta-section h3 {
@@ -458,7 +474,7 @@ main {
     border: 2px solid #a3d9c7;
     border-radius: 6px;
     font-size: 0.9rem;
-    box-shadow: 0 2px 6px rgba(22,160,133,0.1);
+    box-shadow: 0 2px 6px rgba(22, 160, 133, 0.1);
 }
 
 .demo-credentials p {
@@ -503,7 +519,7 @@ main {
     background: #fff;
     border: 1px solid #d5e8e4;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .activity-stats h2 {
@@ -528,13 +544,13 @@ main {
     border-left: 6px solid #16a085;
     border-radius: 8px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(22,160,133,0.15);
+    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.15);
     transition: all 0.3s;
 }
 
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(22,160,133,0.25);
+    box-shadow: 0 6px 20px rgba(22, 160, 133, 0.25);
 }
 
 .stat-card h3 {
@@ -550,7 +566,7 @@ main {
     font-size: 2.6rem;
     font-weight: 900;
     color: #16a085;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Footer */

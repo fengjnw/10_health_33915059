@@ -18,7 +18,9 @@ router.get('/search', (req, res) => {
     res.render('search', {
         title: 'Search Activities - Health & Fitness Tracker',
         activities: null,
-        searchPerformed: false
+        searchPerformed: false,
+        error: null,
+        searchParams: null
     });
 });
 
@@ -54,7 +56,8 @@ router.post('/search', async (req, res) => {
             title: 'Search Activities - Health & Fitness Tracker',
             activities: activities,
             searchPerformed: true,
-            searchParams: req.body
+            searchParams: req.body,
+            error: null
         });
     } catch (error) {
         console.error('Search error:', error);
@@ -62,7 +65,8 @@ router.post('/search', async (req, res) => {
             title: 'Search Activities - Health & Fitness Tracker',
             activities: null,
             searchPerformed: true,
-            error: 'An error occurred while searching'
+            error: 'An error occurred while searching',
+            searchParams: req.body
         });
     }
 });

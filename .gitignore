@@ -20,5 +20,8 @@ Thumbs.db
 *.tmp
 *.temp
 
+#  Tools
+setup_database.sh
+
 # Other
 tasks.md

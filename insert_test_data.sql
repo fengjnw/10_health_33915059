@@ -6,8 +6,8 @@ USE health;
 -- Plain password: smiths
 -- Hashed password generated with bcrypt salt rounds = 10
 INSERT INTO users (username, password, email, first_name, last_name) VALUES
-('gold', '$2b$10$8YFZ7qNZ7qNZ7qNZ7qNZ7.7qNZ7qNZ7qNZ7qNZ7qNZ7qNZ7qNZ7qO', 'gold@example.com', 'Gold', 'Smith'),
-('testuser', '$2b$10$8YFZ7qNZ7qNZ7qNZ7qNZ7.7qNZ7qNZ7qNZ7qNZ7qNZ7qNZ7qNZ7qO', 'test@example.com', 'Test', 'User');
+('gold', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'gold@example.com', 'Gold', 'Smith'),
+('testuser', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'test@example.com', 'Test', 'User');
 
 -- Insert sample fitness activities
 INSERT INTO fitness_activities (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes) VALUES

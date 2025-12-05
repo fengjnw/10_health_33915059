@@ -81,20 +81,23 @@
                                     <div class="stat-card">
                                         <h3>Total Duration</h3>
                                         <p class="stat-value">
-                                            <%= activities.reduce((sum, a)=> sum + a.duration_minutes, 0) %> min
+                                            <%= activities.reduce((sum, a)=> sum + (Number(a.duration_minutes) || 0), 0)
+                                                %> min
                                         </p>
                                     </div>
                                     <div class="stat-card">
                                         <h3>Total Distance</h3>
                                         <p class="stat-value">
-                                            <%= activities.reduce((sum, a)=> sum + (a.distance_km || 0), 0).toFixed(2)
+                                            <%= activities.reduce((sum, a)=> sum + (parseFloat(a.distance_km) || 0),
+                                                0).toFixed(2)
                                                 %> km
                                         </p>
                                     </div>
                                     <div class="stat-card">
                                         <h3>Total Calories</h3>
                                         <p class="stat-value">
-                                            <%= activities.reduce((sum, a)=> sum + (a.calories_burned || 0), 0) %> cal
+                                            <%= activities.reduce((sum, a)=> sum + (Number(a.calories_burned) || 0), 0)
+                                                %> cal
                                         </p>
                                     </div>
                                 </div>

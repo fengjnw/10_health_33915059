@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
+const { loginLimiter, registerLimiter } = require('../middleware/rateLimit');
 
 // Register page route - GET request shows the form
 router.get('/register', (req, res) => {
@@ -14,7 +15,7 @@ router.get('/register', (req, res) => {
 });
 
 // Register page route - POST request processes the form
-router.post('/register', [
+router.post('/register', registerLimiter.middleware(), [
     // Validation middleware
     body('username')
         .trim()
@@ -51,6 +52,10 @@ router.post('/register', [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+        // Record failed attempt for rate limiting
+        if (req.rateLimit) {
+            req.rateLimit.recordIncrement();
+        }
         return res.render('register', {
             title: 'Register - Health & Fitness Tracker',
             errors: errors.array().map(err => err.msg),
@@ -68,6 +73,10 @@ router.post('/register', [
         );
 
         if (existingUsers.length > 0) {
+            // Record failed attempt for rate limiting
+            if (req.rateLimit) {
+                req.rateLimit.recordIncrement();
+            }
             return res.render('register', {
                 title: 'Register - Health & Fitness Tracker',
                 errors: ['Username or email already exists'],
@@ -96,8 +105,17 @@ router.post('/register', [
             last_name: last_name
         };
 
+        // Clear rate limit record on successful registration
+        if (req.rateLimit) {
+            req.rateLimit.recordSuccess();
+        }
+
         res.redirect('/');
     } catch (error) {
+        // Record failed attempt on error
+        if (req.rateLimit) {
+            req.rateLimit.recordIncrement();
+        }
         console.error('Registration error:', error);
         res.render('register', {
             title: 'Register - Health & Fitness Tracker',
@@ -116,12 +134,16 @@ router.get('/login', (req, res) => {
 });
 
 // Login page route - POST request processes the form
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter.middleware(), async (req, res) => {
     try {
         const { username, password } = req.body;
 
         // Validate input
         if (!username || !password) {
+            // Record failed attempt for rate limiting
+            if (req.rateLimit) {
+                req.rateLimit.recordIncrement();
+            }
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
                 errors: ['Username and password are required'],
@@ -136,6 +158,10 @@ router.post('/login', async (req, res) => {
         );
 
         if (users.length === 0) {
+            // Record failed attempt for rate limiting
+            if (req.rateLimit) {
+                req.rateLimit.recordIncrement();
+            }
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
                 errors: ['Invalid username or password'],
@@ -149,6 +175,10 @@ router.post('/login', async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
+            // Record failed attempt for rate limiting
+            if (req.rateLimit) {
+                req.rateLimit.recordIncrement();
+            }
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
                 errors: ['Invalid username or password'],
@@ -165,8 +195,17 @@ router.post('/login', async (req, res) => {
             last_name: user.last_name
         };
 
+        // Clear rate limit record on successful login
+        if (req.rateLimit) {
+            req.rateLimit.recordSuccess();
+        }
+
         res.redirect('/');
     } catch (error) {
+        // Record failed attempt on error
+        if (req.rateLimit) {
+            req.rateLimit.recordIncrement();
+        }
         console.error('Login error:', error);
         res.render('login', {
             title: 'Login - Health & Fitness Tracker',

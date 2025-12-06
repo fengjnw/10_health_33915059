@@ -48,7 +48,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 12, // 12 hours
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
         httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
         secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production
         sameSite: 'strict' // Prevent CSRF attacks - only send cookie for same-site requests

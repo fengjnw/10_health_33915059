@@ -21,11 +21,12 @@
                     <div
                         style="display: grid; gap: 0.4rem; padding: 1rem; background: #f8fafb; border: 1px solid #d5e8e4; border-radius: 8px; margin-bottom: 1rem;">
                         <div style="font-weight: 600; color: #16a085;">Account</div>
-                        <div style="color: #34495e;">Member Since: <%= new Date(user.created_at).toLocaleDateString() %>
+                        <div style="color: #34495e;">Member Since: <%= new Date(user.created_at).toLocaleString() %>
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
                             <a href="/auth/change-password"
-                                style="color: #16a085; font-weight: 600; text-decoration: none;">Change Password</a>
+                                style="color: #16a085; font-weight: 500; font-size: 0.95rem; text-decoration: none;">Change
+                                Password</a>
                         </div>
                     </div>
 

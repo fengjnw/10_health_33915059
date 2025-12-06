@@ -2,6 +2,7 @@
 const express = require('express');
 const session = require('express-session');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
 const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
 const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeout');
 
@@ -14,6 +15,26 @@ const port = 8000;
 
 // Set up EJS as the view engine
 app.set('view engine', 'ejs');
+
+// Configure Helmet for security headers including CSP
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline needed for inline styles
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"]
+        }
+    },
+    xssFilter: true, // Enable XSS filter
+    noSniff: true, // Prevent MIME type sniffing
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
 
 // Middleware to parse URL-encoded bodies (form data)
 app.use(express.urlencoded({ extended: true }));

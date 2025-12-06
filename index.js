@@ -59,8 +59,8 @@ app.use((err, req, res, next) => {
             error: err,
             user: req.session?.user || null
         });
-    } 
-    
+    }
+
     // Handle other errors
     res.status(err.status || 500);
     res.render('error', {

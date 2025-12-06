@@ -7,12 +7,12 @@ function generateToken(req, res) {
     if (!req.session) {
         req.session = {};
     }
-    
+
     // Generate and store token in session if it doesn't exist
     if (!req.session._csrfToken) {
         req.session._csrfToken = crypto.randomBytes(32).toString('hex');
     }
-    
+
     return req.session._csrfToken;
 }
 
@@ -22,33 +22,33 @@ function doubleCsrfProtection(req, res, next) {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
     }
-    
+
     // Ensure session exists
     if (!req.session) {
         req.session = {};
     }
-    
+
     // Generate token if not exists (for forms without loading GET first)
     if (!req.session._csrfToken) {
         req.session._csrfToken = crypto.randomBytes(32).toString('hex');
     }
-    
+
     // Get token from request body
     const tokenFromBody = req.body._csrf;
-    
+
     // Get token from session
     const tokenFromSession = req.session._csrfToken;
-    
+
     // Verify tokens match
     if (!tokenFromBody || !tokenFromSession || tokenFromBody !== tokenFromSession) {
         const error = new Error('Invalid CSRF token');
         error.code = 'EBADCSRFTOKEN';
         return next(error);
     }
-    
+
     // Generate new token for next request after successful verification
     req.session._csrfToken = crypto.randomBytes(32).toString('hex');
-    
+
     next();
 }
 

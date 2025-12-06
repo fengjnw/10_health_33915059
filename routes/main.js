@@ -46,16 +46,16 @@ router.post('/search', async (req, res) => {
         }
 
         if (date_from) {
-            query += ' AND fa.activity_date >= ?';
+            query += ' AND fa.activity_time >= ?';
             params.push(date_from);
         }
 
         if (date_to) {
-            query += ' AND fa.activity_date <= ?';
+            query += ' AND fa.activity_time <= ?';
             params.push(date_to);
         }
 
-        query += ' ORDER BY fa.activity_date DESC';
+        query += ' ORDER BY fa.activity_time DESC';
 
         const [activities] = await db.query(query, params);
 
@@ -99,20 +99,20 @@ router.post('/add-activity', async (req, res) => {
     }
 
     try {
-        const { activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes } = req.body;
+        const { activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes } = req.body;
 
         // Basic validation
-        if (!activity_type || !duration_minutes || !activity_date) {
+        if (!activity_type || !duration_minutes || !activity_time) {
             return res.render('add-activity', {
                 title: 'Add Activity - Health & Fitness Tracker',
-                errors: ['Activity type, duration, and date are required'],
+                errors: ['Activity type, duration, and time are required'],
                 formData: req.body
             });
         }
 
         // Insert activity into database
         const query = `
-            INSERT INTO fitness_activities (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes)
+            INSERT INTO fitness_activities (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
@@ -122,7 +122,7 @@ router.post('/add-activity', async (req, res) => {
             duration_minutes,
             distance_km || null,
             calories_burned || null,
-            activity_date,
+            activity_time,
             notes || null
         ]);
 
@@ -132,7 +132,7 @@ router.post('/add-activity', async (req, res) => {
             req,
             'fitness_activity',
             result.insertId,
-            { activity_type, duration_minutes, activity_date }
+            { activity_type, duration_minutes, activity_time }
         );
 
         res.redirect('/my-activities');
@@ -157,7 +157,7 @@ router.get('/my-activities', async (req, res) => {
         const query = `
             SELECT * FROM fitness_activities 
             WHERE user_id = ? 
-            ORDER BY activity_date DESC
+            ORDER BY activity_time DESC
         `;
 
         const [activities] = await db.query(query, [req.session.user.id]);
@@ -232,12 +232,12 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes, is_public } = req.body;
+        const { activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public } = req.body;
 
         // Validate required fields
-        if (!activity_type || !duration_minutes || !activity_date) {
+        if (!activity_type || !duration_minutes || !activity_time) {
             return res.status(400).json({
-                error: 'Activity type, duration, and date are required'
+                error: 'Activity type, duration, and time are required'
             });
         }
 
@@ -262,7 +262,7 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
         const updateQuery = `
             UPDATE fitness_activities 
             SET activity_type = ?, duration_minutes = ?, distance_km = ?, 
-                calories_burned = ?, activity_date = ?, notes = ?, is_public = ?
+                calories_burned = ?, activity_time = ?, notes = ?, is_public = ?
             WHERE id = ?
         `;
 
@@ -271,7 +271,7 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
             duration_minutes,
             distance_km || null,
             calories_burned || null,
-            activity_date,
+            activity_time,
             notes || null,
             is_public || 0,
             id
@@ -287,12 +287,12 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
                 old: {
                     activity_type: activity.activity_type,
                     duration_minutes: activity.duration_minutes,
-                    activity_date: activity.activity_date
+                    activity_time: activity.activity_time
                 },
                 new: {
                     activity_type,
                     duration_minutes,
-                    activity_date
+                    activity_time
                 }
             }
         );
@@ -327,7 +327,7 @@ router.delete('/my-activities/:id', async (req, res) => {
 
         // Get the activity to verify ownership
         const [activities] = await db.query(
-            'SELECT id, user_id, activity_type, duration_minutes, activity_date FROM fitness_activities WHERE id = ?',
+            'SELECT id, user_id, activity_type, duration_minutes, activity_time FROM fitness_activities WHERE id = ?',
             [id]
         );
 
@@ -358,7 +358,7 @@ router.delete('/my-activities/:id', async (req, res) => {
                 deleted: {
                     activity_type: activity.activity_type,
                     duration_minutes: activity.duration_minutes,
-                    activity_date: activity.activity_date
+                    activity_time: activity.activity_time
                 }
             }
         );

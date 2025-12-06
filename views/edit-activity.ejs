@@ -53,9 +53,9 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="activity_date">Activity Date: *</label>
-                                <input type="date" id="activity_date" name="activity_date" required
-                                    value="<%= activity.activity_date ? activity.activity_date.toISOString().split('T')[0] : '' %>">
+                                <label for="activity_time">Activity Time: *</label>
+                                <input type="datetime-local" id="activity_time" name="activity_time" required
+                                    value="<%= activity.activity_time ? new Date(activity.activity_time).toISOString().slice(0, 16) : '' %>">
                             </div>
                         </div>
 

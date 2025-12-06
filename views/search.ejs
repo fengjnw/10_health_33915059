@@ -75,7 +75,7 @@
                                         <% activities.forEach(activity=> { %>
                                             <tr>
                                                 <td>
-                                                    <%= new Date(activity.activity_date).toLocaleDateString() %>
+                                                    <%= new Date(activity.activity_time).toLocaleString() %>
                                                 </td>
                                                 <td>
                                                     <%= activity.username %>

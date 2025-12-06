@@ -25,7 +25,7 @@ CREATE TABLE fitness_activities (
     duration_minutes INT NOT NULL,
     distance_km DECIMAL(5, 2),
     calories_burned INT,
-    activity_date DATE NOT NULL,
+    activity_time DATETIME NOT NULL,
     notes TEXT,
     is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -34,5 +34,5 @@ CREATE TABLE fitness_activities (
 
 -- Create index for better search performance
 CREATE INDEX idx_activity_type ON fitness_activities(activity_type);
-CREATE INDEX idx_activity_date ON fitness_activities(activity_date);
+CREATE INDEX idx_activity_time ON fitness_activities(activity_time);
 CREATE INDEX idx_user_id ON fitness_activities(user_id);

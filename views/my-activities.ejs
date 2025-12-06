@@ -98,20 +98,50 @@
                                                 <%= activities.length %>
                                             </span> of
                                             <span id="total-count">
-                                                <%= activities.length %>
+                                                <%= pagination ? pagination.totalCount : activities.length %>
                                             </span>
-                                            <%= activities.length===1 ? 'activity' : 'activities' %>
+                                            <%= (pagination ? pagination.totalCount : activities.length)===1
+                                                ? 'activity' : 'activities' %>
                                         </p>
-                                        <div class="sort-controls">
-                                            <label for="sort-by">Sort</label>
-                                            <select id="sort-by">
-                                                <option value="date-desc">Time (newest)</option>
-                                                <option value="date-asc">Time (oldest)</option>
-                                                <option value="calories-desc">Calories (high→low)</option>
-                                                <option value="calories-asc">Calories (low→high)</option>
-                                                <option value="duration-desc">Duration (long→short)</option>
-                                                <option value="duration-asc">Duration (short→long)</option>
-                                            </select>
+                                        <div class="results-actions">
+                                            <div class="sort-controls">
+                                                <label for="sort-by">Sort</label>
+                                                <select id="sort-by">
+                                                    <option value="date-desc">Time (newest)</option>
+                                                    <option value="date-asc">Time (oldest)</option>
+                                                    <option value="calories-desc">Calories (high→low)</option>
+                                                    <option value="calories-asc">Calories (low→high)</option>
+                                                    <option value="duration-desc">Duration (long→short)</option>
+                                                    <option value="duration-asc">Duration (short→long)</option>
+                                                </select>
+                                            </div>
+                                            <% if (pagination && pagination.totalPages> 1) { %>
+                                                <div class="pagination">
+                                                    <% const currentPage=pagination.page; %>
+                                                        <% const totalPages=pagination.totalPages; %>
+                                                            <% const pageSize=pagination.pageSize; %>
+                                                                <% const pageLink=(p)=>
+                                                                    `/my-activities?page=${p}&pageSize=${pageSize}`; %>
+
+                                                                    <% if (currentPage> 1) { %>
+                                                                        <a class="page-link"
+                                                                            href="<%= pageLink(currentPage - 1) %>">Prev</a>
+                                                                        <% } %>
+
+                                                                            <% for (let p=1; p <=totalPages; p++) { %>
+                                                                                <a class="page-link <%= p === currentPage ? 'active' : '' %>"
+                                                                                    href="<%= pageLink(p) %>">
+                                                                                    <%= p %>
+                                                                                </a>
+                                                                                <% } %>
+
+                                                                                    <% if (currentPage < totalPages) {
+                                                                                        %>
+                                                                                        <a class="page-link"
+                                                                                            href="<%= pageLink(currentPage + 1) %>">Next</a>
+                                                                                        <% } %>
+                                                </div>
+                                                <% } %>
                                         </div>
                                     </div>
                                     <table class="activities-table">

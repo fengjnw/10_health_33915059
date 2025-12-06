@@ -27,64 +27,83 @@ router.get('/search', (req, res) => {
     });
 });
 
-// Search page route - POST request processes the search
+// Search page route - POST request processes the search with pagination
 router.post('/search', async (req, res) => {
     try {
         const { activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max } = req.body;
         const userId = req.session.user ? req.session.user.id : null;
 
+        // Pagination (10-20 per page)
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const rawPageSize = parseInt(req.query.pageSize, 10) || 10;
+        const pageSize = Math.min(Math.max(rawPageSize, 10), 20);
+        const offset = (page - 1) * pageSize;
+
         // Build dynamic SQL query based on search parameters
-        // Show own activities OR public activities from other users
-        let query = `SELECT fa.*, u.username FROM fitness_activities fa 
-                     JOIN users u ON fa.user_id = u.id 
-                     WHERE (fa.user_id = ? OR fa.is_public = 1)`;
+        let baseWhere = 'WHERE (fa.user_id = ? OR fa.is_public = 1)';
         let params = [userId || 0]; // 0 if not logged in (won't match any user_id)
 
         if (activity_type) {
-            query += ' AND fa.activity_type = ?';
+            baseWhere += ' AND fa.activity_type = ?';
             params.push(activity_type);
         }
 
         if (date_from) {
-            query += ' AND fa.activity_time >= ?';
+            baseWhere += ' AND fa.activity_time >= ?';
             params.push(date_from);
         }
 
         if (date_to) {
-            query += ' AND fa.activity_time <= ?';
+            baseWhere += ' AND fa.activity_time <= ?';
             params.push(date_to);
         }
 
         if (duration_min) {
-            query += ' AND fa.duration_minutes >= ?';
+            baseWhere += ' AND fa.duration_minutes >= ?';
             params.push(parseInt(duration_min));
         }
 
         if (duration_max) {
-            query += ' AND fa.duration_minutes <= ?';
+            baseWhere += ' AND fa.duration_minutes <= ?';
             params.push(parseInt(duration_max));
         }
 
         if (calories_min) {
-            query += ' AND fa.calories_burned >= ?';
+            baseWhere += ' AND fa.calories_burned >= ?';
             params.push(parseInt(calories_min));
         }
 
         if (calories_max) {
-            query += ' AND fa.calories_burned <= ?';
+            baseWhere += ' AND fa.calories_burned <= ?';
             params.push(parseInt(calories_max));
         }
 
-        query += ' ORDER BY fa.activity_time DESC';
+        const countQuery = `SELECT COUNT(*) as total FROM fitness_activities fa ${baseWhere}`;
+        const dataQuery = `SELECT fa.*, u.username FROM fitness_activities fa 
+                           JOIN users u ON fa.user_id = u.id 
+                           ${baseWhere}
+                           ORDER BY fa.activity_time DESC
+                           LIMIT ? OFFSET ?`;
 
-        const [activities] = await db.query(query, params);
+        const [countRows] = await db.query(countQuery, params);
+        const totalCount = countRows[0]?.total || 0;
+        const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
+
+        const dataParams = [...params, pageSize, offset];
+        const [activities] = await db.query(dataQuery, dataParams);
 
         res.render('search', {
             title: 'Search Activities - Health & Fitness Tracker',
-            activities: activities,
+            activities,
             searchPerformed: true,
             searchParams: req.body,
-            error: null
+            error: null,
+            pagination: {
+                page,
+                pageSize,
+                totalCount,
+                totalPages
+            }
         });
     } catch (error) {
         console.error('Search error:', error);
@@ -93,7 +112,13 @@ router.post('/search', async (req, res) => {
             activities: null,
             searchPerformed: true,
             error: 'An error occurred while searching',
-            searchParams: req.body
+            searchParams: req.body,
+            pagination: {
+                page: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 1
+            }
         });
     }
 });
@@ -174,23 +199,46 @@ router.get('/my-activities', async (req, res) => {
     }
 
     try {
-        const query = `
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const rawPageSize = parseInt(req.query.pageSize, 10) || 10;
+        const pageSize = Math.min(Math.max(rawPageSize, 10), 20);
+        const offset = (page - 1) * pageSize;
+
+        const countQuery = 'SELECT COUNT(*) as total FROM fitness_activities WHERE user_id = ?';
+        const [countRows] = await db.query(countQuery, [req.session.user.id]);
+        const totalCount = countRows[0]?.total || 0;
+        const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
+
+        const dataQuery = `
             SELECT * FROM fitness_activities 
             WHERE user_id = ? 
             ORDER BY activity_time DESC
+            LIMIT ? OFFSET ?
         `;
 
-        const [activities] = await db.query(query, [req.session.user.id]);
+        const [activities] = await db.query(dataQuery, [req.session.user.id, pageSize, offset]);
 
         res.render('my-activities', {
             title: 'My Activities - Health & Fitness Tracker',
-            activities: activities
+            activities,
+            pagination: {
+                page,
+                pageSize,
+                totalCount,
+                totalPages
+            }
         });
     } catch (error) {
         console.error('My activities error:', error);
         res.render('my-activities', {
             title: 'My Activities - Health & Fitness Tracker',
             activities: [],
+            pagination: {
+                page: 1,
+                pageSize: 10,
+                totalCount: 0,
+                totalPages: 1
+            },
             error: 'An error occurred while loading your activities'
         });
     }

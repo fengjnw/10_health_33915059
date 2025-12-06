@@ -107,19 +107,80 @@
                             </div>
                             <% } else if (activities && activities.length> 0) { %>
                                 <div class="results-bar">
-                                    <p class="results-count">Found <%= activities.length %>
-                                            <%= activities.length===1 ? 'activity' : 'activities' %>
+                                    <p class="results-count">Found <%= pagination ? pagination.totalCount :
+                                            activities.length %>
+                                            <%= (pagination ? pagination.totalCount : activities.length)===1
+                                                ? 'activity' : 'activities' %>
                                     </p>
-                                    <div class="sort-controls">
-                                        <label for="search-sort">Sort</label>
-                                        <select id="search-sort">
-                                            <option value="date-desc">Time (newest)</option>
-                                            <option value="date-asc">Time (oldest)</option>
-                                            <option value="calories-desc">Calories (high→low)</option>
-                                            <option value="calories-asc">Calories (low→high)</option>
-                                            <option value="duration-desc">Duration (long→short)</option>
-                                            <option value="duration-asc">Duration (short→long)</option>
-                                        </select>
+                                    <div class="results-actions">
+                                        <div class="sort-controls">
+                                            <label for="search-sort">Sort</label>
+                                            <select id="search-sort">
+                                                <option value="date-desc">Time (newest)</option>
+                                                <option value="date-asc">Time (oldest)</option>
+                                                <option value="calories-desc">Calories (high→low)</option>
+                                                <option value="calories-asc">Calories (low→high)</option>
+                                                <option value="duration-desc">Duration (long→short)</option>
+                                                <option value="duration-asc">Duration (short→long)</option>
+                                            </select>
+                                        </div>
+                                        <% if (pagination && pagination.totalPages> 1) { %>
+                                            <div class="pagination">
+                                                <% const currentPage=pagination.page; %>
+                                                    <% const totalPages=pagination.totalPages; %>
+                                                        <% const pageSize=pagination.pageSize; %>
+                                                            <% const baseQuery=new URLSearchParams({ pageSize:
+                                                                pageSize.toString(), page: '1' }); %>
+                                                                <% const pageFormParams=searchParams || {}; %>
+
+                                                                    <% const renderPageForm=(p, label, extraClass='' )=>
+                                                                        { %>
+                                                                        <form method="POST"
+                                                                            action="/search?page=<%= p %>&pageSize=<%= pageSize %>"
+                                                                            class="page-link-form <%= extraClass %>">
+                                                                            <input type="hidden" name="_csrf"
+                                                                                value="<%= csrfToken %>">
+                                                                            <input type="hidden" name="activity_type"
+                                                                                value="<%= pageFormParams.activity_type || '' %>">
+                                                                            <input type="hidden" name="date_from"
+                                                                                value="<%= pageFormParams.date_from || '' %>">
+                                                                            <input type="hidden" name="date_to"
+                                                                                value="<%= pageFormParams.date_to || '' %>">
+                                                                            <input type="hidden" name="duration_min"
+                                                                                value="<%= pageFormParams.duration_min || '' %>">
+                                                                            <input type="hidden" name="duration_max"
+                                                                                value="<%= pageFormParams.duration_max || '' %>">
+                                                                            <input type="hidden" name="calories_min"
+                                                                                value="<%= pageFormParams.calories_min || '' %>">
+                                                                            <input type="hidden" name="calories_max"
+                                                                                value="<%= pageFormParams.calories_max || '' %>">
+                                                                            <button type="submit"
+                                                                                class="page-link <%= extraClass %>">
+                                                                                <%= label %>
+                                                                            </button>
+                                                                        </form>
+                                                                        <% }; %>
+
+                                                                            <% if (currentPage> 1) { %>
+                                                                                <%= renderPageForm(currentPage -
+                                                                                    1, 'Prev' ) %>
+                                                                                    <% } %>
+
+                                                                                        <% for (let p=1; p <=totalPages;
+                                                                                            p++) { %>
+                                                                                            <%= renderPageForm(p, p,
+                                                                                                p===currentPage
+                                                                                                ? 'active' : '' ) %>
+                                                                                                <% } %>
+
+                                                                                                    <% if (currentPage <
+                                                                                                        totalPages) { %>
+                                                                                                        <%= renderPageForm(currentPage
+                                                                                                            + 1, 'Next'
+                                                                                                            ) %>
+                                                                                                            <% } %>
+                                            </div>
+                                            <% } %>
                                     </div>
                                 </div>
 

@@ -794,6 +794,12 @@ main {
     margin: 1.5rem 0 1rem;
 }
 
+.results-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
 .sort-controls {
     display: flex;
     align-items: center;
@@ -809,6 +815,45 @@ main {
     background: #fff;
     font-weight: 600;
     color: #2c3e50;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.page-link,
+.page-link-form button.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid #cfd8dc;
+    background: #fff;
+    color: #2c3e50;
+    font-weight: 700;
+    text-decoration: none;
+    min-width: 42px;
+}
+
+.page-link:hover,
+.page-link-form button.page-link:hover {
+    background: #e8f8f5;
+    border-color: #1abc9c;
+    color: #138d75;
+}
+
+.page-link.active,
+.page-link-form button.page-link.active {
+    background: #16a085;
+    color: #fff;
+    border-color: #138d75;
+}
+
+.page-link-form {
+    margin: 0;
 }
 
 /* Statistics */

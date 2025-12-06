@@ -2,6 +2,7 @@
 const express = require('express');
 const session = require('express-session');
 const dotenv = require('dotenv');
+const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
 
 // Load environment variables
 dotenv.config();
@@ -29,9 +30,13 @@ app.use(session({
     }
 }));
 
-// Make user session data available to all views
+// Apply CSRF protection middleware to all routes
+app.use(doubleCsrfProtection);
+
+// Make CSRF token and user session data available to all views
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
+    res.locals.csrfToken = generateToken(req, res);
     next();
 });
 
@@ -39,9 +44,32 @@ app.use((req, res, next) => {
 const mainRoutes = require('./routes/main');
 const authRoutes = require('./routes/auth');
 
-// Use route handlers
+// Use route handlers (CSRF protection applied to POST/PUT/DELETE routes)
 app.use('/', mainRoutes);
 app.use('/auth', authRoutes);
+
+// CSRF error handler - must come after routes
+app.use((err, req, res, next) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+        // Handle CSRF token errors
+        res.status(403);
+        return res.render('error', {
+            title: 'CSRF Error',
+            message: 'Invalid CSRF token. Please refresh the page and try again.',
+            error: err,
+            user: req.session?.user || null
+        });
+    } 
+    
+    // Handle other errors
+    res.status(err.status || 500);
+    res.render('error', {
+        title: 'Error',
+        message: err.message || 'An error occurred',
+        error: err,
+        user: req.session?.user || null
+    });
+});
 
 // Start the server
 app.listen(port, () => {

@@ -84,7 +84,7 @@ router.get('/add-activity', (req, res) => {
     });
 });
 
-// Add activity page route - POST request processes the form
+// Add Activity page route - POST request processes the form
 router.post('/add-activity', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {

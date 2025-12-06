@@ -31,6 +31,7 @@
                         <% } %>
 
                             <form method="POST" action="/add-activity" class="activity-form">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                 <div class="form-group">
                                     <label for="activity_type">Activity Type: *</label>
                                     <select id="activity_type" name="activity_type" required>

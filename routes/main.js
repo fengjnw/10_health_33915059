@@ -16,21 +16,27 @@ router.get('/about', (req, res) => {
     res.render('about', { title: 'About - Health & Fitness Tracker' });
 });
 
-// Search page route - GET request shows the form
-router.get('/search', (req, res) => {
-    res.render('search', {
-        title: 'Search Activities - Health & Fitness Tracker',
-        activities: null,
-        searchPerformed: false,
-        error: null,
-        searchParams: null
-    });
-});
+// Search page route - GET request shows the form and processes search with pagination
+router.get('/search', async (req, res) => {
+    // Check if this is a search request (form was submitted)
+    // Look for search-related parameters (not just pagination)
+    const searchParams = ['activity_type', 'date_from', 'date_to', 'duration_min', 'duration_max', 'calories_min', 'calories_max'];
+    const isSearchRequest = searchParams.some(param => param in req.query);
 
-// Search page route - POST request processes the search with pagination
-router.post('/search', async (req, res) => {
+    if (!isSearchRequest) {
+        // No search request, just show the form
+        return res.render('search', {
+            title: 'Search Activities - Health & Fitness Tracker',
+            activities: null,
+            searchPerformed: false,
+            error: null,
+            searchParams: null
+        });
+    }
+
+    // Process search with pagination
     try {
-        const { activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max } = req.body;
+        const { activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max } = req.query;
         const userId = req.session.user ? req.session.user.id : null;
 
         // Pagination (10-20 per page)
@@ -96,7 +102,7 @@ router.post('/search', async (req, res) => {
             title: 'Search Activities - Health & Fitness Tracker',
             activities,
             searchPerformed: true,
-            searchParams: req.body,
+            searchParams: req.query,
             error: null,
             pagination: {
                 page,
@@ -112,7 +118,7 @@ router.post('/search', async (req, res) => {
             activities: null,
             searchPerformed: true,
             error: 'An error occurred while searching',
-            searchParams: req.body,
+            searchParams: req.query,
             pagination: {
                 page: 1,
                 pageSize: 10,

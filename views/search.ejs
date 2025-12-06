@@ -18,8 +18,7 @@
                 <h1>Search Fitness Activities</h1>
 
                 <div class="search-form-container">
-                    <form method="POST" action="/search" class="search-form">
-                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <form method="GET" action="/search" class="search-form">
 
                         <div class="form-group">
                             <label for="activity_type">Activity Type:</label>
@@ -129,56 +128,41 @@
                                                 <% const currentPage=pagination.page; %>
                                                     <% const totalPages=pagination.totalPages; %>
                                                         <% const pageSize=pagination.pageSize; %>
-                                                            <% const baseQuery=new URLSearchParams({ pageSize:
-                                                                pageSize.toString(), page: '1' }); %>
-                                                                <% const pageFormParams=searchParams || {}; %>
+                                                            <% const params=searchParams || {}; %>
+                                                                <% function buildPageUrl(p) { const query=new
+                                                                    URLSearchParams(); query.set('page', p);
+                                                                    query.set('pageSize', pageSize); if
+                                                                    (params.activity_type !==undefined &&
+                                                                    params.activity_type !==null) {
+                                                                    query.set('activity_type', params.activity_type); }
+                                                                    if (params.date_from) { query.set('date_from',
+                                                                    params.date_from); } if (params.date_to) {
+                                                                    query.set('date_to', params.date_to); } if
+                                                                    (params.duration_min) { query.set('duration_min',
+                                                                    params.duration_min); } if (params.duration_max) {
+                                                                    query.set('duration_max', params.duration_max); } if
+                                                                    (params.calories_min) { query.set('calories_min',
+                                                                    params.calories_min); } if (params.calories_max) {
+                                                                    query.set('calories_max', params.calories_max); }
+                                                                    return '/search?' + query.toString(); } %>
 
-                                                                    <% const renderPageForm=(p, label, extraClass='' )=>
-                                                                        { %>
-                                                                        <form method="POST"
-                                                                            action="/search?page=<%= p %>&pageSize=<%= pageSize %>"
-                                                                            class="page-link-form <%= extraClass %>">
-                                                                            <input type="hidden" name="_csrf"
-                                                                                value="<%= csrfToken %>">
-                                                                            <input type="hidden" name="activity_type"
-                                                                                value="<%= pageFormParams.activity_type || '' %>">
-                                                                            <input type="hidden" name="date_from"
-                                                                                value="<%= pageFormParams.date_from || '' %>">
-                                                                            <input type="hidden" name="date_to"
-                                                                                value="<%= pageFormParams.date_to || '' %>">
-                                                                            <input type="hidden" name="duration_min"
-                                                                                value="<%= pageFormParams.duration_min || '' %>">
-                                                                            <input type="hidden" name="duration_max"
-                                                                                value="<%= pageFormParams.duration_max || '' %>">
-                                                                            <input type="hidden" name="calories_min"
-                                                                                value="<%= pageFormParams.calories_min || '' %>">
-                                                                            <input type="hidden" name="calories_max"
-                                                                                value="<%= pageFormParams.calories_max || '' %>">
-                                                                            <button type="submit"
-                                                                                class="page-link <%= extraClass %>">
-                                                                                <%= label %>
-                                                                            </button>
-                                                                        </form>
-                                                                        <% }; %>
+                                                                    <% if (currentPage> 1) { %>
+                                                                        <a class="page-link"
+                                                                            href="<%= buildPageUrl(currentPage - 1) %>">Prev</a>
+                                                                        <% } %>
 
-                                                                            <% if (currentPage> 1) { %>
-                                                                                <%= renderPageForm(currentPage -
-                                                                                    1, 'Prev' ) %>
-                                                                                    <% } %>
+                                                                            <% for (let p=1; p <=totalPages; p++) { %>
+                                                                                <a class="page-link <%= p === currentPage ? 'active' : '' %>"
+                                                                                    href="<%= buildPageUrl(p) %>">
+                                                                                    <%= p %>
+                                                                                </a>
+                                                                                <% } %>
 
-                                                                                        <% for (let p=1; p <=totalPages;
-                                                                                            p++) { %>
-                                                                                            <%= renderPageForm(p, p,
-                                                                                                p===currentPage
-                                                                                                ? 'active' : '' ) %>
-                                                                                                <% } %>
-
-                                                                                                    <% if (currentPage <
-                                                                                                        totalPages) { %>
-                                                                                                        <%= renderPageForm(currentPage
-                                                                                                            + 1, 'Next'
-                                                                                                            ) %>
-                                                                                                            <% } %>
+                                                                                    <% if (currentPage < totalPages) {
+                                                                                        %>
+                                                                                        <a class="page-link"
+                                                                                            href="<%= buildPageUrl(currentPage + 1) %>">Next</a>
+                                                                                        <% } %>
                                             </div>
                                             <% } %>
                                     </div>
@@ -198,7 +182,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% activities.forEach(activity=> { %>
+                                        <% activities.forEach(function(activity) { %>
                                             <tr data-activity-time="<%= activity.activity_time ? new Date(activity.activity_time).toISOString() : '' %>"
                                                 data-duration="<%= activity.duration_minutes || 0 %>"
                                                 data-calories="<%= activity.calories_burned || 0 %>">

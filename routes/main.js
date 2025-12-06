@@ -222,7 +222,7 @@ router.get('/my-activities/:id/edit', async (req, res) => {
 router.patch('/my-activities/:id/edit', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.status(401).json({ error: 'Not authenticated' });
+        return res.status(401).json({ error: 'Not authenticated', csrfToken: generateToken(req, res) });
     }
 
     console.log('PATCH /my-activities/:id/edit received');
@@ -488,12 +488,12 @@ router.post('/email/request-verification', async (req, res) => {
 
         // Validate email
         if (!newEmail) {
-            return res.status(400).json({ error: 'New email is required' });
+            return res.status(400).json({ error: 'New email is required', csrfToken: generateToken(req, res) });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(newEmail)) {
-            return res.status(400).json({ error: 'Invalid email format' });
+            return res.status(400).json({ error: 'Invalid email format', csrfToken: generateToken(req, res) });
         }
 
         // Check if email is already in use
@@ -503,7 +503,7 @@ router.post('/email/request-verification', async (req, res) => {
         );
 
         if (existingUsers.length > 0) {
-            return res.status(400).json({ error: 'Email is already in use by another user' });
+            return res.status(400).json({ error: 'Email is already in use by another user', csrfToken: generateToken(req, res) });
         }
 
         // Generate verification code
@@ -543,7 +543,8 @@ router.post('/email/request-verification', async (req, res) => {
     } catch (error) {
         console.error('Email verification request error:', error);
         res.status(500).json({
-            error: 'An error occurred while requesting email verification'
+            error: 'An error occurred while requesting email verification',
+            csrfToken: generateToken(req, res)
         });
     }
 });
@@ -552,14 +553,14 @@ router.post('/email/request-verification', async (req, res) => {
 router.post('/email/verify-code', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.status(401).json({ error: 'Not authenticated' });
+        return res.status(401).json({ error: 'Not authenticated', csrfToken: generateToken(req, res) });
     }
 
     try {
         const { verificationCode, newEmail } = req.body;
 
         if (!verificationCode || !newEmail) {
-            return res.status(400).json({ error: 'Verification code and email are required' });
+            return res.status(400).json({ error: 'Verification code and email are required', csrfToken: generateToken(req, res) });
         }
 
         // Find verification record
@@ -569,14 +570,14 @@ router.post('/email/verify-code', async (req, res) => {
         );
 
         if (verifications.length === 0) {
-            return res.status(400).json({ error: 'Invalid or expired verification code' });
+            return res.status(400).json({ error: 'Invalid or expired verification code', csrfToken: generateToken(req, res) });
         }
 
         const verification = verifications[0];
 
         // Check if verification has expired
         if (new Date() > new Date(verification.expires_at)) {
-            return res.status(400).json({ error: 'Verification code has expired' });
+            return res.status(400).json({ error: 'Verification code has expired', csrfToken: generateToken(req, res) });
         }
 
         // Mark verification as verified
@@ -620,7 +621,8 @@ router.post('/email/verify-code', async (req, res) => {
     } catch (error) {
         console.error('Email verification error:', error);
         res.status(500).json({
-            error: 'An error occurred while verifying your email'
+            error: 'An error occurred while verifying your email',
+            csrfToken: generateToken(req, res)
         });
     }
 });

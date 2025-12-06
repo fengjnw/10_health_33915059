@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const resendBtn = document.getElementById('resendBtn');
     const backBtn = document.getElementById('backBtn');
     const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+    const verificationInlineError = document.getElementById('verificationInlineError');
 
     let currentVerificationCode = null;
     let currentNewEmail = null;
@@ -36,13 +37,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Close on outside click
-    window.addEventListener('click', function (event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
     // Step 1: Send verification code
     changeEmailForm.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -60,15 +54,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await parseJsonResponse(response);
 
+            if (data.csrfToken) {
+                csrfToken = data.csrfToken;
+            }
+
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to request verification');
             }
 
             currentVerificationCode = data.verificationCode;
             currentNewEmail = newEmail;
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-            }
 
             // Show preview URL if in development
             if (data.previewUrl) {
@@ -83,6 +78,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('emailStep').style.display = 'none';
             document.getElementById('verificationStep').style.display = 'block';
             document.getElementById('verificationEmail').textContent = newEmail;
+            if (verificationInlineError) {
+                verificationInlineError.style.display = 'none';
+                verificationInlineError.textContent = '';
+            }
         } catch (error) {
             showError(error.message);
         }
@@ -108,19 +107,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await parseJsonResponse(response);
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Verification failed');
-            }
-
             if (data.csrfToken) {
                 csrfToken = data.csrfToken;
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Verification failed');
             }
 
             // Success
             document.getElementById('verificationStep').style.display = 'none';
             document.getElementById('successStep').style.display = 'block';
+            if (verificationInlineError) {
+                verificationInlineError.style.display = 'none';
+                verificationInlineError.textContent = '';
+            }
         } catch (error) {
-            showError(error.message);
+            if (verificationInlineError) {
+                verificationInlineError.textContent = error.message;
+                verificationInlineError.style.display = 'block';
+            } else {
+                showError(error.message);
+            }
         }
     });
 
@@ -138,6 +146,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await parseJsonResponse(response);
 
+            if (data.csrfToken) {
+                csrfToken = data.csrfToken;
+            }
+
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to resend verification');
             }
@@ -146,13 +158,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('verificationCode').value = '';
             alert('Verification code resent to ' + currentNewEmail);
 
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-            }
-
             if (data.previewUrl) {
                 const previewLink = document.getElementById('previewLink');
                 previewLink.href = data.previewUrl;
+            }
+
+            if (verificationInlineError) {
+                verificationInlineError.style.display = 'none';
+                verificationInlineError.textContent = '';
             }
         } catch (error) {
             showError(error.message);
@@ -190,5 +203,9 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('previewUrl').style.display = 'none';
         currentVerificationCode = null;
         currentNewEmail = null;
+        if (verificationInlineError) {
+            verificationInlineError.style.display = 'none';
+            verificationInlineError.textContent = '';
+        }
     }
 });

@@ -1,6 +1,7 @@
 // Handle profile form submission
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('profile-form');
+    const successModal = document.getElementById('profileSuccessModal');
     if (!form) return;
 
     form.addEventListener('submit', async (e) => {
@@ -37,10 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Response result:', result);
 
             if (response.ok) {
-                messageContainer.innerHTML = '<div class="alert alert-success">Profile updated successfully!</div>';
-                setTimeout(() => {
-                    window.location.href = '/profile';
-                }, 1500);
+                if (successModal) {
+                    successModal.style.display = 'block';
+                    setTimeout(() => {
+                        successModal.style.display = 'none';
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    messageContainer.innerHTML = '<div class="alert alert-success">Profile updated successfully!</div>';
+                    setTimeout(() => {
+                        window.location.href = '/profile';
+                    }, 1500);
+                }
             } else {
                 messageContainer.innerHTML = `<div class="alert alert-error">${result.error || 'An error occurred'}</div>`;
             }

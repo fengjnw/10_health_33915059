@@ -25,7 +25,7 @@
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
                             <a href="/auth/change-password"
-                                style="color: #16a085; font-weight: 500; font-size: 0.95rem; text-decoration: none; padding: 0.25rem 0.65rem; border: 1px solid #cce7e2; border-radius: 6px; transition: background 0.2s ease, color 0.2s ease;">Change
+                                style="background: #16a085; color: #fff; font-weight: 600; font-size: 0.95rem; text-decoration: none; padding: 0.35rem 0.8rem; border-radius: 6px; transition: transform 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">Change
                                 Password</a>
                         </div>
                     </div>
@@ -80,6 +80,14 @@
         <%- include('partials/footer') %>
 
             <%- include('partials/change-email-modal') %>
+
+                <!-- Profile update success modal -->
+                <div id="profileSuccessModal" class="modal" style="display: none;">
+                    <div class="modal-content" style="max-width: 420px; text-align: center;">
+                        <h3 style="margin-top: 0;">Profile Updated</h3>
+                        <p style="color: #34495e;">Your profile information has been saved.</p>
+                    </div>
+                </div>
 
                 <script src="/js/profile.js"></script>
                 <script src="/js/change-email.js"></script>

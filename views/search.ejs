@@ -106,11 +106,24 @@
                                 <%= error %>
                             </div>
                             <% } else if (activities && activities.length> 0) { %>
-                                <p class="results-count">Found <%= activities.length %>
-                                        <%= activities.length===1 ? 'activity' : 'activities' %>
-                                </p>
+                                <div class="results-bar">
+                                    <p class="results-count">Found <%= activities.length %>
+                                            <%= activities.length===1 ? 'activity' : 'activities' %>
+                                    </p>
+                                    <div class="sort-controls">
+                                        <label for="search-sort">Sort</label>
+                                        <select id="search-sort">
+                                            <option value="date-desc">Time (newest)</option>
+                                            <option value="date-asc">Time (oldest)</option>
+                                            <option value="calories-desc">Calories (high→low)</option>
+                                            <option value="calories-asc">Calories (low→high)</option>
+                                            <option value="duration-desc">Duration (long→short)</option>
+                                            <option value="duration-asc">Duration (short→long)</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                                <table class="activities-table">
+                                <table class="activities-table" id="search-results-table">
                                     <thead>
                                         <tr>
                                             <th>Date</th>
@@ -125,7 +138,9 @@
                                     </thead>
                                     <tbody>
                                         <% activities.forEach(activity=> { %>
-                                            <tr>
+                                            <tr data-activity-time="<%= activity.activity_time ? new Date(activity.activity_time).toISOString() : '' %>"
+                                                data-duration="<%= activity.duration_minutes || 0 %>"
+                                                data-calories="<%= activity.calories_burned || 0 %>">
                                                 <td>
                                                     <%= activity.activity_time ? new
                                                         Date(activity.activity_time).toLocaleString() : 'N/A' %>
@@ -168,6 +183,7 @@
         </main>
 
         <%- include('partials/footer') %>
+            <script src="/js/search-sort.js"></script>
 </body>
 
 </html>

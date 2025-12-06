@@ -12,6 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentNewEmail = null;
     let csrfToken = document.querySelector('input[name="_csrf"]')?.value;
 
+    async function parseJsonResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            return response.json();
+        }
+        const text = await response.text();
+        throw new Error(`Unexpected response (${response.status}): ${text.slice(0, 200)}`);
+    }
+
     // Open modal
     if (changeEmailBtn) {
         changeEmailBtn.addEventListener('click', function () {
@@ -49,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ newEmail })
             });
 
-            const data = await response.json();
+            const data = await parseJsonResponse(response);
 
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to request verification');
@@ -57,6 +66,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             currentVerificationCode = data.verificationCode;
             currentNewEmail = newEmail;
+            if (data.csrfToken) {
+                csrfToken = data.csrfToken;
+            }
 
             // Show preview URL if in development
             if (data.previewUrl) {
@@ -94,10 +106,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
             });
 
-            const data = await response.json();
+            const data = await parseJsonResponse(response);
 
             if (!response.ok) {
                 throw new Error(data.error || 'Verification failed');
+            }
+
+            if (data.csrfToken) {
+                csrfToken = data.csrfToken;
             }
 
             // Success
@@ -120,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ newEmail: currentNewEmail })
             });
 
-            const data = await response.json();
+            const data = await parseJsonResponse(response);
 
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to resend verification');
@@ -129,6 +145,10 @@ document.addEventListener('DOMContentLoaded', function () {
             currentVerificationCode = data.verificationCode;
             document.getElementById('verificationCode').value = '';
             alert('Verification code resent to ' + currentNewEmail);
+
+            if (data.csrfToken) {
+                csrfToken = data.csrfToken;
+            }
 
             if (data.previewUrl) {
                 const previewLink = document.getElementById('previewLink');

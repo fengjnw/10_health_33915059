@@ -3,7 +3,14 @@
  * Records sensitive operations to database for security monitoring and compliance
  */
 
-const db = require('../config/db');
+let db = null;
+
+function getDb() {
+    if (!db) {
+        db = require('../config/db');
+    }
+    return db;
+}
 
 // Event types
 const EventTypes = {
@@ -42,7 +49,7 @@ async function logAuth(eventType, req, userId = null, username = null, reason = 
     try {
         const clientInfo = getClientInfo(req);
 
-        await db.query(
+        await getDb().query(
             `INSERT INTO audit_logs 
             (user_id, username, event_type, ip_address, user_agent, path, method, changes) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -76,7 +83,7 @@ async function logDataChange(eventType, req, resourceType, resourceId, changes =
         const userId = req.session?.user?.id;
         const username = req.session?.user?.username;
 
-        await db.query(
+        await getDb().query(
             `INSERT INTO audit_logs 
             (user_id, username, event_type, resource_type, resource_id, ip_address, user_agent, path, method, changes) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -112,7 +119,7 @@ async function logSecurityEvent(eventType, req, details = {}) {
         const userId = req.session?.user?.id;
         const username = req.session?.user?.username;
 
-        await db.query(
+        await getDb().query(
             `INSERT INTO audit_logs 
             (user_id, username, event_type, ip_address, user_agent, path, method, changes) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -142,7 +149,7 @@ async function logSecurityEvent(eventType, req, details = {}) {
  */
 async function getRecentLogs(limit = 100) {
     try {
-        const [logs] = await db.query(
+        const [logs] = await getDb().query(
             `SELECT * FROM audit_logs 
             ORDER BY created_at DESC 
             LIMIT ?`,
@@ -160,7 +167,7 @@ async function getRecentLogs(limit = 100) {
  */
 async function getLogsByUser(username, limit = 50) {
     try {
-        const [logs] = await db.query(
+        const [logs] = await getDb().query(
             `SELECT * FROM audit_logs 
             WHERE username = ? 
             ORDER BY created_at DESC 
@@ -179,7 +186,7 @@ async function getLogsByUser(username, limit = 50) {
  */
 async function getLogsByEventType(eventType, limit = 50) {
     try {
-        const [logs] = await db.query(
+        const [logs] = await getDb().query(
             `SELECT * FROM audit_logs 
             WHERE event_type = ? 
             ORDER BY created_at DESC 
@@ -198,7 +205,7 @@ async function getLogsByEventType(eventType, limit = 50) {
  */
 async function getLogsByDateRange(startDate, endDate, limit = 100) {
     try {
-        const [logs] = await db.query(
+        const [logs] = await getDb().query(
             `SELECT * FROM audit_logs 
             WHERE created_at BETWEEN ? AND ? 
             ORDER BY created_at DESC 
@@ -217,7 +224,7 @@ async function getLogsByDateRange(startDate, endDate, limit = 100) {
  */
 async function getLogsByResource(resourceType, resourceId, limit = 50) {
     try {
-        const [logs] = await db.query(
+        const [logs] = await getDb().query(
             `SELECT * FROM audit_logs 
             WHERE resource_type = ? AND resource_id = ? 
             ORDER BY created_at DESC 
@@ -236,7 +243,7 @@ async function getLogsByResource(resourceType, resourceId, limit = 50) {
  */
 async function purgeOldLogs(daysToKeep = 90) {
     try {
-        const result = await db.query(
+        const result = await getDb().query(
             `DELETE FROM audit_logs 
             WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)`,
             [daysToKeep]

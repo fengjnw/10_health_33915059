@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require('../config/db');
 const { EventTypes, logDataChange } = require('../utils/auditLogger');
 const { sendVerificationEmail } = require('../utils/emailService');
+const { generateToken } = require('../middleware/csrf');
 
 // Home page route
 router.get('/', (req, res) => {
@@ -399,7 +400,8 @@ router.get('/profile', async (req, res) => {
     }
 });
 
-// PATCH /profile - Update user profile
+// PATCH /profile - Update user profile (first_name, last_name only)
+// Email can only be changed through the email verification process
 router.patch('/profile', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
@@ -411,20 +413,12 @@ router.patch('/profile', async (req, res) => {
     console.log('Request body:', req.body);
 
     try {
-        const { first_name, last_name, email } = req.body;
+        const { first_name, last_name } = req.body;
 
         // Validate required fields
-        if (!first_name || !last_name || !email) {
+        if (!first_name || !last_name) {
             return res.status(400).json({
-                error: 'First name, last name, and email are required'
-            });
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                error: 'Invalid email format'
+                error: 'First name and last name are required'
             });
         }
 
@@ -437,33 +431,18 @@ router.patch('/profile', async (req, res) => {
 
         const currentUser = users[0];
 
-        // Check if email is already in use by another user
-        if (email !== currentUser.email) {
-            const [existingUsers] = await db.query(
-                'SELECT id FROM users WHERE email = ? AND id != ?',
-                [email, req.session.user.id]
-            );
-
-            if (existingUsers.length > 0) {
-                return res.status(400).json({
-                    error: 'Email is already in use by another user'
-                });
-            }
-        }
-
-        // Update user profile
+        // Update user profile (name only)
         const updateQuery = `
             UPDATE users 
-            SET first_name = ?, last_name = ?, email = ?
+            SET first_name = ?, last_name = ?
             WHERE id = ?
         `;
 
-        await db.query(updateQuery, [first_name, last_name, email, req.session.user.id]);
+        await db.query(updateQuery, [first_name, last_name, req.session.user.id]);
 
         // Update session data
         req.session.user.first_name = first_name;
         req.session.user.last_name = last_name;
-        req.session.user.email = email;
 
         // Log the update
         await logDataChange(
@@ -474,13 +453,11 @@ router.patch('/profile', async (req, res) => {
             {
                 old: {
                     first_name: currentUser.first_name,
-                    last_name: currentUser.last_name,
-                    email: currentUser.email
+                    last_name: currentUser.last_name
                 },
                 new: {
                     first_name,
-                    last_name,
-                    email
+                    last_name
                 }
             }
         );
@@ -559,7 +536,8 @@ router.post('/email/request-verification', async (req, res) => {
             success: true,
             message: 'Verification code sent to your new email',
             verificationCode: verificationCode, // For development/testing
-            previewUrl: emailResult.previewUrl // Ethereal preview URL
+            previewUrl: emailResult.previewUrl, // Ethereal preview URL
+            csrfToken: generateToken(req, res)
         });
 
     } catch (error) {
@@ -635,7 +613,8 @@ router.post('/email/verify-code', async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Email verified and updated successfully'
+            message: 'Email verified and updated successfully',
+            csrfToken: generateToken(req, res)
         });
 
     } catch (error) {

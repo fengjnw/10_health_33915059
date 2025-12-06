@@ -46,7 +46,8 @@
 
                         <div class="form-group">
                             <label for="email">Email:</label>
-                            <input type="email" id="email" name="email" value="<%= user.email %>" required>
+                            <input type="email" id="email" name="email" value="<%= user.email %>" disabled readonly>
+                            <span class="form-help">Click "Change Email" button below to update your email</span>
                         </div>
 
                         <div class="form-group" style="display: flex; gap: 12px;">

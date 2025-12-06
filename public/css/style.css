@@ -527,14 +527,6 @@ main {
     box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
 }
 
-.search-form button[type="reset"] {
-    background-color: #95a5a6;
-}
-
-.search-form button[type="reset"]:hover {
-    background-color: #7f8c8d;
-}
-
 .search-form .form-actions {
     display: flex;
     gap: 1rem;

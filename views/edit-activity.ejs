@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <h1>Edit Fitness Activity</h1>
+
+                <div class="form-container">
+                    <div id="message-container"></div>
+
+                    <form id="edit-activity-form" class="activity-form">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                        <div class="form-group">
+                            <label for="activity_type">Activity Type: *</label>
+                            <select id="activity_type" name="activity_type" required>
+                                <option value="">Select an activity...</option>
+                                <option value="Running" <%=activity.activity_type==='Running' ? 'selected' : '' %>
+                                    >Running</option>
+                                <option value="Cycling" <%=activity.activity_type==='Cycling' ? 'selected' : '' %>
+                                    >Cycling</option>
+                                <option value="Swimming" <%=activity.activity_type==='Swimming' ? 'selected' : '' %>
+                                    >Swimming</option>
+                                <option value="Gym" <%=activity.activity_type==='Gym' ? 'selected' : '' %>>Gym</option>
+                                <option value="Yoga" <%=activity.activity_type==='Yoga' ? 'selected' : '' %>>Yoga
+                                </option>
+                                <option value="Walking" <%=activity.activity_type==='Walking' ? 'selected' : '' %>
+                                    >Walking</option>
+                                <option value="Hiking" <%=activity.activity_type==='Hiking' ? 'selected' : '' %>>Hiking
+                                </option>
+                                <option value="Other" <%=activity.activity_type==='Other' ? 'selected' : '' %>>Other
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="duration_minutes">Duration (minutes): *</label>
+                                <input type="number" id="duration_minutes" name="duration_minutes" min="1" required
+                                    value="<%= activity.duration_minutes %>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="activity_date">Activity Date: *</label>
+                                <input type="date" id="activity_date" name="activity_date" required
+                                    value="<%= activity.activity_date ? activity.activity_date.toISOString().split('T')[0] : '' %>">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="distance_km">Distance (km):</label>
+                                <input type="number" id="distance_km" name="distance_km" min="0" step="0.01"
+                                    value="<%= activity.distance_km || '' %>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="calories_burned">Calories Burned:</label>
+                                <input type="number" id="calories_burned" name="calories_burned" min="0"
+                                    value="<%= activity.calories_burned || '' %>">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Notes:</label>
+                            <textarea id="notes" name="notes" rows="4"
+                                placeholder="Add any additional notes about this activity"><%= activity.notes || '' %></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Update Activity</button>
+                            <a href="/my-activities" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+
+            <script>
+                // Handle form submission
+                document.getElementById('edit-activity-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const formData = new FormData(e.target);
+                    const data = {
+                        activity_type: formData.get('activity_type'),
+                        duration_minutes: formData.get('duration_minutes'),
+                        distance_km: formData.get('distance_km') || null,
+                        calories_burned: formData.get('calories_burned') || null,
+                        activity_date: formData.get('activity_date'),
+                        notes: formData.get('notes') || null
+                    };
+
+                    const messageContainer = document.getElementById('message-container');
+
+                    try {
+                        const response = await fetch('/my-activities/<%= activity.id %>/edit', {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': formData.get('_csrf')
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            messageContainer.innerHTML = '<div class="alert alert-success">Activity updated successfully! Redirecting...</div>';
+                            setTimeout(() => {
+                                window.location.href = '/my-activities';
+                            }, 1500);
+                        } else {
+                            messageContainer.innerHTML = `<div class="alert alert-error">${result.error || 'An error occurred'}</div>`;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        messageContainer.innerHTML = '<div class="alert alert-error">An error occurred while updating the activity</div>';
+                    }
+                });
+            </script>
+</body>
+
+</html>

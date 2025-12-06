@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
 const { loginLimiter, registerLimiter } = require('../middleware/rateLimit');
+const { EventTypes, logAuth } = require('../utils/auditLogger');
 
 // Register page route - GET request shows the form
 router.get('/register', (req, res) => {
@@ -105,6 +106,9 @@ router.post('/register', registerLimiter.middleware(), [
             last_name: last_name
         };
 
+        // Log successful registration
+        await logAuth(EventTypes.REGISTER, req, result.insertId, username);
+
         // Clear rate limit record on successful registration
         if (req.rateLimit) {
             req.rateLimit.recordSuccess();
@@ -164,6 +168,9 @@ router.post('/login', loginLimiter.middleware(), async (req, res) => {
             if (req.rateLimit) {
                 req.rateLimit.recordIncrement();
             }
+            // Log failed login attempt
+            await logAuth(EventTypes.LOGIN_FAILURE, req, null, username, 'User not found');
+
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
                 errors: ['Invalid username or password'],
@@ -181,6 +188,9 @@ router.post('/login', loginLimiter.middleware(), async (req, res) => {
             if (req.rateLimit) {
                 req.rateLimit.recordIncrement();
             }
+            // Log failed login attempt
+            await logAuth(EventTypes.LOGIN_FAILURE, req, user.id, username, 'Invalid password');
+
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
                 errors: ['Invalid username or password'],
@@ -196,6 +206,9 @@ router.post('/login', loginLimiter.middleware(), async (req, res) => {
             first_name: user.first_name,
             last_name: user.last_name
         };
+
+        // Log successful login
+        await logAuth(EventTypes.LOGIN_SUCCESS, req, user.id, username);
 
         // Clear rate limit record on successful login
         if (req.rateLimit) {
@@ -218,7 +231,15 @@ router.post('/login', loginLimiter.middleware(), async (req, res) => {
 });
 
 // Logout route
-router.get('/logout', (req, res) => {
+router.get('/logout', async (req, res) => {
+    const userId = req.session?.user?.id;
+    const username = req.session?.user?.username;
+
+    // Log logout before destroying session
+    if (userId && username) {
+        await logAuth(EventTypes.LOGOUT, req, userId, username);
+    }
+
     req.session.destroy((err) => {
         if (err) {
             console.error('Logout error:', err);

@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { EventTypes, logDataChange } = require('../utils/auditLogger');
 
 // Home page route
 router.get('/', (req, res) => {
@@ -109,7 +110,7 @@ router.post('/add-activity', async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
-        await db.query(query, [
+        const [result] = await db.query(query, [
             req.session.user.id,
             activity_type,
             duration_minutes,
@@ -118,6 +119,15 @@ router.post('/add-activity', async (req, res) => {
             activity_date,
             notes || null
         ]);
+
+        // Log activity creation
+        await logDataChange(
+            EventTypes.ACTIVITY_CREATE,
+            req,
+            'fitness_activity',
+            result.insertId,
+            { activity_type, duration_minutes, activity_date }
+        );
 
         res.redirect('/my-activities');
     } catch (error) {

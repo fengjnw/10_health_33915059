@@ -4,6 +4,8 @@
  * Idle timeout: 30 minutes of no activity
  */
 
+const { EventTypes, logAuth } = require('../utils/auditLogger');
+
 const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_THRESHOLD = 25 * 60 * 1000; // Show warning at 25 minutes
 
@@ -23,7 +25,13 @@ function sessionTimeoutMiddleware(req, res, next) {
     // Check if session has exceeded idle timeout
     if (timeSinceLastActivity > IDLE_TIMEOUT) {
         // Session has expired due to inactivity
+        const userId = req.session.user.id;
         const username = req.session.user.username;
+
+        // Log session timeout before destroying
+        logAuth(EventTypes.SESSION_TIMEOUT, req, userId, username, 'Idle timeout exceeded')
+            .catch(err => console.error('Error logging session timeout:', err));
+
         req.session.destroy((err) => {
             if (err) {
                 console.error('Session destruction error:', err);

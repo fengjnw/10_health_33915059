@@ -400,7 +400,7 @@ router.get('/profile', async (req, res) => {
     }
 });
 
-// PATCH /profile - Update user profile (first_name, last_name only)
+// PATCH /profile - Update user profile (username, first_name, last_name)
 // Email can only be changed through the email verification process
 router.patch('/profile', async (req, res) => {
     // Check if user is logged in
@@ -413,13 +413,18 @@ router.patch('/profile', async (req, res) => {
     console.log('Request body:', req.body);
 
     try {
-        const { first_name, last_name } = req.body;
+        const { username, first_name, last_name } = req.body;
 
         // Validate required fields
-        if (!first_name || !last_name) {
+        if (!username || !first_name || !last_name) {
             return res.status(400).json({
-                error: 'First name and last name are required'
+                error: 'Username, first name and last name are required'
             });
+        }
+
+        // Validate username length
+        if (username.length < 3 || username.length > 50) {
+            return res.status(400).json({ error: 'Username must be between 3 and 50 characters' });
         }
 
         // Get current user data
@@ -431,16 +436,29 @@ router.patch('/profile', async (req, res) => {
 
         const currentUser = users[0];
 
-        // Update user profile (name only)
+        // Check username uniqueness if changed
+        if (username !== currentUser.username) {
+            const [existingUsernames] = await db.query(
+                'SELECT id FROM users WHERE username = ? AND id != ?',
+                [username, req.session.user.id]
+            );
+
+            if (existingUsernames.length > 0) {
+                return res.status(400).json({ error: 'Username is already taken' });
+            }
+        }
+
+        // Update user profile (username + names)
         const updateQuery = `
             UPDATE users 
-            SET first_name = ?, last_name = ?
+            SET username = ?, first_name = ?, last_name = ?
             WHERE id = ?
         `;
 
-        await db.query(updateQuery, [first_name, last_name, req.session.user.id]);
+        await db.query(updateQuery, [username, first_name, last_name, req.session.user.id]);
 
         // Update session data
+        req.session.user.username = username;
         req.session.user.first_name = first_name;
         req.session.user.last_name = last_name;
 
@@ -452,10 +470,12 @@ router.patch('/profile', async (req, res) => {
             req.session.user.id,
             {
                 old: {
+                    username: currentUser.username,
                     first_name: currentUser.first_name,
                     last_name: currentUser.last_name
                 },
                 new: {
+                    username,
                     first_name,
                     last_name
                 }

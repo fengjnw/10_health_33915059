@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData(e.target);
         const data = {
+            username: formData.get('username'),
             first_name: formData.get('first_name'),
             last_name: formData.get('last_name')
             // Note: email cannot be changed through this form - use the Change Email button instead

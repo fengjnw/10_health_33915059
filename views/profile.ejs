@@ -37,9 +37,9 @@
 
                         <div class="form-group">
                             <label for="username">Username:</label>
-                            <input type="text" id="username" name="username" value="<%= user.username %>" disabled
-                                readonly>
-                            <span class="form-help">Username cannot be changed</span>
+                            <input type="text" id="username" name="username" value="<%= user.username %>" minlength="3"
+                                maxlength="50" pattern=".{3,50}" required>
+                            <span class="form-help">3-50 characters; must be unique</span>
                         </div>
 
                         <div class="form-row">

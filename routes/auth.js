@@ -139,6 +139,89 @@ router.get('/login', (req, res) => {
     });
 });
 
+// Change password - GET
+router.get('/change-password', (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+
+    res.render('change-password', {
+        title: 'Change Password - Health & Fitness Tracker',
+        errors: null,
+        success: null
+    });
+});
+
+// Change password - POST
+router.post('/change-password', [
+    body('current_password').notEmpty().withMessage('Current password is required'),
+    body('new_password')
+        .isLength({ min: 8 }).withMessage('New password must be at least 8 characters')
+        .matches(/[a-z]/).withMessage('New password must contain at least one lowercase letter')
+        .matches(/[A-Z]/).withMessage('New password must contain at least one uppercase letter')
+        .matches(/[0-9]/).withMessage('New password must contain at least one number')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('New password must contain at least one special character'),
+    body('confirm_password').custom((value, { req }) => value === req.body.new_password)
+        .withMessage('Confirmation password does not match')
+], async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.render('change-password', {
+            title: 'Change Password - Health & Fitness Tracker',
+            errors: errors.array().map(err => err.msg),
+            success: null
+        });
+    }
+
+    try {
+        const { current_password, new_password } = req.body;
+        const userId = req.session.user.id;
+
+        const [users] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) {
+            return res.render('change-password', {
+                title: 'Change Password - Health & Fitness Tracker',
+                errors: ['User not found'],
+                success: null
+            });
+        }
+
+        const user = users[0];
+        const matches = await bcrypt.compare(current_password, user.password);
+        if (!matches) {
+            return res.render('change-password', {
+                title: 'Change Password - Health & Fitness Tracker',
+                errors: ['Current password is incorrect'],
+                success: null
+            });
+        }
+
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(new_password, saltRounds);
+
+        await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+
+        await logAuth(EventTypes.PASSWORD_CHANGE, req, userId, user.username);
+
+        res.render('change-password', {
+            title: 'Change Password - Health & Fitness Tracker',
+            errors: null,
+            success: 'Password updated successfully'
+        });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.render('change-password', {
+            title: 'Change Password - Health & Fitness Tracker',
+            errors: ['An error occurred while changing password'],
+            success: null
+        });
+    }
+});
+
 // Login page route - POST request processes the form
 router.post('/login', loginLimiter.middleware(), async (req, res) => {
     try {

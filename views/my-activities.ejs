@@ -20,135 +20,186 @@
                 <div class="activities-header">
                     <a href="/add-activity" class="btn btn-primary">Add New Activity</a>
                     <% if (activities && activities.length> 0) { %>
-                        <div class="filter-group">
-                            <label for="activity-type-filter">Filter by Type:</label>
-                            <select id="activity-type-filter">
-                                <option value="all">All Activities</option>
-                                <option value="Running">Running</option>
-                                <option value="Cycling">Cycling</option>
-                                <option value="Swimming">Swimming</option>
-                                <option value="Gym">Gym</option>
-                                <option value="Yoga">Yoga</option>
-                                <option value="Walking">Walking</option>
-                                <option value="Hiking">Hiking</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
+                        <button id="toggle-filters" class="btn btn-secondary">
+                            <span id="filter-icon">▼</span> Advanced Filters
+                        </button>
                         <% } %>
                 </div>
 
-                <% if (locals.error) { %>
-                    <div class="alert alert-error">
-                        <%= error %>
+                <% if (activities && activities.length> 0) { %>
+                    <div id="advanced-filters" class="advanced-filters" style="display: none;">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="activity-type-filter">Activity Type:</label>
+                                <select id="activity-type-filter">
+                                    <option value="all">All Activities</option>
+                                    <option value="Running">Running</option>
+                                    <option value="Cycling">Cycling</option>
+                                    <option value="Swimming">Swimming</option>
+                                    <option value="Gym">Gym</option>
+                                    <option value="Yoga">Yoga</option>
+                                    <option value="Walking">Walking</option>
+                                    <option value="Hiking">Hiking</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="date-from-filter">Date From:</label>
+                                <input type="date" id="date-from-filter">
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="date-to-filter">Date To:</label>
+                                <input type="date" id="date-to-filter">
+                            </div>
+                        </div>
+
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="duration-min-filter">Min Duration (min):</label>
+                                <input type="number" id="duration-min-filter" min="0" placeholder="e.g., 30">
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="duration-max-filter">Max Duration (min):</label>
+                                <input type="number" id="duration-max-filter" min="0" placeholder="e.g., 120">
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="calories-min-filter">Min Calories:</label>
+                                <input type="number" id="calories-min-filter" min="0" placeholder="e.g., 100">
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="calories-max-filter">Max Calories:</label>
+                                <input type="number" id="calories-max-filter" min="0" placeholder="e.g., 1000">
+                            </div>
+                        </div>
+
+                        <div class="filter-actions">
+                            <button id="apply-filters" class="btn btn-primary btn-small">Apply Filters</button>
+                            <button id="clear-filters" class="btn btn-secondary btn-small">Clear All</button>
+                        </div>
                     </div>
                     <% } %>
 
-                        <% if (activities && activities.length> 0) { %>
-                            <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
-                            <p class="results-count">
-                                Showing <span id="visible-count">
-                                    <%= activities.length %>
-                                </span> of
-                                <span id="total-count">
-                                    <%= activities.length %>
-                                </span>
-                                <%= activities.length===1 ? 'activity' : 'activities' %>
-                            </p>
-                            <table class="activities-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Activity Type</th>
-                                        <th>Duration (min)</th>
-                                        <th>Distance (km)</th>
-                                        <th>Calories</th>
-                                        <th>Notes</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% activities.forEach(activity=> { %>
-                                        <tr data-activity-type="<%= activity.activity_type %>">
-                                            <td>
-                                                <%= activity.activity_time ? new
-                                                    Date(activity.activity_time).toLocaleString() : 'N/A' %>
-                                            </td>
-                                            <td>
-                                                <%= activity.activity_type %>
-                                            </td>
-                                            <td>
-                                                <%= activity.duration_minutes %>
-                                            </td>
-                                            <td>
-                                                <%= activity.distance_km || 'N/A' %>
-                                            </td>
-                                            <td>
-                                                <%= activity.calories_burned || 'N/A' %>
-                                            </td>
-                                            <td>
-                                                <%= activity.notes || '-' %>
-                                            </td>
-                                            <td>
-                                                <% if (activity.is_public) { %>
-                                                    <span class="status-badge status-public">Public</span>
-                                                    <% } else { %>
-                                                        <span class="status-badge status-private">Private</span>
-                                                        <% } %>
-                                            </td>
-                                            <td>
-                                                <div style="display: flex; gap: 8px;">
-                                                    <a href="/my-activities/<%= activity.id %>/edit"
-                                                        class="btn btn-small"
-                                                        style="flex: 1; display: flex; align-items: center; justify-content: center;">Edit</a>
-                                                    <button class="btn btn-small btn-delete delete-btn" style="flex: 1;"
-                                                        data-activity-id="<%= activity.id %>">Delete</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <% }); %>
-                                </tbody>
-                            </table>
-
-                            <div class="activity-stats">
-                                <h2>Statistics</h2>
-                                <div class="stats-grid">
-                                    <div class="stat-card">
-                                        <h3>Total Activities</h3>
-                                        <p class="stat-value">
-                                            <%= activities.length %>
-                                        </p>
-                                    </div>
-                                    <div class="stat-card">
-                                        <h3>Total Duration</h3>
-                                        <p class="stat-value">
-                                            <%= activities.reduce((sum, a)=> sum + (Number(a.duration_minutes) || 0), 0)
-                                                %> min
-                                        </p>
-                                    </div>
-                                    <div class="stat-card">
-                                        <h3>Total Distance</h3>
-                                        <p class="stat-value">
-                                            <%= activities.reduce((sum, a)=> sum + (parseFloat(a.distance_km) || 0),
-                                                0).toFixed(2)
-                                                %> km
-                                        </p>
-                                    </div>
-                                    <div class="stat-card">
-                                        <h3>Total Calories</h3>
-                                        <p class="stat-value">
-                                            <%= activities.reduce((sum, a)=> sum + (Number(a.calories_burned) || 0), 0)
-                                                %> cal
-                                        </p>
-                                    </div>
-                                </div>
+                        <% if (locals.error) { %>
+                            <div class="alert alert-error">
+                                <%= error %>
                             </div>
-                            <% } else { %>
-                                <div class="no-activities">
-                                    <p>You haven't logged any activities yet.</p>
-                                    <a href="/add-activity" class="btn btn-primary">Add Your First Activity</a>
-                                </div>
-                                <% } %>
+                            <% } %>
+
+                                <% if (activities && activities.length> 0) { %>
+                                    <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
+                                    <p class="results-count">
+                                        Showing <span id="visible-count">
+                                            <%= activities.length %>
+                                        </span> of
+                                        <span id="total-count">
+                                            <%= activities.length %>
+                                        </span>
+                                        <%= activities.length===1 ? 'activity' : 'activities' %>
+                                    </p>
+                                    <table class="activities-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Activity Type</th>
+                                                <th>Duration (min)</th>
+                                                <th>Distance (km)</th>
+                                                <th>Calories</th>
+                                                <th>Notes</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% activities.forEach(activity=> { %>
+                                                <tr data-activity-type="<%= activity.activity_type %>">
+                                                    <td>
+                                                        <%= activity.activity_time ? new
+                                                            Date(activity.activity_time).toLocaleString() : 'N/A' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= activity.activity_type %>
+                                                    </td>
+                                                    <td>
+                                                        <%= activity.duration_minutes %>
+                                                    </td>
+                                                    <td>
+                                                        <%= activity.distance_km || 'N/A' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= activity.calories_burned || 'N/A' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= activity.notes || '-' %>
+                                                    </td>
+                                                    <td>
+                                                        <% if (activity.is_public) { %>
+                                                            <span class="status-badge status-public">Public</span>
+                                                            <% } else { %>
+                                                                <span class="status-badge status-private">Private</span>
+                                                                <% } %>
+                                                    </td>
+                                                    <td>
+                                                        <div style="display: flex; gap: 8px;">
+                                                            <a href="/my-activities/<%= activity.id %>/edit"
+                                                                class="btn btn-small"
+                                                                style="flex: 1; display: flex; align-items: center; justify-content: center;">Edit</a>
+                                                            <button class="btn btn-small btn-delete delete-btn"
+                                                                style="flex: 1;"
+                                                                data-activity-id="<%= activity.id %>">Delete</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="activity-stats">
+                                        <h2>Statistics</h2>
+                                        <div class="stats-grid">
+                                            <div class="stat-card">
+                                                <h3>Total Activities</h3>
+                                                <p class="stat-value">
+                                                    <%= activities.length %>
+                                                </p>
+                                            </div>
+                                            <div class="stat-card">
+                                                <h3>Total Duration</h3>
+                                                <p class="stat-value">
+                                                    <%= activities.reduce((sum, a)=> sum + (Number(a.duration_minutes)
+                                                        || 0), 0)
+                                                        %> min
+                                                </p>
+                                            </div>
+                                            <div class="stat-card">
+                                                <h3>Total Distance</h3>
+                                                <p class="stat-value">
+                                                    <%= activities.reduce((sum, a)=> sum + (parseFloat(a.distance_km) ||
+                                                        0),
+                                                        0).toFixed(2)
+                                                        %> km
+                                                </p>
+                                            </div>
+                                            <div class="stat-card">
+                                                <h3>Total Calories</h3>
+                                                <p class="stat-value">
+                                                    <%= activities.reduce((sum, a)=> sum + (Number(a.calories_burned) ||
+                                                        0), 0)
+                                                        %> cal
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="no-activities">
+                                            <p>You haven't logged any activities yet.</p>
+                                            <a href="/add-activity" class="btn btn-primary">Add Your First Activity</a>
+                                        </div>
+                                        <% } %>
             </div>
         </main>
 

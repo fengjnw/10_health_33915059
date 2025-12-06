@@ -34,11 +34,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Sorting
+    const sortSelect = document.getElementById('sort-by');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', applyFilters);
+    }
+
     // Sync stats/counts on initial load
     applyFilters();
 });
 
 function applyFilters() {
+    const sortBy = document.getElementById('sort-by')?.value || 'date-desc';
     const activityType = document.getElementById('activity-type-filter')?.value || 'all';
     const dateFrom = document.getElementById('date-from-filter')?.value || '';
     const dateTo = document.getElementById('date-to-filter')?.value || '';
@@ -54,8 +61,9 @@ function applyFilters() {
     rows.forEach(row => {
         let shouldShow = true;
 
-        // Activity type filter
         const rowActivityType = row.getAttribute('data-activity-type');
+
+        // Activity type filter
         if (activityType !== 'all' && rowActivityType !== activityType) {
             shouldShow = false;
         }
@@ -76,7 +84,7 @@ function applyFilters() {
 
                 if (dateTo) {
                     const toDate = new Date(dateTo);
-                    toDate.setHours(23, 59, 59, 999); // End of day
+                    toDate.setHours(23, 59, 59, 999);
                     if (activityDate > toDate) {
                         shouldShow = false;
                     }
@@ -125,8 +133,66 @@ function applyFilters() {
         totalCountSpan.textContent = totalCount;
     }
 
-    // Update stats
+    // Sort and update stats
+    sortRows(sortBy);
     updateStats(visibleCount, totalCount);
+}
+
+function sortRows(sortBy) {
+    const tbody = document.querySelector('.activities-table tbody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    const getNumeric = (row, key) => {
+        const val = row.dataset[key];
+        const num = val ? parseFloat(val) : 0;
+        return Number.isNaN(num) ? 0 : num;
+    };
+
+    const getTime = (row) => {
+        const val = row.dataset.activityTime;
+        const ts = val ? new Date(val).getTime() : 0;
+        return Number.isNaN(ts) ? 0 : ts;
+    };
+
+    const [field, direction] = (() => {
+        switch (sortBy) {
+            case 'date-asc':
+                return ['time', 'asc'];
+            case 'calories-desc':
+                return ['calories', 'desc'];
+            case 'calories-asc':
+                return ['calories', 'asc'];
+            case 'duration-desc':
+                return ['duration', 'desc'];
+            case 'duration-asc':
+                return ['duration', 'asc'];
+            case 'date-desc':
+            default:
+                return ['time', 'desc'];
+        }
+    })();
+
+    rows.sort((a, b) => {
+        let aVal;
+        let bVal;
+
+        if (field === 'time') {
+            aVal = getTime(a);
+            bVal = getTime(b);
+        } else {
+            aVal = getNumeric(a, field);
+            bVal = getNumeric(b, field);
+        }
+
+        if (direction === 'asc') {
+            return aVal - bVal;
+        }
+        return bVal - aVal;
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
 }
 
 function updateStats(visibleCount, totalCount) {
@@ -142,12 +208,9 @@ function updateStats(visibleCount, totalCount) {
     let totalCalories = 0;
 
     rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const duration = parseFloat(cells[2]?.textContent) || 0;
-        const distanceText = cells[3]?.textContent.trim();
-        const distance = distanceText !== 'N/A' ? (parseFloat(distanceText) || 0) : 0;
-        const caloriesText = cells[4]?.textContent.trim();
-        const calories = caloriesText !== 'N/A' ? (parseFloat(caloriesText) || 0) : 0;
+        const duration = parseFloat(row.dataset.duration || '0') || 0;
+        const distance = parseFloat(row.dataset.distance || '0') || 0;
+        const calories = parseFloat(row.dataset.calories || '0') || 0;
 
         totalDuration += duration;
         totalDistance += distance;

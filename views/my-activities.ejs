@@ -92,15 +92,28 @@
 
                                 <% if (activities && activities.length> 0) { %>
                                     <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
-                                    <p class="results-count">
-                                        Showing <span id="visible-count">
-                                            <%= activities.length %>
-                                        </span> of
-                                        <span id="total-count">
-                                            <%= activities.length %>
-                                        </span>
-                                        <%= activities.length===1 ? 'activity' : 'activities' %>
-                                    </p>
+                                    <div class="results-bar">
+                                        <p class="results-count">
+                                            Showing <span id="visible-count">
+                                                <%= activities.length %>
+                                            </span> of
+                                            <span id="total-count">
+                                                <%= activities.length %>
+                                            </span>
+                                            <%= activities.length===1 ? 'activity' : 'activities' %>
+                                        </p>
+                                        <div class="sort-controls">
+                                            <label for="sort-by">Sort</label>
+                                            <select id="sort-by">
+                                                <option value="date-desc">Time (newest)</option>
+                                                <option value="date-asc">Time (oldest)</option>
+                                                <option value="calories-desc">Calories (high→low)</option>
+                                                <option value="calories-asc">Calories (low→high)</option>
+                                                <option value="duration-desc">Duration (long→short)</option>
+                                                <option value="duration-asc">Duration (short→long)</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <table class="activities-table">
                                         <thead>
                                             <tr>
@@ -116,7 +129,11 @@
                                         </thead>
                                         <tbody>
                                             <% activities.forEach(activity=> { %>
-                                                <tr data-activity-type="<%= activity.activity_type %>">
+                                                <tr data-activity-type="<%= activity.activity_type %>"
+                                                    data-duration="<%= activity.duration_minutes || 0 %>"
+                                                    data-distance="<%= activity.distance_km || 0 %>"
+                                                    data-calories="<%= activity.calories_burned || 0 %>"
+                                                    data-activity-time="<%= activity.activity_time ? new Date(activity.activity_time).toISOString() : '' %>">
                                                     <td>
                                                         <%= activity.activity_time ? new
                                                             Date(activity.activity_time).toLocaleString() : 'N/A' %>

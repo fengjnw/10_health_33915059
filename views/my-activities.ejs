@@ -19,6 +19,22 @@
 
                 <div class="activities-header">
                     <a href="/add-activity" class="btn btn-primary">Add New Activity</a>
+                    <% if (activities && activities.length> 0) { %>
+                        <div class="filter-group">
+                            <label for="activity-type-filter">Filter by Type:</label>
+                            <select id="activity-type-filter">
+                                <option value="all">All Activities</option>
+                                <option value="Running">Running</option>
+                                <option value="Cycling">Cycling</option>
+                                <option value="Swimming">Swimming</option>
+                                <option value="Gym">Gym</option>
+                                <option value="Yoga">Yoga</option>
+                                <option value="Walking">Walking</option>
+                                <option value="Hiking">Hiking</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <% } %>
                 </div>
 
                 <% if (locals.error) { %>
@@ -29,8 +45,14 @@
 
                         <% if (activities && activities.length> 0) { %>
                             <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
-                            <p class="results-count">You have logged <%= activities.length %>
-                                    <%= activities.length===1 ? 'activity' : 'activities' %>
+                            <p class="results-count">
+                                Showing <span id="visible-count">
+                                    <%= activities.length %>
+                                </span> of
+                                <span id="total-count">
+                                    <%= activities.length %>
+                                </span>
+                                <%= activities.length===1 ? 'activity' : 'activities' %>
                             </p>
                             <table class="activities-table">
                                 <thead>
@@ -47,9 +69,10 @@
                                 </thead>
                                 <tbody>
                                     <% activities.forEach(activity=> { %>
-                                        <tr>
+                                        <tr data-activity-type="<%= activity.activity_type %>">
                                             <td>
-                                                <%= new Date(activity.activity_time).toLocaleString() %>
+                                                <%= activity.activity_time ? new
+                                                    Date(activity.activity_time).toLocaleString() : 'N/A' %>
                                             </td>
                                             <td>
                                                 <%= activity.activity_type %>
@@ -132,11 +155,7 @@
         <%- include('partials/footer') %>
 
             <script src="/js/delete-activity.js"></script>
+            <script src="/js/filter-activities.js"></script>
 </body>
 
 </html>
-
-<%- include('partials/footer') %>
-    </body>
-
-    </html>

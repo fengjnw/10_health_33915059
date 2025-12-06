@@ -219,6 +219,11 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    console.log('PATCH /my-activities/:id/edit received');
+    console.log('User ID:', req.session.user.id);
+    console.log('Activity ID:', req.params.id);
+    console.log('Request body:', req.body);
+
     try {
         const { id } = req.params;
         const { activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes } = req.body;
@@ -300,6 +305,10 @@ router.delete('/my-activities/:id', async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
+
+    console.log('DELETE /my-activities/:id received');
+    console.log('User ID:', req.session.user.id);
+    console.log('Activity ID:', req.params.id);
 
     try {
         const id = parseInt(req.params.id, 10);

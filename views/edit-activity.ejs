@@ -91,49 +91,7 @@
 
         <%- include('partials/footer') %>
 
-            <script>
-                // Handle form submission
-                document.getElementById('edit-activity-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const formData = new FormData(e.target);
-                    const data = {
-                        activity_type: formData.get('activity_type'),
-                        duration_minutes: formData.get('duration_minutes'),
-                        distance_km: formData.get('distance_km') || null,
-                        calories_burned: formData.get('calories_burned') || null,
-                        activity_date: formData.get('activity_date'),
-                        notes: formData.get('notes') || null
-                    };
-
-                    const messageContainer = document.getElementById('message-container');
-
-                    try {
-                        const response = await fetch('/my-activities/<%= activity.id %>/edit', {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-Token': formData.get('_csrf')
-                            },
-                            body: JSON.stringify(data)
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok) {
-                            messageContainer.innerHTML = '<div class="alert alert-success">Activity updated successfully! Redirecting...</div>';
-                            setTimeout(() => {
-                                window.location.href = '/my-activities';
-                            }, 1500);
-                        } else {
-                            messageContainer.innerHTML = `<div class="alert alert-error">${result.error || 'An error occurred'}</div>`;
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        messageContainer.innerHTML = '<div class="alert alert-error">An error occurred while updating the activity</div>';
-                    }
-                });
-            </script>
+            <script src="/js/edit-activity.js"></script>
 </body>
 
 </html>

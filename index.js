@@ -39,6 +39,9 @@ app.use(helmet({
 // Middleware to parse URL-encoded bodies (form data)
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware to parse JSON bodies
+app.use(express.json());
+
 // Serve static files from the public directory
 app.use(express.static('public'));
 

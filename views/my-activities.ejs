@@ -28,10 +28,10 @@
                     <% } %>
 
                         <% if (activities && activities.length> 0) { %>
+                            <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
                             <p class="results-count">You have logged <%= activities.length %>
                                     <%= activities.length===1 ? 'activity' : 'activities' %>
                             </p>
-
                             <table class="activities-table">
                                 <thead>
                                     <tr>
@@ -70,8 +70,8 @@
                                                     <a href="/my-activities/<%= activity.id %>/edit"
                                                         class="btn btn-small"
                                                         style="flex: 1; display: flex; align-items: center; justify-content: center;">Edit</a>
-                                                    <button class="btn btn-small btn-delete" style="flex: 1;"
-                                                        onclick="deleteActivity('<%= activity.id %>')">Delete</button>
+                                                    <button class="btn btn-small btn-delete delete-btn" style="flex: 1;"
+                                                        data-activity-id="<%= activity.id %>">Delete</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -123,34 +123,7 @@
 
         <%- include('partials/footer') %>
 
-            <script>
-                // Delete activity function
-                async function deleteActivity(id) {
-                    if (confirm('Are you sure you want to delete this activity?')) {
-                        try {
-                            const response = await fetch(`/my-activities/${id}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-Token': document.querySelector('input[name="_csrf"]').value
-                                }
-                            });
-
-                            const data = await response.json();
-
-                            if (response.ok) {
-                                alert('Activity deleted successfully');
-                                location.reload();
-                            } else {
-                                alert('Error: ' + (data.error || 'Failed to delete activity'));
-                            }
-                        } catch (error) {
-                            console.error('Delete error:', error);
-                            alert('An error occurred while deleting the activity');
-                        }
-                    }
-                }
-            </script>
+            <script src="/js/delete-activity.js"></script>
 </body>
 
 </html>

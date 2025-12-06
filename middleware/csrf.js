@@ -33,14 +33,17 @@ function doubleCsrfProtection(req, res, next) {
         req.session._csrfToken = crypto.randomBytes(32).toString('hex');
     }
 
-    // Get token from request body
-    const tokenFromBody = req.body._csrf;
+    // Get token from multiple sources: body (for forms), header (for AJAX/JSON), or query
+    const tokenFromBody = req.body && req.body._csrf;
+    const tokenFromHeader = req.get('X-CSRF-Token');
+    const tokenFromQuery = req.query._csrf;
+    const tokenFromRequest = tokenFromBody || tokenFromHeader || tokenFromQuery;
 
     // Get token from session
     const tokenFromSession = req.session._csrfToken;
 
     // Verify tokens match
-    if (!tokenFromBody || !tokenFromSession || tokenFromBody !== tokenFromSession) {
+    if (!tokenFromRequest || !tokenFromSession || tokenFromRequest !== tokenFromSession) {
         const error = new Error('Invalid CSRF token');
         error.code = 'EBADCSRFTOKEN';
         return next(error);

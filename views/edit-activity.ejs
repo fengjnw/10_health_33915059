@@ -79,9 +79,10 @@
                                 placeholder="Add any additional notes about this activity"><%= activity.notes || '' %></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Update Activity</button>
-                            <a href="/my-activities" class="btn btn-secondary">Cancel</a>
+                        <div class="form-group" style="display: flex; gap: 12px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Update Activity</button>
+                            <a href="/my-activities" class="btn btn-secondary"
+                                style="flex: 1; display: flex; align-items: center; justify-content: center;">Cancel</a>
                         </div>
                     </form>
                 </div>

@@ -295,7 +295,12 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
 });
 
 // DELETE /my-activities/:id - Delete an activity
-router.delete('/my-activities/:id', requireLogin, csrfProtection, async (req, res) => {
+router.delete('/my-activities/:id', async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
     try {
         const id = parseInt(req.params.id, 10);
 

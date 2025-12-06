@@ -66,10 +66,13 @@
                                                 <%= activity.notes || '-' %>
                                             </td>
                                             <td>
-                                                <a href="/my-activities/<%= activity.id %>/edit"
-                                                    class="btn btn-small btn-edit">Edit</a>
-                                                <button class="btn btn-small btn-delete"
-                                                    onclick="deleteActivity(<%= activity.id %>)">Delete</button>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <a href="/my-activities/<%= activity.id %>/edit"
+                                                        class="btn btn-small"
+                                                        style="flex: 1; display: flex; align-items: center; justify-content: center;">Edit</a>
+                                                    <button class="btn btn-small btn-delete" style="flex: 1;"
+                                                        onclick="deleteActivity('<%= activity.id %>')">Delete</button>
+                                                </div>
                                             </td>
                                         </tr>
                                         <% }); %>

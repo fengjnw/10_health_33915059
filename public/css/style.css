@@ -206,6 +206,24 @@ main {
     border-color: #1abc9c;
 }
 
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    min-width: 70px;
+}
+
+.btn-delete {
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-delete:hover {
+    background: #fef5f5;
+    border-color: #c0392b;
+    color: #c0392b;
+}
+
 /* Forms */
 .form-container {
     max-width: 500px;

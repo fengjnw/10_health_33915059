@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const helmet = require('helmet');
 const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
 const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeout');
+const { initializeEmailService } = require('./utils/emailService');
 
 // Load environment variables
 dotenv.config();
@@ -103,6 +104,13 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, async () => {
     console.log(`Health & Fitness app listening on port ${port}`);
+
+    // Initialize email service
+    try {
+        await initializeEmailService();
+    } catch (error) {
+        console.error('Failed to initialize email service:', error);
+    }
 });

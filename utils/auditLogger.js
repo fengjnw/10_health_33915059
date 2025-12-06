@@ -1,15 +1,9 @@
 /**
- * Audit Logger - Security Event Logging Module
- * Records sensitive operations for security monitoring and compliance
+ * Audit Logger - Database-backed Security Event Logging Module
+ * Records sensitive operations to database for security monitoring and compliance
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-
-// Log file configuration
-const LOG_DIR = path.join(__dirname, '../logs');
-const LOG_FILE = path.join(LOG_DIR, 'audit.log');
-const MAX_LOG_SIZE = 10 * 1024 * 1024; // 10MB
+const db = require('../config/db');
 
 // Event types
 const EventTypes = {
@@ -18,83 +12,24 @@ const EventTypes = {
     LOGOUT: 'LOGOUT',
     REGISTER: 'REGISTER',
     PASSWORD_CHANGE: 'PASSWORD_CHANGE',
+    ACCOUNT_UPDATE: 'ACCOUNT_UPDATE',
     ACTIVITY_CREATE: 'ACTIVITY_CREATE',
     ACTIVITY_UPDATE: 'ACTIVITY_UPDATE',
     ACTIVITY_DELETE: 'ACTIVITY_DELETE',
     SESSION_TIMEOUT: 'SESSION_TIMEOUT',
     RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
     CSRF_VIOLATION: 'CSRF_VIOLATION',
-    UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS'
+    UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS',
+    EMAIL_VERIFICATION_REQUESTED: 'EMAIL_VERIFICATION_REQUESTED'
 };
-
-/**
- * Ensure log directory exists
- */
-async function ensureLogDirectory() {
-    try {
-        await fs.access(LOG_DIR);
-    } catch (error) {
-        await fs.mkdir(LOG_DIR, { recursive: true });
-    }
-}
-
-/**
- * Rotate log file if it exceeds max size
- */
-async function rotateLogIfNeeded() {
-    try {
-        const stats = await fs.stat(LOG_FILE);
-        if (stats.size > MAX_LOG_SIZE) {
-            const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-            const archiveFile = path.join(LOG_DIR, `audit-${timestamp}.log`);
-            await fs.rename(LOG_FILE, archiveFile);
-            console.log(`Log file rotated: ${archiveFile}`);
-        }
-    } catch (error) {
-        // Log file doesn't exist yet, no rotation needed
-    }
-}
-
-/**
- * Format log entry
- */
-function formatLogEntry(eventType, details) {
-    const timestamp = new Date().toISOString();
-    const entry = {
-        timestamp,
-        eventType,
-        ...details
-    };
-    return JSON.stringify(entry) + '\n';
-}
-
-/**
- * Write log entry to file
- */
-async function writeLog(eventType, details) {
-    try {
-        await ensureLogDirectory();
-        await rotateLogIfNeeded();
-
-        const logEntry = formatLogEntry(eventType, details);
-        await fs.appendFile(LOG_FILE, logEntry);
-
-        // Also log to console in development
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`[AUDIT] ${eventType}:`, details);
-        }
-    } catch (error) {
-        console.error('Error writing audit log:', error);
-    }
-}
 
 /**
  * Extract client information from request
  */
 function getClientInfo(req) {
     return {
-        ip: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('user-agent'),
+        ip_address: req.ip || req.connection.remoteAddress,
+        user_agent: req.get('user-agent'),
         path: req.path,
         method: req.method
     };
@@ -104,59 +39,118 @@ function getClientInfo(req) {
  * Log authentication events
  */
 async function logAuth(eventType, req, userId = null, username = null, reason = null) {
-    const details = {
-        userId,
-        username,
-        reason,
-        ...getClientInfo(req)
-    };
-    await writeLog(eventType, details);
+    try {
+        const clientInfo = getClientInfo(req);
+
+        await db.query(
+            `INSERT INTO audit_logs 
+            (user_id, username, event_type, ip_address, user_agent, path, method, changes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                username,
+                eventType,
+                clientInfo.ip_address,
+                clientInfo.user_agent,
+                clientInfo.path,
+                clientInfo.method,
+                reason ? JSON.stringify({ reason }) : null
+            ]
+        );
+
+        // Log to console in development
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`[AUDIT] ${eventType}: ${username || userId}`, reason ? `(${reason})` : '');
+        }
+    } catch (error) {
+        console.error('Error writing audit log:', error);
+    }
 }
 
 /**
  * Log data modification events
  */
 async function logDataChange(eventType, req, resourceType, resourceId, changes = null) {
-    const details = {
-        userId: req.session?.user?.id,
-        username: req.session?.user?.username,
-        resourceType,
-        resourceId,
-        changes,
-        ...getClientInfo(req)
-    };
-    await writeLog(eventType, details);
+    try {
+        const clientInfo = getClientInfo(req);
+        const userId = req.session?.user?.id;
+        const username = req.session?.user?.username;
+
+        await db.query(
+            `INSERT INTO audit_logs 
+            (user_id, username, event_type, resource_type, resource_id, ip_address, user_agent, path, method, changes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                username,
+                eventType,
+                resourceType,
+                resourceId,
+                clientInfo.ip_address,
+                clientInfo.user_agent,
+                clientInfo.path,
+                clientInfo.method,
+                changes ? JSON.stringify(changes) : null
+            ]
+        );
+
+        // Log to console in development
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`[AUDIT] ${eventType} - ${resourceType}:${resourceId}`, changes ? JSON.stringify(changes) : '');
+        }
+    } catch (error) {
+        console.error('Error writing audit log:', error);
+    }
 }
 
 /**
  * Log security violations
  */
 async function logSecurityEvent(eventType, req, details = {}) {
-    const logDetails = {
-        userId: req.session?.user?.id,
-        username: req.session?.user?.username,
-        ...details,
-        ...getClientInfo(req)
-    };
-    await writeLog(eventType, logDetails);
+    try {
+        const clientInfo = getClientInfo(req);
+        const userId = req.session?.user?.id;
+        const username = req.session?.user?.username;
+
+        await db.query(
+            `INSERT INTO audit_logs 
+            (user_id, username, event_type, ip_address, user_agent, path, method, changes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                username,
+                eventType,
+                clientInfo.ip_address,
+                clientInfo.user_agent,
+                clientInfo.path,
+                clientInfo.method,
+                Object.keys(details).length > 0 ? JSON.stringify(details) : null
+            ]
+        );
+
+        // Log to console in development
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`[AUDIT] SECURITY: ${eventType}`, details);
+        }
+    } catch (error) {
+        console.error('Error writing audit log:', error);
+    }
 }
 
 /**
- * Read recent audit logs (for admin viewing)
+ * Get recent audit logs
  */
 async function getRecentLogs(limit = 100) {
     try {
-        const content = await fs.readFile(LOG_FILE, 'utf-8');
-        const lines = content.trim().split('\n');
-        const logs = lines.slice(-limit).map(line => {
-            try {
-                return JSON.parse(line);
-            } catch (e) {
-                return null;
-            }
-        }).filter(log => log !== null);
-        return logs.reverse(); // Most recent first
+        const [logs] = await db.query(
+            `SELECT * FROM audit_logs 
+            ORDER BY created_at DESC 
+            LIMIT ?`,
+            [limit]
+        );
+        return logs;
     } catch (error) {
+        console.error('Error fetching audit logs:', error);
         return [];
     }
 }
@@ -165,20 +159,94 @@ async function getRecentLogs(limit = 100) {
  * Get logs by user
  */
 async function getLogsByUser(username, limit = 50) {
-    const allLogs = await getRecentLogs(1000);
-    return allLogs
-        .filter(log => log.username === username)
-        .slice(0, limit);
+    try {
+        const [logs] = await db.query(
+            `SELECT * FROM audit_logs 
+            WHERE username = ? 
+            ORDER BY created_at DESC 
+            LIMIT ?`,
+            [username, limit]
+        );
+        return logs;
+    } catch (error) {
+        console.error('Error fetching user logs:', error);
+        return [];
+    }
 }
 
 /**
  * Get logs by event type
  */
 async function getLogsByEventType(eventType, limit = 50) {
-    const allLogs = await getRecentLogs(1000);
-    return allLogs
-        .filter(log => log.eventType === eventType)
-        .slice(0, limit);
+    try {
+        const [logs] = await db.query(
+            `SELECT * FROM audit_logs 
+            WHERE event_type = ? 
+            ORDER BY created_at DESC 
+            LIMIT ?`,
+            [eventType, limit]
+        );
+        return logs;
+    } catch (error) {
+        console.error('Error fetching event logs:', error);
+        return [];
+    }
+}
+
+/**
+ * Get logs by date range
+ */
+async function getLogsByDateRange(startDate, endDate, limit = 100) {
+    try {
+        const [logs] = await db.query(
+            `SELECT * FROM audit_logs 
+            WHERE created_at BETWEEN ? AND ? 
+            ORDER BY created_at DESC 
+            LIMIT ?`,
+            [startDate, endDate, limit]
+        );
+        return logs;
+    } catch (error) {
+        console.error('Error fetching logs by date range:', error);
+        return [];
+    }
+}
+
+/**
+ * Get logs for specific resource
+ */
+async function getLogsByResource(resourceType, resourceId, limit = 50) {
+    try {
+        const [logs] = await db.query(
+            `SELECT * FROM audit_logs 
+            WHERE resource_type = ? AND resource_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT ?`,
+            [resourceType, resourceId, limit]
+        );
+        return logs;
+    } catch (error) {
+        console.error('Error fetching resource logs:', error);
+        return [];
+    }
+}
+
+/**
+ * Purge old audit logs (for maintenance)
+ */
+async function purgeOldLogs(daysToKeep = 90) {
+    try {
+        const result = await db.query(
+            `DELETE FROM audit_logs 
+            WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)`,
+            [daysToKeep]
+        );
+        console.log(`✓ Purged audit logs older than ${daysToKeep} days`);
+        return result;
+    } catch (error) {
+        console.error('Error purging old logs:', error);
+        throw error;
+    }
 }
 
 module.exports = {
@@ -188,5 +256,8 @@ module.exports = {
     logSecurityEvent,
     getRecentLogs,
     getLogsByUser,
-    getLogsByEventType
+    getLogsByEventType,
+    getLogsByDateRange,
+    getLogsByResource,
+    purgeOldLogs
 };

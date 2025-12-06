@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { EventTypes, logDataChange } = require('../utils/auditLogger');
+const { sendVerificationEmail } = require('../utils/emailService');
 
 // Home page route
 router.get('/', (req, res) => {
@@ -367,6 +368,316 @@ router.delete('/my-activities/:id', async (req, res) => {
         res.status(500).json({
             error: 'An error occurred while deleting the activity'
         });
+    }
+});
+
+// GET /profile - Show user profile
+router.get('/profile', async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+
+    try {
+        const [users] = await db.query('SELECT * FROM users WHERE id = ?', [req.session.user.id]);
+
+        if (users.length === 0) {
+            return res.status(404).render('error', {
+                message: 'User not found'
+            });
+        }
+
+        res.render('profile', {
+            title: 'My Profile - Health & Fitness Tracker',
+            user: users[0]
+        });
+    } catch (error) {
+        console.error('Profile page error:', error);
+        res.status(500).render('error', {
+            message: 'An error occurred while loading your profile'
+        });
+    }
+});
+
+// PATCH /profile - Update user profile
+router.patch('/profile', async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    console.log('PATCH /profile received');
+    console.log('User ID:', req.session.user.id);
+    console.log('Request body:', req.body);
+
+    try {
+        const { first_name, last_name, email } = req.body;
+
+        // Validate required fields
+        if (!first_name || !last_name || !email) {
+            return res.status(400).json({
+                error: 'First name, last name, and email are required'
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                error: 'Invalid email format'
+            });
+        }
+
+        // Get current user data
+        const [users] = await db.query('SELECT * FROM users WHERE id = ?', [req.session.user.id]);
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const currentUser = users[0];
+
+        // Check if email is already in use by another user
+        if (email !== currentUser.email) {
+            const [existingUsers] = await db.query(
+                'SELECT id FROM users WHERE email = ? AND id != ?',
+                [email, req.session.user.id]
+            );
+
+            if (existingUsers.length > 0) {
+                return res.status(400).json({
+                    error: 'Email is already in use by another user'
+                });
+            }
+        }
+
+        // Update user profile
+        const updateQuery = `
+            UPDATE users 
+            SET first_name = ?, last_name = ?, email = ?
+            WHERE id = ?
+        `;
+
+        await db.query(updateQuery, [first_name, last_name, email, req.session.user.id]);
+
+        // Update session data
+        req.session.user.first_name = first_name;
+        req.session.user.last_name = last_name;
+        req.session.user.email = email;
+
+        // Log the update
+        await logDataChange(
+            EventTypes.ACCOUNT_UPDATE,
+            req,
+            'user_profile',
+            req.session.user.id,
+            {
+                old: {
+                    first_name: currentUser.first_name,
+                    last_name: currentUser.last_name,
+                    email: currentUser.email
+                },
+                new: {
+                    first_name,
+                    last_name,
+                    email
+                }
+            }
+        );
+
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({
+            error: 'An error occurred while updating your profile'
+        });
+    }
+});
+
+// Generate a random verification code
+function generateVerificationCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// Request email verification code
+router.post('/email/request-verification', async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    try {
+        const { newEmail } = req.body;
+
+        // Validate email
+        if (!newEmail) {
+            return res.status(400).json({ error: 'New email is required' });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newEmail)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        // Check if email is already in use
+        const [existingUsers] = await db.query(
+            'SELECT id FROM users WHERE email = ? AND id != ?',
+            [newEmail, req.session.user.id]
+        );
+
+        if (existingUsers.length > 0) {
+            return res.status(400).json({ error: 'Email is already in use by another user' });
+        }
+
+        // Generate verification code
+        const verificationCode = generateVerificationCode();
+
+        // Store verification in database
+        const expiresAt = new Date(Date.now() + 3600000); // 1 hour from now
+        await db.query(
+            'INSERT INTO email_verifications (user_id, new_email, verification_code, expires_at) VALUES (?, ?, ?, ?)',
+            [req.session.user.id, newEmail, verificationCode, expiresAt]
+        );
+
+        // Send verification email
+        const emailResult = await sendVerificationEmail(newEmail, verificationCode);
+
+        // Log email verification request
+        await logDataChange(
+            'EMAIL_VERIFICATION_REQUESTED',
+            req,
+            'email_verification',
+            req.session.user.id,
+            {
+                event: 'Email verification code sent',
+                new_email: newEmail,
+                old_email: req.session.user.email
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Verification code sent to your new email',
+            verificationCode: verificationCode, // For development/testing
+            previewUrl: emailResult.previewUrl // Ethereal preview URL
+        });
+
+    } catch (error) {
+        console.error('Email verification request error:', error);
+        res.status(500).json({
+            error: 'An error occurred while requesting email verification'
+        });
+    }
+});
+
+// Verify email code and update email
+router.post('/email/verify-code', async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    try {
+        const { verificationCode, newEmail } = req.body;
+
+        if (!verificationCode || !newEmail) {
+            return res.status(400).json({ error: 'Verification code and email are required' });
+        }
+
+        // Find verification record
+        const [verifications] = await db.query(
+            'SELECT * FROM email_verifications WHERE user_id = ? AND verification_code = ? AND new_email = ? AND is_verified = 0',
+            [req.session.user.id, verificationCode, newEmail]
+        );
+
+        if (verifications.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired verification code' });
+        }
+
+        const verification = verifications[0];
+
+        // Check if verification has expired
+        if (new Date() > new Date(verification.expires_at)) {
+            return res.status(400).json({ error: 'Verification code has expired' });
+        }
+
+        // Mark verification as verified
+        await db.query(
+            'UPDATE email_verifications SET is_verified = 1 WHERE id = ?',
+            [verification.id]
+        );
+
+        // Update user email
+        const [currentUser] = await db.query(
+            'SELECT * FROM users WHERE id = ?',
+            [req.session.user.id]
+        );
+
+        await db.query(
+            'UPDATE users SET email = ? WHERE id = ?',
+            [newEmail, req.session.user.id]
+        );
+
+        // Update session
+        req.session.user.email = newEmail;
+
+        // Log email change
+        await logDataChange(
+            'ACCOUNT_UPDATE',
+            req,
+            'email_change',
+            req.session.user.id,
+            {
+                old: { email: currentUser[0].email },
+                new: { email: newEmail }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Email verified and updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({
+            error: 'An error occurred while verifying your email'
+        });
+    }
+});
+
+// API: Get recent audit logs (development/debugging only)
+router.get('/api/audit-logs', async (req, res) => {
+    // Only allow in development mode
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Not available in production' });
+    }
+
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit) : 50;
+        const eventType = req.query.eventType;
+        const username = req.query.username;
+
+        let logs;
+
+        if (eventType) {
+            const { getLogsByEventType } = require('../utils/auditLogger');
+            logs = await getLogsByEventType(eventType, limit);
+        } else if (username) {
+            const { getLogsByUser } = require('../utils/auditLogger');
+            logs = await getLogsByUser(username, limit);
+        } else {
+            const { getRecentLogs } = require('../utils/auditLogger');
+            logs = await getRecentLogs(limit);
+        }
+
+        res.json({
+            count: logs.length,
+            logs: logs
+        });
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
 });
 

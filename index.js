@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const dotenv = require('dotenv');
 const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
+const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeout');
 
 // Load environment variables
 dotenv.config();
@@ -22,16 +23,22 @@ app.use(express.static('public'));
 
 // Set up session middleware
 app.use(session({
-    secret: 'health-app-secret-key',
+    secret: process.env.SESSION_SECRET || 'health-app-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 // 24 hours
+        maxAge: 1000 * 60 * 60 * 12, // 12 hours
+        httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+        secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production
+        sameSite: 'strict' // Prevent CSRF attacks - only send cookie for same-site requests
     }
 }));
 
 // Apply CSRF protection middleware to all routes
 app.use(doubleCsrfProtection);
+
+// Apply session timeout middleware to check for inactivity
+app.use(sessionTimeoutMiddleware);
 
 // Make CSRF token and user session data available to all views
 app.use((req, res, next) => {

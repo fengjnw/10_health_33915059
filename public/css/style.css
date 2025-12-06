@@ -681,3 +681,89 @@ footer {
     color: #2c3e50;
     margin: 1rem 0;
 }
+
+/* Session Timeout Warning Modal */
+.session-warning-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.session-warning-content {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.session-warning-content h3 {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.session-warning-content p {
+    color: #2c3e50;
+    margin-bottom: 0.8rem;
+    line-height: 1.5;
+}
+
+#timeout-countdown {
+    font-weight: bold;
+    color: #e74c3c;
+    font-size: 1.1em;
+}
+
+.session-warning-content .btn {
+    margin: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.session-warning-content .btn-primary {
+    background-color: #1abc9c;
+    color: white;
+}
+
+.session-warning-content .btn-primary:hover {
+    background-color: #16a085;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.session-warning-content .btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.session-warning-content .btn-secondary:hover {
+    background-color: #7f8c8d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

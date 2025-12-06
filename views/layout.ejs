@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
-<body>
+<body data-user-logged-in="<%= user ? 'true' : 'false' %>">
     <%- include('partials/header') %>
 
         <main>
@@ -18,6 +18,11 @@
         </main>
 
         <%- include('partials/footer') %>
+
+            <!-- Session Timeout Handler - Only load for logged-in users -->
+            <% if (user) { %>
+                <script src="/js/session-timeout.js"></script>
+                <% } %>
 </body>
 
 </html>

@@ -127,9 +127,11 @@ router.post('/register', registerLimiter.middleware(), [
 
 // Login page route - GET request shows the form
 router.get('/login', (req, res) => {
+    const timeoutMessage = req.query.timeout ? 'Your session has expired due to inactivity. Please log in again.' : null;
     res.render('login', {
         title: 'Login - Health & Fitness Tracker',
-        errors: null
+        errors: timeoutMessage ? [timeoutMessage] : null,
+        info: timeoutMessage ? 'Session Expired' : null
     });
 });
 

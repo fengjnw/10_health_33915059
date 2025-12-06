@@ -7,7 +7,7 @@ class RateLimiter {
         this.windowMs = options.windowMs || 15 * 60 * 1000; // 15 minutes default
         this.lockoutMs = options.lockoutMs || 30 * 60 * 1000; // 30 minutes lockout
         this.store = new Map(); // IP -> { attempts, firstAttemptTime, lockedUntil }
-        
+
         // Clean up old entries periodically (every 5 minutes)
         setInterval(() => this.cleanup(), 5 * 60 * 1000);
     }
@@ -19,7 +19,7 @@ class RateLimiter {
         return (req, res, next) => {
             const ip = req.ip || req.connection.remoteAddress;
             const key = `${ip}:${req.path}`;
-            
+
             const now = Date.now();
             let record = this.store.get(key);
 

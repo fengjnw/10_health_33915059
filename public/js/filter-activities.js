@@ -33,16 +33,19 @@ document.addEventListener('DOMContentLoaded', function () {
             applyFilters();
         });
     }
+
+    // Sync stats/counts on initial load
+    applyFilters();
 });
 
 function applyFilters() {
-    const activityType = document.getElementById('activity-type-filter').value;
-    const dateFrom = document.getElementById('date-from-filter').value;
-    const dateTo = document.getElementById('date-to-filter').value;
-    const durationMin = parseInt(document.getElementById('duration-min-filter').value) || 0;
-    const durationMax = parseInt(document.getElementById('duration-max-filter').value) || Infinity;
-    const caloriesMin = parseInt(document.getElementById('calories-min-filter').value) || 0;
-    const caloriesMax = parseInt(document.getElementById('calories-max-filter').value) || Infinity;
+    const activityType = document.getElementById('activity-type-filter')?.value || 'all';
+    const dateFrom = document.getElementById('date-from-filter')?.value || '';
+    const dateTo = document.getElementById('date-to-filter')?.value || '';
+    const durationMin = parseInt(document.getElementById('duration-min-filter')?.value) || 0;
+    const durationMax = parseInt(document.getElementById('duration-max-filter')?.value) || Infinity;
+    const caloriesMin = parseInt(document.getElementById('calories-min-filter')?.value) || 0;
+    const caloriesMax = parseInt(document.getElementById('calories-max-filter')?.value) || Infinity;
 
     const rows = document.querySelectorAll('.activities-table tbody tr');
     const totalCount = rows.length;
@@ -111,7 +114,7 @@ function applyFilters() {
         }
     });
 
-    // Update the count display
+    // Update the count display (table header area)
     const visibleCountSpan = document.getElementById('visible-count');
     const totalCountSpan = document.getElementById('total-count');
 
@@ -123,48 +126,52 @@ function applyFilters() {
     }
 
     // Update stats
-    updateStats();
+    updateStats(visibleCount, totalCount);
 }
 
-function updateStats() {
+function updateStats(visibleCount, totalCount) {
     const statsContainer = document.querySelector('.stats-grid');
     if (!statsContainer) return;
 
     const rows = document.querySelectorAll('.activities-table tbody tr');
+    let visibleDuration = 0;
+    let visibleDistance = 0;
+    let visibleCalories = 0;
     let totalDuration = 0;
     let totalDistance = 0;
     let totalCalories = 0;
 
     rows.forEach(row => {
-        // Only count visible rows
+        const cells = row.querySelectorAll('td');
+        const duration = parseFloat(cells[2]?.textContent) || 0;
+        const distanceText = cells[3]?.textContent.trim();
+        const distance = distanceText !== 'N/A' ? (parseFloat(distanceText) || 0) : 0;
+        const caloriesText = cells[4]?.textContent.trim();
+        const calories = caloriesText !== 'N/A' ? (parseFloat(caloriesText) || 0) : 0;
+
+        totalDuration += duration;
+        totalDistance += distance;
+        totalCalories += calories;
+
         if (row.style.display !== 'none') {
-            const cells = row.querySelectorAll('td');
-
-            // Duration is in column 3 (index 2)
-            const duration = parseFloat(cells[2]?.textContent) || 0;
-            totalDuration += duration;
-
-            // Distance is in column 4 (index 3)
-            const distanceText = cells[3]?.textContent.trim();
-            if (distanceText !== 'N/A') {
-                const distance = parseFloat(distanceText) || 0;
-                totalDistance += distance;
-            }
-
-            // Calories is in column 5 (index 4)
-            const caloriesText = cells[4]?.textContent.trim();
-            if (caloriesText !== 'N/A') {
-                const calories = parseFloat(caloriesText) || 0;
-                totalCalories += calories;
-            }
+            visibleDuration += duration;
+            visibleDistance += distance;
+            visibleCalories += calories;
         }
     });
 
-    // Update stat cards
     const statCards = statsContainer.querySelectorAll('.stat-card');
-    if (statCards.length >= 3) {
-        statCards[0].querySelector('.stat-value').textContent = `${totalDuration} min`;
-        statCards[1].querySelector('.stat-value').textContent = `${totalDistance.toFixed(2)} km`;
-        statCards[2].querySelector('.stat-value').textContent = `${totalCalories} cal`;
+    const setCardNumbers = (card, visible, total, formatter = (v) => v) => {
+        const visibleEl = card.querySelector('.stat-visible');
+        const totalEl = card.querySelector('.stat-total');
+        if (visibleEl) visibleEl.textContent = formatter(visible);
+        if (totalEl) totalEl.textContent = formatter(total);
+    };
+
+    if (statCards.length >= 4) {
+        setCardNumbers(statCards[0], visibleCount, totalCount);
+        setCardNumbers(statCards[1], visibleDuration, totalDuration);
+        setCardNumbers(statCards[2], visibleDistance, totalDistance, (val) => val.toFixed(2));
+        setCardNumbers(statCards[3], visibleCalories, totalCalories);
     }
 }

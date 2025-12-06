@@ -158,48 +158,77 @@
                                         </tbody>
                                     </table>
 
-                                    <div class="activity-stats">
-                                        <h2>Statistics</h2>
-                                        <div class="stats-grid">
-                                            <div class="stat-card">
-                                                <h3>Total Activities</h3>
-                                                <p class="stat-value">
-                                                    <%= activities.length %>
-                                                </p>
-                                            </div>
-                                            <div class="stat-card">
-                                                <h3>Total Duration</h3>
-                                                <p class="stat-value">
-                                                    <%= activities.reduce((sum, a)=> sum + (Number(a.duration_minutes)
-                                                        || 0), 0)
-                                                        %> min
-                                                </p>
-                                            </div>
-                                            <div class="stat-card">
-                                                <h3>Total Distance</h3>
-                                                <p class="stat-value">
-                                                    <%= activities.reduce((sum, a)=> sum + (parseFloat(a.distance_km) ||
-                                                        0),
-                                                        0).toFixed(2)
-                                                        %> km
-                                                </p>
-                                            </div>
-                                            <div class="stat-card">
-                                                <h3>Total Calories</h3>
-                                                <p class="stat-value">
-                                                    <%= activities.reduce((sum, a)=> sum + (Number(a.calories_burned) ||
-                                                        0), 0)
-                                                        %> cal
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <% } else { %>
-                                        <div class="no-activities">
-                                            <p>You haven't logged any activities yet.</p>
-                                            <a href="/add-activity" class="btn btn-primary">Add Your First Activity</a>
-                                        </div>
-                                        <% } %>
+                                    <% const totalDuration=activities.reduce((sum, a)=> sum +
+                                        (Number(a.duration_minutes) || 0), 0); %>
+                                        <% const totalDistance=activities.reduce((sum, a)=> sum +
+                                            (parseFloat(a.distance_km) || 0), 0); %>
+                                            <% const totalCalories=activities.reduce((sum, a)=> sum +
+                                                (Number(a.calories_burned) || 0), 0); %>
+
+                                                <div class="activity-stats">
+                                                    <h2>Statistics</h2>
+                                                    <div class="stats-grid">
+                                                        <div class="stat-card">
+                                                            <h3>Activities</h3>
+                                                            <div class="stat-value">
+                                                                <span class="stat-visible">
+                                                                    <%= activities.length %>
+                                                                </span>
+                                                                <span class="stat-divider">/</span>
+                                                                <span class="stat-total">
+                                                                    <%= activities.length %>
+                                                                </span>
+                                                            </div>
+                                                            <div class="stat-meta">visible / total</div>
+                                                        </div>
+                                                        <div class="stat-card">
+                                                            <h3>Duration</h3>
+                                                            <div class="stat-value">
+                                                                <span class="stat-visible">
+                                                                    <%= totalDuration %>
+                                                                </span>
+                                                                <span class="stat-divider">/</span>
+                                                                <span class="stat-total">
+                                                                    <%= totalDuration %>
+                                                                </span>
+                                                            </div>
+                                                            <div class="stat-meta">visible / total (min)</div>
+                                                        </div>
+                                                        <div class="stat-card">
+                                                            <h3>Distance</h3>
+                                                            <div class="stat-value">
+                                                                <span class="stat-visible">
+                                                                    <%= totalDistance.toFixed(2) %>
+                                                                </span>
+                                                                <span class="stat-divider">/</span>
+                                                                <span class="stat-total">
+                                                                    <%= totalDistance.toFixed(2) %>
+                                                                </span>
+                                                            </div>
+                                                            <div class="stat-meta">visible / total (km)</div>
+                                                        </div>
+                                                        <div class="stat-card">
+                                                            <h3>Calories</h3>
+                                                            <div class="stat-value">
+                                                                <span class="stat-visible">
+                                                                    <%= totalCalories %>
+                                                                </span>
+                                                                <span class="stat-divider">/</span>
+                                                                <span class="stat-total">
+                                                                    <%= totalCalories %>
+                                                                </span>
+                                                            </div>
+                                                            <div class="stat-meta">visible / total (cal)</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <% } else { %>
+                                                    <div class="no-activities">
+                                                        <p>You haven't logged any activities yet.</p>
+                                                        <a href="/add-activity" class="btn btn-primary">Add Your First
+                                                            Activity</a>
+                                                    </div>
+                                                    <% } %>
             </div>
         </main>
 

@@ -30,7 +30,7 @@ router.get('/search', (req, res) => {
 // Search page route - POST request processes the search
 router.post('/search', async (req, res) => {
     try {
-        const { activity_type, date_from, date_to } = req.body;
+        const { activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max } = req.body;
         const userId = req.session.user ? req.session.user.id : null;
 
         // Build dynamic SQL query based on search parameters
@@ -41,8 +41,8 @@ router.post('/search', async (req, res) => {
         let params = [userId || 0]; // 0 if not logged in (won't match any user_id)
 
         if (activity_type) {
-            query += ' AND fa.activity_type LIKE ?';
-            params.push(`%${activity_type}%`);
+            query += ' AND fa.activity_type = ?';
+            params.push(activity_type);
         }
 
         if (date_from) {
@@ -53,6 +53,26 @@ router.post('/search', async (req, res) => {
         if (date_to) {
             query += ' AND fa.activity_time <= ?';
             params.push(date_to);
+        }
+
+        if (duration_min) {
+            query += ' AND fa.duration_minutes >= ?';
+            params.push(parseInt(duration_min));
+        }
+
+        if (duration_max) {
+            query += ' AND fa.duration_minutes <= ?';
+            params.push(parseInt(duration_max));
+        }
+
+        if (calories_min) {
+            query += ' AND fa.calories_burned >= ?';
+            params.push(parseInt(calories_min));
+        }
+
+        if (calories_max) {
+            query += ' AND fa.calories_burned <= ?';
+            params.push(parseInt(calories_max));
         }
 
         query += ' ORDER BY fa.activity_time DESC';

@@ -20,11 +20,28 @@
                 <div class="search-form-container">
                     <form method="POST" action="/search" class="search-form">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
                         <div class="form-group">
                             <label for="activity_type">Activity Type:</label>
-                            <input type="text" id="activity_type" name="activity_type"
-                                placeholder="e.g., Running, Cycling, Swimming"
-                                value="<%= searchPerformed && searchParams ? searchParams.activity_type || '' : '' %>">
+                            <select id="activity_type" name="activity_type">
+                                <option value="">All Activities</option>
+                                <option value="Running" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Running' ? 'selected' : '' %>>Running</option>
+                                <option value="Cycling" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Cycling' ? 'selected' : '' %>>Cycling</option>
+                                <option value="Swimming" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Swimming' ? 'selected' : '' %>>Swimming</option>
+                                <option value="Gym" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Gym' ? 'selected' : '' %>>Gym</option>
+                                <option value="Yoga" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Yoga' ? 'selected' : '' %>>Yoga</option>
+                                <option value="Walking" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Walking' ? 'selected' : '' %>>Walking</option>
+                                <option value="Hiking" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Hiking' ? 'selected' : '' %>>Hiking</option>
+                                <option value="Other" <%=searchPerformed && searchParams &&
+                                    searchParams.activity_type==='Other' ? 'selected' : '' %>>Other</option>
+                            </select>
                         </div>
 
                         <div class="form-row">
@@ -41,7 +58,42 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Search</button>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="duration_min">Min Duration (minutes):</label>
+                                <input type="number" id="duration_min" name="duration_min" min="0"
+                                    placeholder="e.g., 30"
+                                    value="<%= searchPerformed && searchParams ? searchParams.duration_min || '' : '' %>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="duration_max">Max Duration (minutes):</label>
+                                <input type="number" id="duration_max" name="duration_max" min="0"
+                                    placeholder="e.g., 120"
+                                    value="<%= searchPerformed && searchParams ? searchParams.duration_max || '' : '' %>">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="calories_min">Min Calories:</label>
+                                <input type="number" id="calories_min" name="calories_min" min="0"
+                                    placeholder="e.g., 100"
+                                    value="<%= searchPerformed && searchParams ? searchParams.calories_min || '' : '' %>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="calories_max">Max Calories:</label>
+                                <input type="number" id="calories_max" name="calories_max" min="0"
+                                    placeholder="e.g., 1000"
+                                    value="<%= searchPerformed && searchParams ? searchParams.calories_max || '' : '' %>">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
                     </form>
                 </div>
 

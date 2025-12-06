@@ -41,6 +41,7 @@
                                         <th>Distance (km)</th>
                                         <th>Calories</th>
                                         <th>Notes</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -64,6 +65,13 @@
                                             </td>
                                             <td>
                                                 <%= activity.notes || '-' %>
+                                            </td>
+                                            <td>
+                                                <% if (activity.is_public) { %>
+                                                    <span class="status-badge status-public">Public</span>
+                                                    <% } else { %>
+                                                        <span class="status-badge status-private">Private</span>
+                                                        <% } %>
                                             </td>
                                             <td>
                                                 <div style="display: flex; gap: 8px;">

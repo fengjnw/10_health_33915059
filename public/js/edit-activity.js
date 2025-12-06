@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
             distance_km: formData.get('distance_km') || null,
             calories_burned: formData.get('calories_burned') || null,
             activity_date: formData.get('activity_date'),
-            notes: formData.get('notes') || null
+            notes: formData.get('notes') || null,
+            is_public: formData.get('is_public') === 'on' ? 1 : 0
         };
 
         console.log('Data to send:', data);

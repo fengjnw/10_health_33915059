@@ -29,10 +29,14 @@ router.get('/search', (req, res) => {
 router.post('/search', async (req, res) => {
     try {
         const { activity_type, date_from, date_to } = req.body;
+        const userId = req.session.user ? req.session.user.id : null;
 
         // Build dynamic SQL query based on search parameters
-        let query = 'SELECT fa.*, u.username FROM fitness_activities fa JOIN users u ON fa.user_id = u.id WHERE 1=1';
-        let params = [];
+        // Show own activities OR public activities from other users
+        let query = `SELECT fa.*, u.username FROM fitness_activities fa 
+                     JOIN users u ON fa.user_id = u.id 
+                     WHERE (fa.user_id = ? OR fa.is_public = 1)`;
+        let params = [userId || 0]; // 0 if not logged in (won't match any user_id)
 
         if (activity_type) {
             query += ' AND fa.activity_type LIKE ?';
@@ -226,7 +230,7 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes } = req.body;
+        const { activity_type, duration_minutes, distance_km, calories_burned, activity_date, notes, is_public } = req.body;
 
         // Validate required fields
         if (!activity_type || !duration_minutes || !activity_date) {
@@ -256,7 +260,7 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
         const updateQuery = `
             UPDATE fitness_activities 
             SET activity_type = ?, duration_minutes = ?, distance_km = ?, 
-                calories_burned = ?, activity_date = ?, notes = ?
+                calories_burned = ?, activity_date = ?, notes = ?, is_public = ?
             WHERE id = ?
         `;
 
@@ -267,6 +271,7 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
             calories_burned || null,
             activity_date,
             notes || null,
+            is_public || 0,
             id
         ]);
 

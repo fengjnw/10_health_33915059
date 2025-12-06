@@ -27,6 +27,7 @@ CREATE TABLE fitness_activities (
     calories_burned INT,
     activity_date DATE NOT NULL,
     notes TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

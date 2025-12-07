@@ -1,5 +1,21 @@
 let currentPage = 1;
 
+function renderActivityCard(activity) {
+    const date = new Date(activity.activity_time).toLocaleString();
+    return `
+        <div class="activity-card">
+            <h3>${activity.activity_type} - ${activity.username}</h3>
+            <p><strong>Date:</strong> ${date}</p>
+            <p><strong>Duration:</strong> ${activity.duration_minutes} min | 
+               <strong>Distance:</strong> ${activity.distance_km || 'N/A'} km | 
+               <strong>Calories:</strong> ${activity.calories_burned}</p>
+            <p><strong>Public:</strong> ${activity.is_public ? 'Yes' : 'No'} | 
+               <strong>ID:</strong> ${activity.id}</p>
+            ${activity.notes ? `<p><em>${activity.notes}</em></p>` : ''}
+        </div>
+    `;
+}
+
 function buildQuery() {
     const params = new URLSearchParams();
 
@@ -78,19 +94,7 @@ function displayResults(data) {
     let html = `<p><strong>Authenticated:</strong> ${data.authenticated ? 'Yes' : 'No (public only)'}</p>`;
 
     data.data.forEach(activity => {
-        const date = new Date(activity.activity_time).toLocaleString();
-        html += `
-            <div class="activity-card">
-                <h3>${activity.activity_type} - ${activity.username}</h3>
-                <p><strong>Date:</strong> ${date}</p>
-                <p><strong>Duration:</strong> ${activity.duration_minutes} min | 
-                   <strong>Distance:</strong> ${activity.distance_km || 'N/A'} km | 
-                   <strong>Calories:</strong> ${activity.calories_burned}</p>
-                <p><strong>Public:</strong> ${activity.is_public ? 'Yes' : 'No'} | 
-                   <strong>ID:</strong> ${activity.id}</p>
-                ${activity.notes ? `<p><em>${activity.notes}</em></p>` : ''}
-            </div>
-        `;
+        html += renderActivityCard(activity);
     });
 
     resultDiv.innerHTML = html;
@@ -140,6 +144,65 @@ function clearFilters() {
     document.getElementById('status').innerHTML = '';
 }
 
+async function fetchActivityById() {
+    const input = document.getElementById('activityIdInput');
+    const idValue = parseInt(input.value, 10);
+
+    if (Number.isNaN(idValue) || idValue <= 0) {
+        showSingleStatus('Please enter a valid activity ID', 'error');
+        document.getElementById('singleResult').innerHTML = '';
+        document.getElementById('apiUrlSingle').innerHTML = '';
+        return;
+    }
+
+    const url = `/api/activities/${idValue}`;
+    const fullUrl = `${window.location.origin}${url}`;
+
+    console.log('Fetching single activity:', url);
+
+    showSingleStatus('Loading...', 'success');
+
+    const apiUrlDiv = document.getElementById('apiUrlSingle');
+    apiUrlDiv.innerHTML = `
+        <strong>API Request:</strong><br>
+        <a href="${url}" target="_blank" style="color: #007bff; text-decoration: none;">${fullUrl}</a>
+        <button id="copyUrlBtnSingle" style="margin-left: 10px; padding: 5px 10px; cursor: pointer;">Copy</button>
+    `;
+
+    const copyBtn = document.getElementById('copyUrlBtnSingle');
+    copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            this.textContent = 'Copied!';
+            setTimeout(() => { this.textContent = 'Copy'; }, 2000);
+        });
+    });
+
+    try {
+        const response = await fetch(url);
+        console.log('Single activity status:', response.status);
+        const data = await response.json();
+        console.log('Single activity data:', data);
+
+        if (!data.success) {
+            showSingleStatus(`✗ Error: ${data.error || 'Not found'}`, 'error');
+            document.getElementById('singleResult').innerHTML = '';
+            return;
+        }
+
+        showSingleStatus('✓ Activity loaded', 'success');
+        document.getElementById('singleResult').innerHTML = renderActivityCard(data.data);
+    } catch (error) {
+        console.error('Fetch by ID error:', error);
+        showSingleStatus(`✗ Request failed: ${error.message}`, 'error');
+        document.getElementById('singleResult').innerHTML = '';
+    }
+}
+
+function showSingleStatus(message, type) {
+    const statusDiv = document.getElementById('singleStatus');
+    statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+}
+
 // Add event listeners when DOM is ready
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('searchBtn').addEventListener('click', function () {
@@ -147,6 +210,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('clearBtn').addEventListener('click', clearFilters);
+
+    document.getElementById('fetchByIdBtn').addEventListener('click', fetchActivityById);
 
     // Load initial data
     fetchActivities(1);

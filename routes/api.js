@@ -39,7 +39,7 @@ router.get('/activities', async (req, res) => {
         } = req.query;
 
         // Get userId from session (may be undefined for unauthenticated users)
-        const userId = req.session.userId;
+        const userId = req.session?.user?.id;
 
         // Validate and normalize pagination parameters
         const currentPage = Math.max(parseInt(page, 10) || 1, 1);
@@ -162,6 +162,68 @@ router.get('/activities', async (req, res) => {
             error: 'Failed to fetch activities',
             message: error.message
         });
+    }
+});
+
+/**
+ * GET /api/activities/:id
+ * Get single activity details
+ *
+ * Access control:
+ * - Unauthenticated: only public activities
+ * - Authenticated: public activities + own private activities
+ */
+router.get('/activities/:id', async (req, res) => {
+    try {
+        const activityId = parseInt(req.params.id, 10);
+        if (Number.isNaN(activityId) || activityId <= 0) {
+            return res.status(400).json({ success: false, error: 'Invalid activity id' });
+        }
+
+        const userId = req.session?.user?.id;
+
+        let whereClause = 'WHERE fa.id = ? AND fa.is_public = 1';
+        const params = [activityId];
+
+        if (userId) {
+            // Allow owner to view their private activity
+            whereClause = 'WHERE fa.id = ? AND (fa.is_public = 1 OR fa.user_id = ?)';
+            params.push(userId);
+        }
+
+        const query = `
+            SELECT 
+                fa.id,
+                fa.user_id,
+                fa.activity_type,
+                fa.duration_minutes,
+                fa.distance_km,
+                fa.calories_burned,
+                fa.activity_time,
+                fa.notes,
+                fa.is_public,
+                fa.created_at,
+                u.username
+            FROM fitness_activities fa
+            JOIN users u ON fa.user_id = u.id
+            ${whereClause}
+            LIMIT 1
+        `;
+
+        const [rows] = await db.query(query, params);
+
+        if (!rows || rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Activity not found or access denied' });
+        }
+
+        return res.json({
+            success: true,
+            authenticated: !!userId,
+            data: rows[0]
+        });
+    } catch (error) {
+        console.error('Error fetching activity detail:', error);
+        return res.status(500).json({ success: false, error: 'Failed to fetch activity detail', message: error.message });
     }
 });
 

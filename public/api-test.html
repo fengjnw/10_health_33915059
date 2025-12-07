@@ -186,6 +186,27 @@
         <div class="result" id="result"></div>
     </div>
 
+    <div class="test-section">
+        <h2>Get Single Activity</h2>
+        <div class="filters" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+            <div class="filter-group">
+                <label>Activity ID:</label>
+                <input type="number" id="activityIdInput" min="1" placeholder="e.g. 23">
+            </div>
+        </div>
+        <div>
+            <button id="fetchByIdBtn">Fetch Activity</button>
+        </div>
+
+        <div id="singleStatus"></div>
+
+        <div id="apiUrlSingle"
+            style="margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 5px; font-family: monospace; word-break: break-all;">
+        </div>
+
+        <div class="result" id="singleResult"></div>
+    </div>
+
     <script src="/js/api-test.js"></script>
 </body>
 

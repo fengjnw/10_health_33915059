@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
 const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeout');
 const { initializeEmailService } = require('./utils/emailService');
+const { initializeCleanup } = require('./utils/tokenCleanup');
 
 // Load environment variables
 dotenv.config();
@@ -114,5 +115,12 @@ app.listen(port, async () => {
         await initializeEmailService();
     } catch (error) {
         console.error('Failed to initialize email service:', error);
+    }
+
+    // Initialize token cleanup
+    try {
+        await initializeCleanup();
+    } catch (error) {
+        console.error('Failed to initialize token cleanup:', error);
     }
 });

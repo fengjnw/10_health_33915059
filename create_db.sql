@@ -2,9 +2,13 @@
 CREATE DATABASE IF NOT EXISTS health;
 USE health;
 
--- Drop existing tables if they exist
+-- Drop existing tables if they exist (in reverse dependency order)
+SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE IF EXISTS password_resets;
 DROP TABLE IF EXISTS fitness_activities;
+DROP TABLE IF EXISTS email_verifications;
 DROP TABLE IF EXISTS users;
+SET FOREIGN_KEY_CHECKS=1;
 
 -- Create users table
 CREATE TABLE users (
@@ -32,7 +36,23 @@ CREATE TABLE fitness_activities (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create index for better search performance
+-- Create password_resets table for forgot password functionality
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    token_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_email (email),
+    INDEX idx_token_hash (token_hash),
+    INDEX idx_expires_at (expires_at)
+);
+
+-- Create indexes for better search performance
 CREATE INDEX idx_activity_type ON fitness_activities(activity_type);
 CREATE INDEX idx_activity_time ON fitness_activities(activity_time);
 CREATE INDEX idx_user_id ON fitness_activities(user_id);

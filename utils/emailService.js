@@ -65,7 +65,50 @@ async function sendVerificationEmail(to, verificationCode) {
     }
 }
 
+async function sendPasswordResetEmail(to, resetToken, userName) {
+    if (!transporter) {
+        await initializeEmailService();
+    }
+
+    const resetLink = `${process.env.APP_URL || 'http://localhost:8000'}/auth/reset-password?token=${resetToken}`;
+
+    const mailOptions = {
+        from: '"Health & Fitness Tracker" <noreply@healthtracker.com>',
+        to: to,
+        subject: 'Reset Your Password',
+        html: `
+      <h2>Password Reset Request</h2>
+      <p>Hi ${userName || 'User'},</p>
+      <p>We received a request to reset your password. Click the link below to create a new password:</p>
+      <p><a href="${resetLink}" style="display: inline-block; background: #16a085; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+      <p>Or copy and paste this link into your browser:</p>
+      <p>${resetLink}</p>
+      <p><strong>⚠️ This link expires in 24 hours.</strong></p>
+      <p>If you did not request a password reset, please ignore this email.</p>
+      <hr/>
+      <p style="color: #999; font-size: 12px;">This is an automated email. Please do not reply to this message.</p>
+    `
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+
+        // Log the preview URL for development
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        console.log('✓ Password reset email sent. Preview URL:', previewUrl);
+
+        return {
+            success: true,
+            previewUrl: previewUrl
+        };
+    } catch (error) {
+        console.error('✗ Failed to send password reset email:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     initializeEmailService,
-    sendVerificationEmail
+    sendVerificationEmail,
+    sendPasswordResetEmail
 };

@@ -1,6 +1,5 @@
 const step1Form = document.getElementById('step1Form');
 const step2Form = document.getElementById('step2Form');
-const backBtn = document.getElementById('backBtn');
 const resendBtn = document.getElementById('resendBtn');
 
 let currentEmail = '';
@@ -13,9 +12,6 @@ step1Form.addEventListener('submit', async (e) => {
 
     const username = document.getElementById('username').value.trim();
     const email = document.getElementById('email').value.trim();
-    const errorDiv = document.getElementById('step1Error');
-
-    errorDiv.textContent = '';
 
     try {
         const response = await fetch('/auth/forgot-password', {
@@ -30,7 +26,7 @@ step1Form.addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (!response.ok) {
-            errorDiv.textContent = data.error || 'An error occurred';
+            alert(data.error || 'An error occurred');
             // Update CSRF token from response
             if (data.csrfToken) {
                 csrfToken = data.csrfToken;
@@ -49,17 +45,20 @@ step1Form.addEventListener('submit', async (e) => {
         currentEmail = email;
         currentUsername = username;
 
-        // Show code for development (remove in production)
-        if (data.verificationCode) {
-            document.getElementById('displayCode').textContent = data.verificationCode;
-            document.getElementById('codeDisplay').style.display = 'block';
+        // Show email address in step 2
+        document.getElementById('verificationEmail').textContent = `Email: ${email}`;
+
+        // Show preview URL if available (development mode)
+        if (data.previewUrl) {
+            document.getElementById('previewLink').href = data.previewUrl;
+            document.getElementById('previewUrl').style.display = 'block';
         }
 
         // Move to step 2
         showStep2();
     } catch (error) {
         console.error('Error:', error);
-        errorDiv.textContent = 'An error occurred. Please try again later.';
+        alert('An error occurred. Please try again later.');
     }
 });
 
@@ -68,8 +67,9 @@ step2Form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const verificationCode = document.getElementById('verificationCode').value.trim();
-    const errorDiv = document.getElementById('step2Error');
+    const errorDiv = document.getElementById('verificationInlineError');
 
+    errorDiv.style.display = 'none';
     errorDiv.textContent = '';
 
     try {
@@ -89,6 +89,7 @@ step2Form.addEventListener('submit', async (e) => {
 
         if (!response.ok) {
             errorDiv.textContent = data.error || 'An error occurred';
+            errorDiv.style.display = 'block';
             // Update CSRF token from response
             if (data.csrfToken) {
                 csrfToken = data.csrfToken;
@@ -108,13 +109,8 @@ step2Form.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Error:', error);
         errorDiv.textContent = 'An error occurred. Please try again later.';
+        errorDiv.style.display = 'block';
     }
-});
-
-// Back button
-backBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    showStep1();
 });
 
 // Resend button
@@ -142,18 +138,22 @@ resendBtn.addEventListener('click', async (e) => {
             updateCSRFMeta(csrfToken);
         }
 
-        if (response.ok && data.verificationCode) {
-            // Update code display
-            document.getElementById('displayCode').textContent = data.verificationCode;
-            document.getElementById('codeDisplay').style.display = 'block';
-            document.getElementById('step2Error').textContent = '';
+        if (response.ok) {
+            // Update preview URL if available
+            if (data.previewUrl) {
+                document.getElementById('previewLink').href = data.previewUrl;
+                document.getElementById('previewUrl').style.display = 'block';
+            }
+
             document.getElementById('verificationCode').value = '';
 
             // Show feedback
-            const errorDiv = document.getElementById('step2Error');
+            const errorDiv = document.getElementById('verificationInlineError');
             errorDiv.style.color = '#27ae60';
+            errorDiv.style.display = 'block';
             errorDiv.textContent = 'New code sent! Check your email.';
             setTimeout(() => {
+                errorDiv.style.display = 'none';
                 errorDiv.textContent = '';
                 errorDiv.style.color = '#e74c3c';
             }, 3000);
@@ -163,23 +163,9 @@ resendBtn.addEventListener('click', async (e) => {
     }
 });
 
-function showStep1() {
-    step1Form.classList.remove('hidden');
-    step2Form.classList.add('hidden');
-
-    document.getElementById('step1Indicator').classList.add('active');
-    document.getElementById('step2Indicator').classList.remove('active');
-    document.getElementById('step1Separator').classList.add('active');
-}
-
 function showStep2() {
-    step1Form.classList.add('hidden');
-    step2Form.classList.remove('hidden');
-
-    document.getElementById('step1Indicator').classList.add('active');
-    document.getElementById('step2Indicator').classList.add('active');
-    document.getElementById('step1Separator').classList.add('active');
-
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
     document.getElementById('verificationCode').focus();
 }
 

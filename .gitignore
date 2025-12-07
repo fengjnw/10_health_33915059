@@ -6,6 +6,9 @@ node_modules/
 .env.local
 .env.*.local
 
+# Setup
+setup_database.sh
+
 # Log files
 *.log
 npm-debug.log*

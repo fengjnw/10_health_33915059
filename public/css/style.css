@@ -259,7 +259,7 @@ main {
 
 /* Forms */
 .form-container {
-    max-width: 500px;
+    max-width: 600px;
     margin: 2rem auto;
     padding: 2.8rem;
     background: #fff;
@@ -309,7 +309,7 @@ main {
 }
 
 .profile-page .form-container {
-    max-width: 760px;
+    max-width: 800px;
     margin: 0 auto;
 }
 

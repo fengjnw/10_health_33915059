@@ -540,4 +540,49 @@ router.patch('/activities/:id', async (req, res) => {
     }
 });
 
+/**
+ * DELETE /api/activities/:id
+ * Delete an activity (owner only)
+ * Requires authentication
+ */
+router.delete('/activities/:id', async (req, res) => {
+    try {
+        const userId = req.apiUserId || req.session?.user?.id;
+        if (!userId) {
+            return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+
+        const activityId = parseInt(req.params.id, 10);
+        if (Number.isNaN(activityId) || activityId <= 0) {
+            return res.status(400).json({ success: false, error: 'Invalid activity ID' });
+        }
+
+        // Check if activity exists and belongs to user
+        const checkQuery = 'SELECT id, user_id FROM fitness_activities WHERE id = ?';
+        const [existing] = await db.query(checkQuery, [activityId]);
+
+        if (!existing || existing.length === 0) {
+            return res.status(404).json({ success: false, error: 'Activity not found' });
+        }
+
+        if (existing[0].user_id !== userId) {
+            return res.status(403).json({ success: false, error: 'You can only delete your own activities' });
+        }
+
+        // Delete the activity
+        const deleteQuery = 'DELETE FROM fitness_activities WHERE id = ?';
+        await db.query(deleteQuery, [activityId]);
+
+        return res.json({
+            success: true,
+            authenticated: true,
+            message: 'Activity deleted successfully',
+            deletedId: activityId
+        });
+    } catch (error) {
+        console.error('Error deleting activity:', error);
+        return res.status(500).json({ success: false, error: 'Failed to delete activity', message: error.message });
+    }
+});
+
 module.exports = router;

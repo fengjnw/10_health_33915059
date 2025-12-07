@@ -215,6 +215,33 @@ document.getElementById('clearUpdateBtn').addEventListener('click', () => {
     hideOutput('updateOutput');
 });
 
+// ===== Delete Activity Section =====
+document.getElementById('buildDeleteBtn').addEventListener('click', () => {
+    const id = document.getElementById('delete_id').value.trim();
+    const token = document.getElementById('delete_token').value.trim();
+
+    if (!id) {
+        alert('Activity ID is required');
+        return;
+    }
+
+    if (!token) {
+        alert('Bearer Token is required for deleting activities');
+        return;
+    }
+
+    const curlCommand = `curl -X DELETE ${BASE_URL}/api/activities/${id} \\
+  -H "Authorization: Bearer ${token}"`;
+
+    displayOutput('deleteOutput', curlCommand, `DELETE /api/activities/${id}`);
+});
+
+document.getElementById('clearDeleteBtn').addEventListener('click', () => {
+    document.getElementById('delete_id').value = '';
+    document.getElementById('delete_token').value = '';
+    hideOutput('deleteOutput');
+});
+
 // ===== Helper Functions =====
 function displayOutput(elementId, curlCommand, endpoint, payload = null) {
     const outputBox = document.getElementById(elementId);

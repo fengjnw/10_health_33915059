@@ -1,17 +1,11 @@
-/**
- * Session Timeout Middleware
- * Tracks user activity and invalidates sessions after a period of inactivity
- * Idle timeout: 30 minutes of no activity
- */
+// Session timeout middleware - idle timeout: 30 minutes
 
 const { EventTypes, logAuth } = require('../utils/auditLogger');
 
 const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_THRESHOLD = 25 * 60 * 1000; // Show warning at 25 minutes
 
-/**
- * Middleware to track user activity and manage session timeouts
- */
+// Middleware to track user activity and manage session timeouts
 function sessionTimeoutMiddleware(req, res, next) {
     // Only apply to logged-in users
     if (!req.session.user) {

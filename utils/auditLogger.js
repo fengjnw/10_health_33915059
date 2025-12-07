@@ -1,7 +1,4 @@
-/**
- * Audit Logger - Database-backed Security Event Logging Module
- * Records sensitive operations to database for security monitoring and compliance
- */
+// Audit logger - records security events to database
 
 let db = null;
 
@@ -31,9 +28,7 @@ const EventTypes = {
     EMAIL_VERIFICATION_REQUESTED: 'EMAIL_VERIFICATION_REQUESTED'
 };
 
-/**
- * Extract client information from request
- */
+// Extract client information from request
 function getClientInfo(req) {
     return {
         ip_address: req.ip || req.connection.remoteAddress,
@@ -43,9 +38,7 @@ function getClientInfo(req) {
     };
 }
 
-/**
- * Log authentication events
- */
+// Log authentication events
 async function logAuth(eventType, req, userId = null, username = null, reason = null) {
     try {
         const clientInfo = getClientInfo(req);
@@ -111,9 +104,7 @@ async function logDataChange(eventType, req, resourceType, resourceId, changes =
     }
 }
 
-/**
- * Log security violations
- */
+// Log security violations
 async function logSecurityEvent(eventType, req, details = {}) {
     try {
         const clientInfo = getClientInfo(req);
@@ -145,9 +136,7 @@ async function logSecurityEvent(eventType, req, details = {}) {
     }
 }
 
-/**
- * Get recent audit logs
- */
+// Get recent audit logs
 async function getRecentLogs(limit = 100) {
     try {
         const [logs] = await getDb().query(
@@ -163,9 +152,7 @@ async function getRecentLogs(limit = 100) {
     }
 }
 
-/**
- * Get logs by user
- */
+// Get logs by user
 async function getLogsByUser(username, limit = 50) {
     try {
         const [logs] = await getDb().query(
@@ -182,9 +169,7 @@ async function getLogsByUser(username, limit = 50) {
     }
 }
 
-/**
- * Get logs by event type
- */
+// Get logs by event type
 async function getLogsByEventType(eventType, limit = 50) {
     try {
         const [logs] = await getDb().query(
@@ -201,9 +186,7 @@ async function getLogsByEventType(eventType, limit = 50) {
     }
 }
 
-/**
- * Get logs by date range
- */
+// Get logs by date range
 async function getLogsByDateRange(startDate, endDate, limit = 100) {
     try {
         const [logs] = await getDb().query(
@@ -220,9 +203,7 @@ async function getLogsByDateRange(startDate, endDate, limit = 100) {
     }
 }
 
-/**
- * Get logs for specific resource
- */
+// Get logs for specific resource
 async function getLogsByResource(resourceType, resourceId, limit = 50) {
     try {
         const [logs] = await getDb().query(
@@ -239,9 +220,7 @@ async function getLogsByResource(resourceType, resourceId, limit = 50) {
     }
 }
 
-/**
- * Purge old audit logs (for maintenance)
- */
+// Purge old audit logs (for maintenance)
 async function purgeOldLogs(daysToKeep = 90) {
     try {
         const result = await getDb().query(

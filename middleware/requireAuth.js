@@ -1,13 +1,5 @@
-/**
- * Authentication middleware
- * Checks if user is logged in and redirects to message page if not
- */
+// Authentication middleware - checks if user is logged in
 
-/**
- * Middleware to require authentication for a route
- * @param {string} action - Description of the action requiring authentication
- * @returns {Function} Express middleware function
- */
 function requireAuth(action = 'access this page') {
     return (req, res, next) => {
         if (!req.session.user) {

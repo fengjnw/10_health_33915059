@@ -390,4 +390,154 @@ router.post('/activities', async (req, res) => {
     }
 });
 
+/**
+ * PATCH /api/activities/:id
+ * Update an existing activity (owner only)
+ * Requires authentication
+ */
+router.patch('/activities/:id', async (req, res) => {
+    try {
+        const userId = req.apiUserId || req.session?.user?.id;
+        if (!userId) {
+            return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+
+        const activityId = parseInt(req.params.id, 10);
+        if (Number.isNaN(activityId) || activityId <= 0) {
+            return res.status(400).json({ success: false, error: 'Invalid activity ID' });
+        }
+
+        // Check if activity exists and belongs to user
+        const checkQuery = 'SELECT id, user_id FROM fitness_activities WHERE id = ?';
+        const [existing] = await db.query(checkQuery, [activityId]);
+
+        if (!existing || existing.length === 0) {
+            return res.status(404).json({ success: false, error: 'Activity not found' });
+        }
+
+        if (existing[0].user_id !== userId) {
+            return res.status(403).json({ success: false, error: 'You can only update your own activities' });
+        }
+
+        // Parse and validate fields (accept both short and database field names)
+        const {
+            activity_type,
+            duration_minutes,
+            duration,
+            distance_km,
+            distance,
+            calories_burned,
+            calories,
+            activity_time,
+            notes,
+            is_public
+        } = req.body || {};
+
+        // Build dynamic UPDATE query based on provided fields
+        const updates = [];
+        const values = [];
+
+        if (activity_type !== undefined) {
+            updates.push('activity_type = ?');
+            values.push(activity_type);
+        }
+
+        const durationValue = duration_minutes || duration;
+        if (durationValue !== undefined) {
+            const durationParsed = parseInt(durationValue, 10);
+            if (Number.isNaN(durationParsed) || durationParsed <= 0) {
+                return res.status(400).json({ success: false, error: 'duration must be a positive integer' });
+            }
+            updates.push('duration_minutes = ?');
+            values.push(durationParsed);
+        }
+
+        const distanceValue = distance_km !== undefined ? distance_km : distance;
+        if (distanceValue !== undefined) {
+            if (distanceValue === null || distanceValue === '') {
+                updates.push('distance_km = NULL');
+            } else {
+                const distanceParsed = parseFloat(distanceValue);
+                if (Number.isNaN(distanceParsed)) {
+                    return res.status(400).json({ success: false, error: 'distance must be a number' });
+                }
+                updates.push('distance_km = ?');
+                values.push(distanceParsed);
+            }
+        }
+
+        const caloriesValue = calories_burned || calories;
+        if (caloriesValue !== undefined) {
+            const caloriesParsed = parseInt(caloriesValue, 10);
+            if (Number.isNaN(caloriesParsed) || caloriesParsed <= 0) {
+                return res.status(400).json({ success: false, error: 'calories must be a positive integer' });
+            }
+            updates.push('calories_burned = ?');
+            values.push(caloriesParsed);
+        }
+
+        if (activity_time !== undefined) {
+            const activityDate = new Date(activity_time);
+            if (Number.isNaN(activityDate.getTime())) {
+                return res.status(400).json({ success: false, error: 'activity_time must be a valid date' });
+            }
+            updates.push('activity_time = ?');
+            values.push(activityDate);
+        }
+
+        if (notes !== undefined) {
+            updates.push('notes = ?');
+            values.push(notes || null);
+        }
+
+        if (is_public !== undefined) {
+            const isPublicFlag = is_public === 0 || is_public === '0' ? 0 : 1;
+            updates.push('is_public = ?');
+            values.push(isPublicFlag);
+        }
+
+        // If no fields to update, return error
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, error: 'No fields to update' });
+        }
+
+        // Execute update
+        const updateQuery = `UPDATE fitness_activities SET ${updates.join(', ')} WHERE id = ?`;
+        values.push(activityId);
+        await db.query(updateQuery, values);
+
+        // Fetch and return updated activity
+        const selectQuery = `
+            SELECT 
+                fa.id,
+                fa.user_id,
+                fa.activity_type,
+                fa.duration_minutes,
+                fa.distance_km,
+                fa.calories_burned,
+                fa.activity_time,
+                fa.notes,
+                fa.is_public,
+                fa.created_at,
+                u.username
+            FROM fitness_activities fa
+            JOIN users u ON fa.user_id = u.id
+            WHERE fa.id = ?
+            LIMIT 1
+        `;
+
+        const [rows] = await db.query(selectQuery, [activityId]);
+        const updated = rows && rows[0] ? rows[0] : null;
+
+        return res.json({
+            success: true,
+            authenticated: true,
+            data: updated
+        });
+    } catch (error) {
+        console.error('Error updating activity:', error);
+        return res.status(500).json({ success: false, error: 'Failed to update activity', message: error.message });
+    }
+});
+
 module.exports = router;

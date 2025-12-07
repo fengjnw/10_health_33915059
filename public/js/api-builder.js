@@ -156,6 +156,65 @@ document.getElementById('clearCreateBtn').addEventListener('click', () => {
     hideOutput('createOutput');
 });
 
+// ===== Update Activity Section =====
+document.getElementById('buildUpdateBtn').addEventListener('click', () => {
+    const id = document.getElementById('update_id').value.trim();
+    const activityType = document.getElementById('update_activity_type').value;
+    const duration = document.getElementById('update_duration').value;
+    const distance = document.getElementById('update_distance').value;
+    const calories = document.getElementById('update_calories').value;
+    const activityTime = document.getElementById('update_activity_time').value;
+    const notes = document.getElementById('update_notes').value;
+    const isPublic = document.getElementById('update_is_public').value;
+    const token = document.getElementById('update_token').value.trim();
+
+    if (!id) {
+        alert('Activity ID is required');
+        return;
+    }
+
+    if (!token) {
+        alert('Bearer Token is required for updating activities');
+        return;
+    }
+
+    // Build payload with only provided fields
+    const payload = {};
+    if (activityType) payload.activity_type = activityType;
+    if (duration) payload.duration = parseInt(duration);
+    if (distance) payload.distance = parseFloat(distance);
+    if (calories) payload.calories = parseInt(calories);
+    if (activityTime) payload.activity_time = activityTime;
+    if (notes) payload.notes = notes;
+    if (isPublic !== '') payload.is_public = parseInt(isPublic);
+
+    if (Object.keys(payload).length === 0) {
+        alert('At least one field must be provided to update');
+        return;
+    }
+
+    const payloadString = JSON.stringify(payload, null, 2);
+    const curlCommand = `curl -X PATCH ${BASE_URL}/api/activities/${id} \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${token}" \\
+  -d '${JSON.stringify(payload)}'`;
+
+    displayOutput('updateOutput', curlCommand, `PATCH /api/activities/${id}`, payloadString);
+});
+
+document.getElementById('clearUpdateBtn').addEventListener('click', () => {
+    document.getElementById('update_id').value = '';
+    document.getElementById('update_activity_type').value = '';
+    document.getElementById('update_duration').value = '';
+    document.getElementById('update_distance').value = '';
+    document.getElementById('update_calories').value = '';
+    document.getElementById('update_activity_time').value = '';
+    document.getElementById('update_notes').value = '';
+    document.getElementById('update_is_public').value = '';
+    document.getElementById('update_token').value = '';
+    hideOutput('updateOutput');
+});
+
 // ===== Helper Functions =====
 function displayOutput(elementId, curlCommand, endpoint, payload = null) {
     const outputBox = document.getElementById(elementId);

@@ -75,10 +75,12 @@ app.use((req, res, next) => {
 // Import route handlers
 const mainRoutes = require('./routes/main');
 const authRoutes = require('./routes/auth');
+const apiRoutes = require('./routes/api');
 
 // Use route handlers (CSRF protection applied to POST/PUT/DELETE routes)
 app.use('/', mainRoutes);
 app.use('/auth', authRoutes);
+app.use('/api', apiRoutes);
 
 // CSRF error handler - must come after routes
 app.use((err, req, res, next) => {

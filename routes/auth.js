@@ -409,12 +409,13 @@ router.post('/forgot-password', [
         );
 
         // Send verification email
-        await sendPasswordResetEmail(email, verificationCode, user.first_name);
+        const emailResult = await sendPasswordResetEmail(email, verificationCode, user.first_name);
 
         res.json({
             success: true,
             message: 'Verification code sent to your email',
             verificationCode: verificationCode, // For development/testing only
+            previewUrl: emailResult.previewUrl, // Ethereal preview link for development
             csrfToken: generateToken(req, res)
         });
     } catch (error) {

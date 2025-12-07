@@ -3,21 +3,38 @@
  * Can be run periodically (e.g., via cron job or scheduled task)
  */
 
-const db = require('../config/db');
+let db = null;
+
+function getDb() {
+    if (!db) {
+        db = require('../config/db');
+    }
+    return db;
+}
 
 async function cleanupExpiredTokens() {
     try {
         console.log('🧹 Starting password reset token cleanup...');
 
+        const database = getDb();
+
         // Delete expired tokens (older than 24 hours) and used tokens (older than 7 days)
-        const [result] = await db.query(
+        const [result1] = await database.query(
             `DELETE FROM password_resets 
              WHERE expires_at < NOW() 
              OR (used_at IS NOT NULL AND used_at < DATE_SUB(NOW(), INTERVAL 7 DAY))`
         );
 
-        console.log(`✅ Cleanup completed. Deleted ${result.affectedRows} records.`);
-        return result.affectedRows;
+        // Delete expired verification codes (older than 1 hour) and used codes (older than 1 day)
+        const [result2] = await database.query(
+            `DELETE FROM password_reset_verifications 
+             WHERE expires_at < NOW() 
+             OR (used_at IS NOT NULL AND used_at < DATE_SUB(NOW(), INTERVAL 1 DAY))`
+        );
+
+        const totalDeleted = result1.affectedRows + result2.affectedRows;
+        console.log(`✅ Cleanup completed. Deleted ${totalDeleted} records (${result1.affectedRows} tokens, ${result2.affectedRows} codes).`);
+        return totalDeleted;
     } catch (error) {
         console.error('❌ Cleanup error:', error.message);
         // Don't throw - just log the error to prevent server startup failure

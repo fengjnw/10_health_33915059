@@ -65,12 +65,10 @@ async function sendVerificationEmail(to, verificationCode) {
     }
 }
 
-async function sendPasswordResetEmail(to, resetToken, userName) {
+async function sendPasswordResetEmail(to, verificationCode, userName) {
     if (!transporter) {
         await initializeEmailService();
     }
-
-    const resetLink = `${process.env.APP_URL || 'http://localhost:8000'}/auth/reset-password?token=${resetToken}`;
 
     const mailOptions = {
         from: '"Health & Fitness Tracker" <noreply@healthtracker.com>',
@@ -79,12 +77,10 @@ async function sendPasswordResetEmail(to, resetToken, userName) {
         html: `
       <h2>Password Reset Request</h2>
       <p>Hi ${userName || 'User'},</p>
-      <p>We received a request to reset your password. Click the link below to create a new password:</p>
-      <p><a href="${resetLink}" style="display: inline-block; background: #16a085; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
-      <p>Or copy and paste this link into your browser:</p>
-      <p>${resetLink}</p>
-      <p><strong>⚠️ This link expires in 24 hours.</strong></p>
-      <p>If you did not request a password reset, please ignore this email.</p>
+      <p>We received a request to reset your password. Use the verification code below to proceed:</p>
+      <p style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #16a085;">${verificationCode}</p>
+      <p><strong>⚠️ This code expires in 1 hour.</strong></p>
+      <p>If you did not request a password reset, please ignore this email and your password will remain unchanged.</p>
       <hr/>
       <p style="color: #999; font-size: 12px;">This is an automated email. Please do not reply to this message.</p>
     `

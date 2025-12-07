@@ -8,6 +8,7 @@ const { loginLimiter, registerLimiter, loginStore, registerStore, attachRateLimi
 const { EventTypes, logAuth } = require('../utils/auditLogger');
 const { generateResetToken, hashToken } = require('../utils/passwordReset');
 const { sendPasswordResetEmail } = require('../utils/emailService');
+const { generateToken } = require('../middleware/csrf');
 
 // Register page route - GET request shows the form
 router.get('/register', (req, res) => {
@@ -143,14 +144,26 @@ router.get('/login', (req, res) => {
 
 // Change password - GET
 router.get('/change-password', (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/auth/login');
+    const resetMode = req.query.resetMode === 'true';
+
+    // Reset mode: requires password reset session
+    // Normal mode: requires logged-in user
+    if (resetMode) {
+        if (!req.session.passwordResetUserId) {
+            return res.redirect('/auth/forgot-password');
+        }
+    } else {
+        if (!req.session.user) {
+            return res.redirect('/auth/login');
+        }
     }
 
     res.render('change-password', {
-        title: 'Change Password - Health & Fitness Tracker',
+        title: (resetMode ? 'Reset Password' : 'Change Password') + ' - Health & Fitness Tracker',
         errors: null,
-        success: null
+        success: null,
+        csrfToken: generateToken(req, res),
+        resetMode: resetMode
     });
 });
 
@@ -338,12 +351,17 @@ router.get('/forgot-password', (req, res) => {
     res.render('forgot-password', {
         title: 'Forgot Password - Health & Fitness Tracker',
         errors: null,
-        success: null
+        success: null,
+        csrfToken: generateToken(req, res)
     });
 });
 
-// Forgot Password - POST (Request password reset link)
+// Forgot Password - POST (Request password reset verification code via API)
 router.post('/forgot-password', [
+    body('username')
+        .trim()
+        .notEmpty()
+        .withMessage('Username is required'),
     body('email')
         .trim()
         .isEmail()
@@ -351,115 +369,133 @@ router.post('/forgot-password', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.render('forgot-password', {
-            title: 'Forgot Password - Health & Fitness Tracker',
-            errors: errors.array().map(err => err.msg),
-            success: null
+        return res.status(400).json({
+            error: errors.array()[0].msg,
+            csrfToken: generateToken(req, res)
         });
     }
 
     try {
-        const { email } = req.body;
+        const { username, email } = req.body;
 
-        // Check if user exists
-        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        // Check if user exists with matching username AND email
+        const [users] = await db.query(
+            'SELECT * FROM users WHERE username = ? AND email = ?',
+            [username, email]
+        );
 
         if (users.length === 0) {
-            // Don't reveal if email exists (security best practice)
-            // Just show success message anyway
-            return res.render('forgot-password', {
-                title: 'Forgot Password - Health & Fitness Tracker',
-                errors: null,
-                success: '如果该邮箱已注册，您将收到密码重置链接。请检查您的收件箱。'
+            // Don't reveal which field is wrong (security best practice)
+            return res.status(400).json({
+                error: 'Username and email do not match or account does not exist',
+                csrfToken: generateToken(req, res)
             });
         }
 
         const user = users[0];
 
-        // Generate reset token
-        const { token, tokenHash } = generateResetToken();
+        // Generate verification code (6 digits)
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Calculate expiry time (24 hours from now)
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        // Calculate expiry time (1 hour from now)
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-        // Insert token into database
+        // Insert verification code into email_verifications table
+        // Use email as new_email for password reset verification
         await db.query(
-            `INSERT INTO password_resets (user_id, email, token, token_hash, expires_at)
-             VALUES (?, ?, ?, ?, ?)`,
-            [user.id, email, token, tokenHash, expiresAt]
+            `INSERT INTO email_verifications (user_id, new_email, verification_code, expires_at)
+             VALUES (?, ?, ?, ?)`,
+            [user.id, email, verificationCode, expiresAt]
         );
 
-        // Send password reset email
-        await sendPasswordResetEmail(email, token, user.first_name);
+        // Send verification email
+        await sendPasswordResetEmail(email, verificationCode, user.first_name);
 
-        res.render('forgot-password', {
-            title: 'Forgot Password - Health & Fitness Tracker',
-            errors: null,
-            success: '如果该邮箱已注册，您将收到密码重置链接。请检查您的收件箱。'
+        res.json({
+            success: true,
+            message: 'Verification code sent to your email',
+            verificationCode: verificationCode, // For development/testing only
+            csrfToken: generateToken(req, res)
         });
     } catch (error) {
         console.error('Forgot password error:', error);
-        res.render('forgot-password', {
-            title: 'Forgot Password - Health & Fitness Tracker',
-            errors: ['An error occurred. Please try again later.'],
-            success: null
+        res.status(500).json({
+            error: 'An error occurred. Please try again later.',
+            csrfToken: generateToken(req, res)
         });
     }
 });
 
-// Reset Password page - GET (Validate token and show form)
-router.get('/reset-password', async (req, res) => {
-    const { token } = req.query;
-
-    if (!token) {
-        return res.render('reset-password', {
-            title: 'Reset Password - Health & Fitness Tracker',
-            errors: ['Invalid password reset link'],
-            token: null,
-            valid: false
+// Verify Password Reset Code - POST (Check verification code)
+router.post('/verify-password-reset', [
+    body('email')
+        .trim()
+        .isEmail()
+        .withMessage('Please enter a valid email address'),
+    body('verification_code')
+        .trim()
+        .notEmpty()
+        .withMessage('Verification code is required')
+        .isLength({ min: 6, max: 6 })
+        .withMessage('Verification code must be 6 digits')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            error: errors.array()[0].msg,
+            csrfToken: generateToken(req, res)
         });
     }
 
     try {
-        // Hash the token to find it in database
-        const tokenHash = hashToken(token);
+        const { email, verification_code } = req.body;
 
-        // Find the reset token record
+        // Find verification code record in email_verifications table
         const [records] = await db.query(
-            `SELECT * FROM password_resets 
-             WHERE token_hash = ? AND used_at IS NULL AND expires_at > NOW()`,
-            [tokenHash]
+            `SELECT * FROM email_verifications 
+             WHERE new_email = ? AND verification_code = ? AND used_at IS NULL AND expires_at > NOW()`,
+            [email, verification_code]
         );
 
         if (records.length === 0) {
-            return res.render('reset-password', {
-                title: 'Reset Password - Health & Fitness Tracker',
-                errors: ['This password reset link is invalid or has expired. Please request a new one.'],
-                token: null,
-                valid: false
+            return res.status(400).json({
+                error: 'Invalid or expired verification code',
+                csrfToken: generateToken(req, res)
             });
         }
 
-        res.render('reset-password', {
-            title: 'Reset Password - Health & Fitness Tracker',
-            errors: null,
-            token: token,
-            valid: true
+        const verificationRecord = records[0];
+
+        // Mark verification as used
+        await db.query(
+            'UPDATE email_verifications SET used_at = NOW() WHERE id = ?',
+            [verificationRecord.id]
+        );
+
+        // Create a session-like state to allow password change without full login
+        // Store in session that this user has verified their identity
+        req.session.passwordResetUserId = verificationRecord.user_id;
+        req.session.passwordResetEmail = email;
+
+        res.json({
+            success: true,
+            message: 'Verification successful. You can now reset your password.',
+            csrfToken: generateToken(req, res)
         });
     } catch (error) {
-        console.error('Reset password validation error:', error);
-        res.render('reset-password', {
-            title: 'Reset Password - Health & Fitness Tracker',
-            errors: ['An error occurred. Please try again later.'],
-            token: null,
-            valid: false
+        console.error('Verify password reset error:', error);
+        res.status(500).json({
+            error: 'An error occurred. Please try again later.',
+            csrfToken: generateToken(req, res)
         });
     }
 });
 
-// Reset Password - POST (Update password)
+// Reset Password - POST (Update password after verification code is confirmed)
+// Supports both:
+// 1. Logged-in users changing their own password (session.userId exists)
+// 2. Users who verified their password reset code (session.passwordResetUserId exists)
 router.post('/reset-password', [
-    body('token').notEmpty().withMessage('Token is required'),
     body('new_password')
         .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
         .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
@@ -471,38 +507,29 @@ router.post('/reset-password', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.render('reset-password', {
-            title: 'Reset Password - Health & Fitness Tracker',
-            errors: errors.array().map(err => err.msg),
-            token: req.body.token,
-            valid: true
+        return res.status(400).json({
+            error: errors.array()[0].msg,
+            csrfToken: generateToken(req, res)
         });
     }
 
     try {
-        const { token, new_password } = req.body;
+        const { new_password } = req.body;
 
-        // Hash the token to find it in database
-        const tokenHash = hashToken(token);
-
-        // Find the reset token record
-        const [records] = await db.query(
-            `SELECT * FROM password_resets 
-             WHERE token_hash = ? AND used_at IS NULL AND expires_at > NOW()`,
-            [tokenHash]
-        );
-
-        if (records.length === 0) {
-            return res.render('reset-password', {
-                title: 'Reset Password - Health & Fitness Tracker',
-                errors: ['This password reset link is invalid or has expired.'],
-                token: null,
-                valid: false
+        // Determine which user is resetting password
+        let userId;
+        if (req.session.userId) {
+            // Logged-in user changing password
+            userId = req.session.userId;
+        } else if (req.session.passwordResetUserId) {
+            // User who verified password reset code
+            userId = req.session.passwordResetUserId;
+        } else {
+            return res.status(401).json({
+                error: 'Not authorized to reset password',
+                csrfToken: generateToken(req, res)
             });
         }
-
-        const resetRecord = records[0];
-        const userId = resetRecord.user_id;
 
         // Hash the new password
         const saltRounds = 10;
@@ -511,31 +538,29 @@ router.post('/reset-password', [
         // Update user password
         await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
 
-        // Mark token as used
-        await db.query(
-            'UPDATE password_resets SET used_at = NOW() WHERE id = ?',
-            [resetRecord.id]
-        );
-
         // Get user info for logging
         const [users] = await db.query('SELECT username FROM users WHERE id = ?', [userId]);
         const user = users[0];
 
-        // Log password reset
+        // Log password reset/change
         if (user) {
             await logAuth(EventTypes.PASSWORD_RESET, req, userId, user.username);
         }
 
-        res.render('reset-password-success', {
-            title: 'Password Reset Successful - Health & Fitness Tracker'
+        // Clear password reset session state
+        delete req.session.passwordResetUserId;
+        delete req.session.passwordResetEmail;
+
+        res.json({
+            success: true,
+            message: 'Password has been reset successfully',
+            csrfToken: generateToken(req, res)
         });
     } catch (error) {
         console.error('Reset password error:', error);
-        res.render('reset-password', {
-            title: 'Reset Password - Health & Fitness Tracker',
-            errors: ['An error occurred. Please try again later.'],
-            token: req.body.token,
-            valid: false
+        res.status(500).json({
+            error: 'An error occurred. Please try again later.',
+            csrfToken: generateToken(req, res)
         });
     }
 });

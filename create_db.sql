@@ -4,7 +4,6 @@ USE health;
 
 -- Drop existing tables if they exist (in reverse dependency order)
 SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS password_resets;
 DROP TABLE IF EXISTS fitness_activities;
 DROP TABLE IF EXISTS email_verifications;
 DROP TABLE IF EXISTS users;
@@ -36,19 +35,19 @@ CREATE TABLE fitness_activities (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create password_resets table for forgot password functionality
-CREATE TABLE password_resets (
+-- Create email_verifications table
+-- Used for both email change verification AND password reset verification
+CREATE TABLE email_verifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    token VARCHAR(255) NOT NULL UNIQUE,
-    token_hash VARCHAR(255) NOT NULL,
+    new_email VARCHAR(100) NOT NULL,
+    verification_code VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
     used_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_email (email),
-    INDEX idx_token_hash (token_hash),
+    INDEX idx_new_email (new_email),
+    INDEX idx_verification_code (verification_code),
     INDEX idx_expires_at (expires_at)
 );
 

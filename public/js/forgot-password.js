@@ -57,6 +57,7 @@ step1Form.addEventListener('submit', async (e) => {
         // Show preview URL if available (development mode)
         if (data.previewUrl) {
             document.getElementById('previewLink').href = data.previewUrl;
+            document.getElementById('previewLink').textContent = data.previewUrl;
             document.getElementById('previewUrl').style.display = 'block';
         }
 
@@ -145,6 +146,13 @@ resendBtn.addEventListener('click', async (e) => {
         }
 
         if (response.ok) {
+            // Update preview URL if available
+            if (data.previewUrl) {
+                document.getElementById('previewLink').href = data.previewUrl;
+                document.getElementById('previewLink').textContent = data.previewUrl;
+                document.getElementById('previewUrl').style.display = 'block';
+            }
+
             document.getElementById('verificationCode').value = '';
 
             // Show feedback

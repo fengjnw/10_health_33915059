@@ -49,11 +49,11 @@ const checks = [
         }
     },
     {
-        name: 'tokenCleanup module exists',
+        name: 'codeGenerator module exists',
         verify: () => {
             try {
-                require(path.join(projectRoot, 'utils/tokenCleanup'));
-                return true;
+                const generator = require(path.join(projectRoot, 'utils/codeGenerator'));
+                return typeof generator.generateVerificationCode === 'function';
             } catch (e) {
                 return false;
             }

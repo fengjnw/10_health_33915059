@@ -6,9 +6,9 @@ const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
 const { loginLimiter, registerLimiter, loginStore, registerStore, attachRateLimitHelpers } = require('../middleware/rateLimit');
 const { EventTypes, logAuth } = require('../utils/auditLogger');
-const { generateResetToken, hashToken } = require('../utils/passwordReset');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 const { generateToken } = require('../middleware/csrf');
+const { generateVerificationCode } = require('../utils/codeGenerator');
 
 // Register page route - GET request shows the form
 router.get('/register', (req, res) => {
@@ -395,7 +395,7 @@ router.post('/forgot-password', [
         const user = users[0];
 
         // Generate verification code (6 digits)
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationCode = generateVerificationCode();
 
         // Calculate expiry time (1 hour from now)
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000);

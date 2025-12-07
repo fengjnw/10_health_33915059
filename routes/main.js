@@ -5,6 +5,7 @@ const db = require('../config/db');
 const { EventTypes, logDataChange } = require('../utils/auditLogger');
 const { sendVerificationEmail } = require('../utils/emailService');
 const { generateToken } = require('../middleware/csrf');
+const { generateVerificationCode } = require('../utils/codeGenerator');
 
 // Home page route
 router.get('/', (req, res) => {
@@ -566,10 +567,6 @@ router.patch('/profile', async (req, res) => {
 });
 
 // Generate a random verification code
-function generateVerificationCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 // Request email verification code
 router.post('/email/request-verification', async (req, res) => {
     // Check if user is logged in

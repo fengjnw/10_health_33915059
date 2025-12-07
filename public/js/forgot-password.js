@@ -5,7 +5,7 @@ const closeModal = document.getElementById('closeModal');
 
 let currentEmail = '';
 let currentUsername = '';
-let csrfToken = getCSRFToken(); // Store CSRF token
+let csrfToken = getCSRFToken();
 
 // Close modal button
 closeModal.addEventListener('click', () => {
@@ -33,21 +33,11 @@ step1Form.addEventListener('submit', async (e) => {
 
         if (!response.ok) {
             alert(data.error || 'An error occurred');
-            // Update CSRF token from response
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-                updateCSRFMeta(csrfToken);
-            }
+            csrfToken = handleCSRFUpdate(data) || csrfToken;
             return;
         }
 
-        // Update CSRF token from response
-        if (data.csrfToken) {
-            csrfToken = data.csrfToken;
-            updateCSRFMeta(csrfToken);
-        }
-
-        // Store for resend functionality
+        csrfToken = handleCSRFUpdate(data) || csrfToken;
         currentEmail = email;
         currentUsername = username;
 
@@ -61,7 +51,6 @@ step1Form.addEventListener('submit', async (e) => {
             document.getElementById('previewUrl').style.display = 'block';
         }
 
-        // Move to step 2
         showStep2();
     } catch (error) {
         console.error('Error:', error);
@@ -97,21 +86,11 @@ step2Form.addEventListener('submit', async (e) => {
         if (!response.ok) {
             errorDiv.textContent = data.error || 'An error occurred';
             errorDiv.style.display = 'block';
-            // Update CSRF token from response
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-                updateCSRFMeta(csrfToken);
-            }
+            csrfToken = handleCSRFUpdate(data) || csrfToken;
             return;
         }
 
-        // Update CSRF token from response
-        if (data.csrfToken) {
-            csrfToken = data.csrfToken;
-            updateCSRFMeta(csrfToken);
-        }
-
-        // Redirect to change password page
+        csrfToken = handleCSRFUpdate(data) || csrfToken;
         window.location.href = '/auth/change-password?resetMode=true';
     } catch (error) {
         console.error('Error:', error);
@@ -138,15 +117,9 @@ resendBtn.addEventListener('click', async (e) => {
         });
 
         const data = await response.json();
-
-        // Update CSRF token
-        if (data.csrfToken) {
-            csrfToken = data.csrfToken;
-            updateCSRFMeta(csrfToken);
-        }
+        csrfToken = handleCSRFUpdate(data) || csrfToken;
 
         if (response.ok) {
-            // Update preview URL if available
             if (data.previewUrl) {
                 document.getElementById('previewLink').href = data.previewUrl;
                 document.getElementById('previewLink').textContent = data.previewUrl;
@@ -155,7 +128,6 @@ resendBtn.addEventListener('click', async (e) => {
 
             document.getElementById('verificationCode').value = '';
 
-            // Show feedback
             const errorDiv = document.getElementById('verificationInlineError');
             errorDiv.style.color = '#27ae60';
             errorDiv.style.display = 'block';
@@ -175,21 +147,7 @@ function showStep2() {
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
     document.getElementById('verificationCode').focus();
-}
-
-function getCSRFToken() {
-    const token = document.querySelector('meta[name="csrf-token"]');
-    return token ? token.getAttribute('content') : '';
-}
-
-function updateCSRFMeta(token) {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    if (meta) {
-        meta.setAttribute('content', token);
-    }
-}
-
-// Auto-format verification code input
+}// Auto-format verification code input
 document.getElementById('verificationCode').addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
 });

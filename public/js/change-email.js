@@ -11,16 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentVerificationCode = null;
     let currentNewEmail = null;
-    let csrfToken = document.querySelector('input[name="_csrf"]')?.value;
-
-    async function parseJsonResponse(response) {
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-            return response.json();
-        }
-        const text = await response.text();
-        throw new Error(`Unexpected response (${response.status}): ${text.slice(0, 200)}`);
-    }
+    let csrfToken = getCSRFToken();
 
     // Open modal
     if (changeEmailBtn) {
@@ -53,10 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await parseJsonResponse(response);
-
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-            }
+            csrfToken = handleCSRFUpdate(data) || csrfToken;
 
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to request verification');
@@ -106,10 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await parseJsonResponse(response);
-
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-            }
+            csrfToken = handleCSRFUpdate(data) || csrfToken;
 
             if (!response.ok) {
                 throw new Error(data.error || 'Verification failed');
@@ -145,13 +130,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const data = await parseJsonResponse(response);
-
-            if (data.csrfToken) {
-                csrfToken = data.csrfToken;
-            }
+            csrfToken = handleCSRFUpdate(data) || csrfToken;
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to resend verification');
+                throw new Error(data.error || 'Failed to resend code');
             }
 
             currentVerificationCode = data.verificationCode;

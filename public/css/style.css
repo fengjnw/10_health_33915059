@@ -1262,6 +1262,59 @@ footer {
     color: white;
 }
 
+/* Message Page Styles */
+.message-container {
+    max-width: 600px;
+    margin: 3rem auto;
+    text-align: center;
+}
+
+.message-container .alert {
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.message-container .alert h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.message-container .alert p {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.redirect-message {
+    font-size: 0.95rem;
+    color: #7f8c8d;
+    margin: 1rem 0;
+}
+
+.redirect-message #countdown {
+    font-weight: 700;
+    color: #16a085;
+}
+
+.alert-warning {
+    background-color: #fff8e1;
+    border-color: #f39c12;
+    color: #7d6608;
+}
+
+.alert-warning h2 {
+    color: #e67e22;
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    border-color: #3498db;
+    color: #1565c0;
+}
+
+.alert-info h2 {
+    color: #2980b9;
+}
+
 .session-warning-content .btn-secondary:hover {
     background-color: #7f8c8d;
     transform: translateY(-2px);

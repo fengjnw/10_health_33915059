@@ -41,16 +41,26 @@ function sessionTimeoutMiddleware(req, res, next) {
         // Log the automatic logout
         console.log(`[${new Date().toISOString()}] User "${username}" automatically logged out due to inactivity`);
 
-        // If it's an API request, return JSON response
-        if (req.accepts('json')) {
+        // Check if this is an AJAX/API request
+        const isAjaxRequest = req.xhr || req.headers.accept?.includes('application/json');
+
+        if (isAjaxRequest) {
             return res.status(401).json({
                 success: false,
-                message: 'Your session has expired due to inactivity. Please log in again.'
+                message: 'Your session has expired due to inactivity. Please log in again.',
+                redirectUrl: '/auth/login'
             });
         }
 
-        // For regular requests, redirect to login
-        return res.redirect('/auth/login?timeout=true');
+        // For regular page requests, show a message page with auto-redirect
+        return res.render('message', {
+            title: 'Session Expired',
+            messageType: 'warning',
+            messageTitle: 'Session Expired',
+            message: 'Your session has expired due to inactivity. You will be redirected to the login page.',
+            redirectUrl: '/auth/login',
+            redirectDelay: 3
+        });
     }
 
     // Check if we should warn the user (approaching timeout)

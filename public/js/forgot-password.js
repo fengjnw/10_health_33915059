@@ -1,10 +1,16 @@
 const step1Form = document.getElementById('step1Form');
 const step2Form = document.getElementById('step2Form');
 const resendBtn = document.getElementById('resendBtn');
+const closeModal = document.getElementById('closeModal');
 
 let currentEmail = '';
 let currentUsername = '';
 let csrfToken = getCSRFToken(); // Store CSRF token
+
+// Close modal button
+closeModal.addEventListener('click', () => {
+    window.location.href = '/auth/login';
+});
 
 // Step 1: Submit username and email
 step1Form.addEventListener('submit', async (e) => {
@@ -139,12 +145,6 @@ resendBtn.addEventListener('click', async (e) => {
         }
 
         if (response.ok) {
-            // Update preview URL if available
-            if (data.previewUrl) {
-                document.getElementById('previewLink').href = data.previewUrl;
-                document.getElementById('previewUrl').style.display = 'block';
-            }
-
             document.getElementById('verificationCode').value = '';
 
             // Show feedback

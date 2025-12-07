@@ -6,6 +6,12 @@ const { EventTypes, logDataChange } = require('../utils/auditLogger');
 const { sendVerificationEmail } = require('../utils/emailService');
 const { generateToken } = require('../middleware/csrf');
 const { generateVerificationCode } = require('../utils/codeGenerator');
+const {
+    sendValidationError,
+    sendAuthError,
+    sendSuccess,
+    sendServerError
+} = require('../utils/responseHelper');
 
 // Home page route
 router.get('/', (req, res) => {
@@ -300,11 +306,6 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated', csrfToken: generateToken(req, res) });
     }
 
-    console.log('PATCH /my-activities/:id/edit received');
-    console.log('User ID:', req.session.user.id);
-    console.log('Activity ID:', req.params.id);
-    console.log('Request body:', req.body);
-
     try {
         const { id } = req.params;
         const { activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public } = req.body;
@@ -388,16 +389,12 @@ router.delete('/my-activities/:id', async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    console.log('DELETE /my-activities/:id received');
-    console.log('User ID:', req.session.user.id);
-    console.log('Activity ID:', req.params.id);
-
     try {
         const id = parseInt(req.params.id, 10);
 
         // Validate id
         if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid activity ID' });
+            return sendValidationError(res, 'Invalid activity ID', req);
         }
 
         // Get the activity to verify ownership
@@ -483,10 +480,6 @@ router.patch('/profile', async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    console.log('PATCH /profile received');
-    console.log('User ID:', req.session.user.id);
-    console.log('Request body:', req.body);
-
     try {
         const { username, first_name, last_name } = req.body;
 
@@ -499,7 +492,7 @@ router.patch('/profile', async (req, res) => {
 
         // Validate username length
         if (username.length < 3 || username.length > 50) {
-            return res.status(400).json({ error: 'Username must be between 3 and 50 characters' });
+            return sendValidationError(res, 'Username must be between 3 and 50 characters', req);
         }
 
         // Get current user data
@@ -519,7 +512,7 @@ router.patch('/profile', async (req, res) => {
             );
 
             if (existingUsernames.length > 0) {
-                return res.status(400).json({ error: 'Username is already taken' });
+                return sendValidationError(res, 'Username is already taken', req);
             }
         }
 
@@ -579,12 +572,12 @@ router.post('/email/request-verification', async (req, res) => {
 
         // Validate email
         if (!newEmail) {
-            return res.status(400).json({ error: 'New email is required', csrfToken: generateToken(req, res) });
+            return sendValidationError(res, 'New email is required', req);
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(newEmail)) {
-            return res.status(400).json({ error: 'Invalid email format', csrfToken: generateToken(req, res) });
+            return sendValidationError(res, 'Invalid email format', req);
         }
 
         // Check if email is already in use
@@ -594,7 +587,7 @@ router.post('/email/request-verification', async (req, res) => {
         );
 
         if (existingUsers.length > 0) {
-            return res.status(400).json({ error: 'Email is already in use by another user', csrfToken: generateToken(req, res) });
+            return sendValidationError(res, 'Email is already in use by another user', req);
         }
 
         // Generate verification code
@@ -651,7 +644,7 @@ router.post('/email/verify-code', async (req, res) => {
         const { verificationCode, newEmail } = req.body;
 
         if (!verificationCode || !newEmail) {
-            return res.status(400).json({ error: 'Verification code and email are required', csrfToken: generateToken(req, res) });
+            return sendValidationError(res, 'Verification code and email are required', req);
         }
 
         // Find verification record
@@ -661,14 +654,14 @@ router.post('/email/verify-code', async (req, res) => {
         );
 
         if (verifications.length === 0) {
-            return res.status(400).json({ error: 'Invalid or expired verification code', csrfToken: generateToken(req, res) });
+            return sendValidationError(res, 'Invalid or expired verification code', req);
         }
 
         const verification = verifications[0];
 
         // Check if verification has expired
         if (new Date() > new Date(verification.expires_at)) {
-            return res.status(400).json({ error: 'Verification code has expired', csrfToken: generateToken(req, res) });
+            return sendValidationError(res, 'Verification code has expired', req);
         }
 
         // Mark verification as verified

@@ -1,4 +1,5 @@
 let currentPage = 1;
+let csrfToken = '';
 
 function renderActivityCard(activity) {
     const date = new Date(activity.activity_time).toLocaleString();
@@ -64,10 +65,16 @@ async function fetchActivities(page) {
     });
 
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { credentials: 'same-origin' });
         console.log('Response status:', response.status);
 
-        const data = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Non-JSON response (status ${response.status})`);
+        }
         console.log('Data:', data);
 
         if (data.success) {
@@ -81,6 +88,21 @@ async function fetchActivities(page) {
     } catch (error) {
         console.error('Fetch error:', error);
         showStatus(`✗ Request failed: ${error.message}`, 'error');
+    }
+}
+
+async function fetchCsrfToken() {
+    try {
+        const res = await fetch('/api/csrf-token', { credentials: 'same-origin' });
+        const data = await res.json();
+        if (data?.csrfToken) {
+            csrfToken = data.csrfToken;
+            console.log('CSRF token fetched');
+        } else {
+            console.warn('Failed to obtain CSRF token');
+        }
+    } catch (err) {
+        console.error('CSRF token fetch error:', err);
     }
 }
 
@@ -137,6 +159,20 @@ function updateAuthStatus(isAuthenticated) {
     authDiv.textContent = isAuthenticated ? 'Auth status: logged in (session cookie present)' : 'Auth status: not logged in (public only)';
 }
 
+function showCreateStatus(message, type) {
+    const statusDiv = document.getElementById('createStatus');
+    if (statusDiv) {
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+}
+
+function showSingleStatus(message, type) {
+    const statusDiv = document.getElementById('singleStatus');
+    if (statusDiv) {
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+}
+
 function clearFilters() {
     document.getElementById('activity_type').value = '';
     document.getElementById('date_from').value = '';
@@ -151,6 +187,35 @@ function clearFilters() {
     document.getElementById('result').innerHTML = '';
     document.getElementById('pagination').innerHTML = '';
     document.getElementById('status').innerHTML = '';
+}
+
+function clearSingleActivity() {
+    const input = document.getElementById('activityIdInput');
+    if (input) input.value = '';
+    const singleResult = document.getElementById('singleResult');
+    if (singleResult) singleResult.innerHTML = '';
+    const apiUrlSingle = document.getElementById('apiUrlSingle');
+    if (apiUrlSingle) apiUrlSingle.innerHTML = '';
+    const singleStatus = document.getElementById('singleStatus');
+    if (singleStatus) singleStatus.innerHTML = '';
+}
+
+function clearCreateActivity() {
+    const ids = ['create_duration', 'create_distance', 'create_calories', 'create_activity_time', 'create_notes'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const typeEl = document.getElementById('create_activity_type');
+    if (typeEl) typeEl.value = 'Running';
+    const publicEl = document.getElementById('create_is_public');
+    if (publicEl) publicEl.value = '1';
+    const apiUrlCreate = document.getElementById('apiUrlCreate');
+    if (apiUrlCreate) apiUrlCreate.innerHTML = '';
+    const createResult = document.getElementById('createResult');
+    if (createResult) createResult.innerHTML = '';
+    const createStatus = document.getElementById('createStatus');
+    if (createStatus) createStatus.innerHTML = '';
 }
 
 function clearSingleActivity() {
@@ -198,9 +263,15 @@ async function fetchActivityById() {
     });
 
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { credentials: 'same-origin' });
         console.log('Single activity status:', response.status);
-        const data = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Non-JSON response (status ${response.status})`);
+        }
         console.log('Single activity data:', data);
 
         if (!data.success) {
@@ -219,6 +290,115 @@ async function fetchActivityById() {
     }
 }
 
+function buildCreatePayload() {
+    const activity_type = document.getElementById('create_activity_type').value;
+    const duration_minutes = parseInt(document.getElementById('create_duration').value, 10);
+    const distance_raw = document.getElementById('create_distance').value;
+    const distance_km = distance_raw === '' ? null : parseFloat(distance_raw);
+    const calories_burned = parseInt(document.getElementById('create_calories').value, 10);
+    const activity_time = document.getElementById('create_activity_time').value;
+    const notes = document.getElementById('create_notes').value;
+    const is_public = document.getElementById('create_is_public').value;
+
+    return {
+        activity_type,
+        duration_minutes,
+        distance_km,
+        calories_burned,
+        activity_time,
+        notes,
+        is_public
+    };
+}
+
+function validateCreatePayload(payload) {
+    if (!payload.activity_type || !payload.duration_minutes || !payload.calories_burned || !payload.activity_time) {
+        return 'activity_type, duration_minutes, calories_burned, activity_time are required';
+    }
+    if (Number.isNaN(payload.duration_minutes) || payload.duration_minutes <= 0) return 'duration_minutes must be positive';
+    if (Number.isNaN(payload.calories_burned) || payload.calories_burned <= 0) return 'calories_burned must be positive';
+    if (payload.distance_km !== null && Number.isNaN(payload.distance_km)) return 'distance_km must be a number';
+    if (Number.isNaN(new Date(payload.activity_time).getTime())) return 'activity_time must be a valid datetime';
+    return null;
+}
+
+async function createActivity() {
+    const payload = buildCreatePayload();
+    const validationError = validateCreatePayload(payload);
+    if (validationError) {
+        showCreateStatus(`✗ ${validationError}`, 'error');
+        return;
+    }
+
+    if (!csrfToken) {
+        await fetchCsrfToken();
+        if (!csrfToken) {
+            showCreateStatus('✗ Missing CSRF token, please refresh', 'error');
+            return;
+        }
+    }
+
+    const url = '/api/activities';
+    const fullUrl = `${window.location.origin}${url}`;
+
+    const apiUrlDiv = document.getElementById('apiUrlCreate');
+    if (apiUrlDiv) {
+        const jsonBody = JSON.stringify(payload, null, 2);
+        const curlCmd = `curl -X POST ${fullUrl} \\\n  -H "Content-Type: application/json" \\\n  -H "X-CSRF-Token: ${csrfToken}" \\\n  --cookie "${document.cookie}" \\\n  -d '${jsonBody.replace(/'/g, "'\\''")}'`;
+        apiUrlDiv.innerHTML = `
+            <strong>API Request:</strong><br>
+            <div>POST ${fullUrl}</div>
+            <pre style="white-space: pre-wrap;">${jsonBody}</pre>
+            <button id="copyCurlBtn" style="margin-top: 5px; padding: 5px 10px; cursor: pointer;">Copy curl</button>
+        `;
+        const copyBtn = document.getElementById('copyCurlBtn');
+        copyBtn.addEventListener('click', function () {
+            navigator.clipboard.writeText(curlCmd).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => { this.textContent = 'Copy curl'; }, 2000);
+            });
+        });
+    }
+
+    showCreateStatus('Loading...', 'success');
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`Non-JSON response (status ${response.status})`);
+        }
+        console.log('Create activity status:', response.status, 'data:', data);
+
+        if (!data.success) {
+            showCreateStatus(`✗ Error: ${data.error || 'Failed to create'}`, 'error');
+            document.getElementById('createResult').innerHTML = '';
+            updateAuthStatus(!!data.authenticated);
+            return;
+        }
+
+        updateAuthStatus(!!data.authenticated);
+        showCreateStatus('✓ Activity created', 'success');
+        document.getElementById('createResult').innerHTML = renderActivityCard(data.data);
+    } catch (error) {
+        console.error('Create activity error:', error);
+        showCreateStatus(`✗ Request failed: ${error.message}`, 'error');
+        document.getElementById('createResult').innerHTML = '';
+    }
+}
+
 function showSingleStatus(message, type) {
     const statusDiv = document.getElementById('singleStatus');
     statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
@@ -234,4 +414,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('fetchByIdBtn').addEventListener('click', fetchActivityById);
     document.getElementById('clearByIdBtn').addEventListener('click', clearSingleActivity);
+
+    const createSendBtn = document.getElementById('createSendBtn');
+    if (createSendBtn) createSendBtn.addEventListener('click', createActivity);
+    const createClearBtn = document.getElementById('createClearBtn');
+    if (createClearBtn) createClearBtn.addEventListener('click', clearCreateActivity);
+
+    // Fetch CSRF token on page load
+    fetchCsrfToken();
 });

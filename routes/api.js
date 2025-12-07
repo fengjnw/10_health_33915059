@@ -2,6 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { generateToken } = require('../middleware/csrf');
+const bcrypt = require('bcrypt');
+const { createToken, verifyToken } = require('../utils/apiToken');
 
 /**
  * GET /api/activities
@@ -23,6 +26,48 @@ const db = require('../config/db');
  * - Unauthenticated: Returns only public activities (is_public = 1)
  * - Authenticated: Returns public activities + user's private activities
  */
+// Bearer token detection middleware
+router.use((req, res, next) => {
+    const auth = req.get('authorization');
+    const secret = process.env.API_TOKEN_SECRET || process.env.SESSION_SECRET || 'api-token-secret';
+    if (auth && auth.toLowerCase().startsWith('bearer ')) {
+        const token = auth.slice(7).trim();
+        const payload = verifyToken(token, secret);
+        if (payload && payload.uid) {
+            req.apiUserId = payload.uid;
+        }
+    }
+    next();
+});
+
+router.post('/auth/token', async (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+        if (!username || !password) {
+            return res.status(400).json({ success: false, error: 'Username and password are required' });
+        }
+
+        const [rows] = await db.query('SELECT id, username, password FROM users WHERE username = ?', [username]);
+        if (!rows || rows.length === 0) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const user = rows[0];
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const secret = process.env.API_TOKEN_SECRET || process.env.SESSION_SECRET || 'api-token-secret';
+        const token = createToken({ uid: user.id, username: user.username }, secret, 3600);
+
+        return res.json({ success: true, token, token_type: 'Bearer', expires_in: 3600 });
+    } catch (error) {
+        console.error('Error issuing token:', error);
+        return res.status(500).json({ success: false, error: 'Failed to issue token' });
+    }
+});
+
 router.get('/activities', async (req, res) => {
     try {
         const {
@@ -39,7 +84,7 @@ router.get('/activities', async (req, res) => {
         } = req.query;
 
         // Get userId from session (may be undefined for unauthenticated users)
-        const userId = req.session?.user?.id;
+        const userId = req.apiUserId || req.session?.user?.id;
 
         // Validate and normalize pagination parameters
         const currentPage = Math.max(parseInt(page, 10) || 1, 1);
@@ -165,6 +210,12 @@ router.get('/activities', async (req, res) => {
     }
 });
 
+// CSRF token endpoint for API testing (GET is allowed without token)
+router.get('/csrf-token', (req, res) => {
+    const token = generateToken(req, res);
+    return res.json({ success: true, csrfToken: token });
+});
+
 /**
  * GET /api/activities/:id
  * Get single activity details
@@ -180,7 +231,7 @@ router.get('/activities/:id', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid activity id' });
         }
 
-        const userId = req.session?.user?.id;
+        const userId = req.apiUserId || req.session?.user?.id;
 
         let whereClause = 'WHERE fa.id = ? AND fa.is_public = 1';
         const params = [activityId];
@@ -224,6 +275,118 @@ router.get('/activities/:id', async (req, res) => {
     } catch (error) {
         console.error('Error fetching activity detail:', error);
         return res.status(500).json({ success: false, error: 'Failed to fetch activity detail', message: error.message });
+    }
+});
+
+/**
+ * POST /api/activities
+ * Create a new activity (JSON body)
+ * Requires authentication
+ */
+router.post('/activities', async (req, res) => {
+    try {
+        const userId = req.apiUserId || req.session?.user?.id;
+        if (!userId) {
+            return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+
+        const {
+            activity_type,
+            duration_minutes,
+            duration,  // Accept short form
+            distance_km,
+            distance,  // Accept short form
+            calories_burned,
+            calories,  // Accept short form
+            activity_time,
+            notes,
+            is_public
+        } = req.body || {};
+
+        // Use short form if provided, otherwise use database field name
+        const durationValue = duration_minutes || duration;
+        const caloriesValue = calories_burned || calories;
+        const distanceValue = distance_km !== undefined ? distance_km : distance;
+
+        if (!activity_type || !durationValue || !caloriesValue || !activity_time) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: activity_type, duration, calories, activity_time'
+            });
+        }
+
+        const durationParsed = parseInt(durationValue, 10);
+        const caloriesParsed = parseInt(caloriesValue, 10);
+        const distanceParsed = distanceValue !== undefined && distanceValue !== null && distanceValue !== ''
+            ? parseFloat(distanceValue)
+            : null;
+        const isPublicFlag = is_public === 0 || is_public === '0' ? 0 : 1;
+
+        if (Number.isNaN(durationParsed) || durationParsed <= 0) {
+            return res.status(400).json({ success: false, error: 'duration must be a positive integer' });
+        }
+        if (Number.isNaN(caloriesParsed) || caloriesParsed <= 0) {
+            return res.status(400).json({ success: false, error: 'calories must be a positive integer' });
+        }
+        if (distanceParsed !== null && Number.isNaN(distanceParsed)) {
+            return res.status(400).json({ success: false, error: 'distance must be a number' });
+        }
+
+        const activityDate = new Date(activity_time);
+        if (Number.isNaN(activityDate.getTime())) {
+            return res.status(400).json({ success: false, error: 'activity_time must be a valid date' });
+        }
+
+        const insertQuery = `
+            INSERT INTO fitness_activities
+                (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            userId,
+            activity_type,
+            durationParsed,
+            distanceParsed,
+            caloriesParsed,
+            activityDate,
+            notes || null,
+            isPublicFlag
+        ];
+
+        const [result] = await db.query(insertQuery, values);
+        const insertedId = result.insertId;
+
+        const selectQuery = `
+            SELECT 
+                fa.id,
+                fa.user_id,
+                fa.activity_type,
+                fa.duration_minutes,
+                fa.distance_km,
+                fa.calories_burned,
+                fa.activity_time,
+                fa.notes,
+                fa.is_public,
+                fa.created_at,
+                u.username
+            FROM fitness_activities fa
+            JOIN users u ON fa.user_id = u.id
+            WHERE fa.id = ?
+            LIMIT 1
+        `;
+
+        const [rows] = await db.query(selectQuery, [insertedId]);
+        const created = rows && rows[0] ? rows[0] : null;
+
+        return res.status(201).json({
+            success: true,
+            authenticated: true,
+            data: created
+        });
+    } catch (error) {
+        console.error('Error creating activity:', error);
+        return res.status(500).json({ success: false, error: 'Failed to create activity', message: error.message });
     }
 });
 

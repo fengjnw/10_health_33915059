@@ -71,6 +71,7 @@ async function fetchActivities(page) {
         console.log('Data:', data);
 
         if (data.success) {
+            updateAuthStatus(!!data.authenticated);
             displayResults(data);
             displayPagination(data.pagination);
             showStatus(`✓ Found ${data.pagination.totalItems} activities`, 'success');
@@ -128,6 +129,14 @@ function showStatus(message, type) {
     statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
 }
 
+function updateAuthStatus(isAuthenticated) {
+    const authDiv = document.getElementById('authStatus');
+    if (!authDiv) return;
+    const cls = isAuthenticated ? 'status success' : 'status error';
+    authDiv.className = cls;
+    authDiv.textContent = isAuthenticated ? 'Auth status: logged in (session cookie present)' : 'Auth status: not logged in (public only)';
+}
+
 function clearFilters() {
     document.getElementById('activity_type').value = '';
     document.getElementById('date_from').value = '';
@@ -142,6 +151,17 @@ function clearFilters() {
     document.getElementById('result').innerHTML = '';
     document.getElementById('pagination').innerHTML = '';
     document.getElementById('status').innerHTML = '';
+}
+
+function clearSingleActivity() {
+    const input = document.getElementById('activityIdInput');
+    if (input) input.value = '';
+    const singleResult = document.getElementById('singleResult');
+    if (singleResult) singleResult.innerHTML = '';
+    const apiUrlSingle = document.getElementById('apiUrlSingle');
+    if (apiUrlSingle) apiUrlSingle.innerHTML = '';
+    const singleStatus = document.getElementById('singleStatus');
+    if (singleStatus) singleStatus.innerHTML = '';
 }
 
 async function fetchActivityById() {
@@ -189,6 +209,7 @@ async function fetchActivityById() {
             return;
         }
 
+        updateAuthStatus(!!data.authenticated);
         showSingleStatus('✓ Activity loaded', 'success');
         document.getElementById('singleResult').innerHTML = renderActivityCard(data.data);
     } catch (error) {
@@ -212,7 +233,5 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('clearBtn').addEventListener('click', clearFilters);
 
     document.getElementById('fetchByIdBtn').addEventListener('click', fetchActivityById);
-
-    // Load initial data
-    fetchActivities(1);
+    document.getElementById('clearByIdBtn').addEventListener('click', clearSingleActivity);
 });

@@ -103,6 +103,10 @@
 <body>
     <h1>GET /api/activities - API Test</h1>
 
+    <div id="authStatus" class="status" style="display: inline-block; margin-bottom: 10px;">
+        Auth status: unknown
+    </div>
+
     <div class="test-section">
         <h2>Filters & Pagination</h2>
 
@@ -196,6 +200,7 @@
         </div>
         <div>
             <button id="fetchByIdBtn">Fetch Activity</button>
+            <button id="clearByIdBtn">Clear</button>
         </div>
 
         <div id="singleStatus"></div>

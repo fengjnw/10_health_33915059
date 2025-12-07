@@ -5,6 +5,10 @@ const db = require('../config/db');
 const { generateToken } = require('../middleware/csrf');
 const bcrypt = require('bcrypt');
 const { createToken, verifyToken } = require('../utils/apiToken');
+const { apiLimiter, apiTokenLimiter } = require('../middleware/rateLimit');
+
+// Apply general API rate limiting to all routes
+router.use(apiLimiter);
 
 /**
  * GET /api/activities
@@ -40,7 +44,8 @@ router.use((req, res, next) => {
     next();
 });
 
-router.post('/auth/token', async (req, res) => {
+// Apply stricter rate limiting to token generation endpoint
+router.post('/auth/token', apiTokenLimiter, async (req, res) => {
     try {
         const { username, password } = req.body || {};
         if (!username || !password) {

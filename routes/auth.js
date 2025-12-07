@@ -4,7 +4,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
-const { loginLimiter, registerLimiter } = require('../middleware/rateLimit');
+const { loginLimiter, registerLimiter, loginStore, registerStore, attachRateLimitHelpers } = require('../middleware/rateLimit');
 const { EventTypes, logAuth } = require('../utils/auditLogger');
 
 // Register page route - GET request shows the form
@@ -16,7 +16,7 @@ router.get('/register', (req, res) => {
 });
 
 // Register page route - POST request processes the form
-router.post('/register', registerLimiter.middleware(), [
+router.post('/register', registerLimiter, attachRateLimitHelpers(registerStore), [
     // Validation middleware
     body('username')
         .trim()
@@ -223,7 +223,7 @@ router.post('/change-password', [
 });
 
 // Login page route - POST request processes the form
-router.post('/login', loginLimiter.middleware(), async (req, res) => {
+router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (req, res) => {
     try {
         const { username, password } = req.body;
 

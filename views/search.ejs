@@ -112,6 +112,10 @@
                                                 ? 'activity' : 'activities' %>
                                     </p>
                                     <div class="results-actions">
+                                        <button id="export-results" class="btn btn-secondary btn-small"
+                                            title="Export filtered results to CSV">
+                                            Export CSV
+                                        </button>
                                         <div class="sort-controls">
                                             <label for="search-sort">Sort</label>
                                             <select id="search-sort">
@@ -121,6 +125,19 @@
                                                 <option value="calories-asc">Calories (low→high)</option>
                                                 <option value="duration-desc">Duration (long→short)</option>
                                                 <option value="duration-asc">Duration (short→long)</option>
+                                            </select>
+                                        </div>
+                                        <div class="sort-controls">
+                                            <label for="search-pageSize">Per Page</label>
+                                            <select id="search-pageSize">
+                                                <option value="10" <% if (pagination && pagination.pageSize===10) { %>
+                                                    selected<% } %>>10</option>
+                                                <option value="20" <% if (pagination && pagination.pageSize===20) { %>
+                                                    selected<% } %>>20</option>
+                                                <option value="30" <% if (pagination && pagination.pageSize===30) { %>
+                                                    selected<% } %>>30</option>
+                                                <option value="50" <% if (pagination && pagination.pageSize===50) { %>
+                                                    selected<% } %>>50</option>
                                             </select>
                                         </div>
                                         <% if (pagination && pagination.totalPages> 1) { %>
@@ -229,6 +246,8 @@
 
         <%- include('partials/footer') %>
             <script src="/js/search-sort.js"></script>
+            <script src="/js/export-activities.js"></script>
+            <script src="/js/page-size-selector.js"></script>
 </body>
 
 </html>

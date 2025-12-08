@@ -190,6 +190,20 @@ router.get('/activities', async (req, res) => {
         const dataParams = [...params, itemsPerPage, offset];
         const [activities] = await db.query(dataQuery, dataParams);
 
+        // Calculate stats based on current filters
+        const statsQuery = `
+            SELECT
+                COUNT(*) AS total_count,
+                COALESCE(SUM(calories_burned), 0) AS total_calories,
+                COALESCE(SUM(duration_minutes), 0) AS total_duration,
+                COALESCE(SUM(distance_km), 0) AS total_distance,
+                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) AS avg_intensity
+            FROM fitness_activities fa
+            ${whereClause}
+        `;
+        const [statsRows] = await db.query(statsQuery, params);
+        const stats = statsRows && statsRows[0] ? statsRows[0] : null;
+
         // Return successful response
         res.json({
             success: true,
@@ -202,7 +216,8 @@ router.get('/activities', async (req, res) => {
                 totalPages: totalPages,
                 hasNextPage: currentPage < totalPages,
                 hasPreviousPage: currentPage > 1
-            }
+            },
+            stats: stats
         });
 
     } catch (error) {

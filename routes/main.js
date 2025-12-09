@@ -813,6 +813,12 @@ router.post('/account/delete/request-code', async (req, res) => {
         const verificationCode = generateVerificationCode();
         const expiresAt = new Date(Date.now() + 3600000); // 1 hour
 
+        // Delete any existing unused verifications for this user
+        await db.query(
+            'DELETE FROM email_verifications WHERE user_id = ? AND new_email = ? AND used_at IS NULL',
+            [user.id, user.email]
+        );
+
         await db.query(
             'INSERT INTO email_verifications (user_id, new_email, verification_code, expires_at) VALUES (?, ?, ?, ?)',
             [user.id, user.email, verificationCode, expiresAt]
@@ -838,8 +844,8 @@ router.post('/account/delete/request-code', async (req, res) => {
     }
 });
 
-// Delete account after verification
-router.post('/account/delete', async (req, res) => {
+// Verify delete account code
+router.post('/account/delete/verify-code', async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
@@ -852,6 +858,7 @@ router.post('/account/delete', async (req, res) => {
     try {
         const user = req.session.user;
 
+        // Check for valid verification code (allow multiple verification attempts)
         const [records] = await db.query(
             'SELECT * FROM email_verifications WHERE user_id = ? AND new_email = ? AND verification_code = ? AND used_at IS NULL AND expires_at > NOW()',
             [user.id, user.email, verificationCode]
@@ -865,11 +872,63 @@ router.post('/account/delete', async (req, res) => {
             });
         }
 
+        // Store verification record ID in session for final deletion
+        req.session.deleteAccountVerificationId = records[0].id;
+
+        res.json({
+            success: true,
+            message: 'Verification code verified. Please confirm account deletion.',
+            csrfToken: generateToken(req, res)
+        });
+    } catch (error) {
+        console.error('Verify delete account code error:', error);
+        sendServerError(res, error, 'Failed to verify code');
+    }
+});
+
+// Delete account after verification
+router.post('/account/delete', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    try {
+        const user = req.session.user;
+
+        // Check if there's a verified code in session
+        if (!req.session.deleteAccountVerificationId) {
+            return res.status(400).json({
+                message: 'Verification required. Please verify your code first.',
+                csrfToken: generateToken(req, res)
+            });
+        }
+
+        // Verify the verification record still exists and is valid
+        const [records] = await db.query(
+            'SELECT * FROM email_verifications WHERE id = ? AND user_id = ? AND used_at IS NULL AND expires_at > NOW()',
+            [req.session.deleteAccountVerificationId, user.id]
+        );
+
+        if (records.length === 0) {
+            // Clear invalid session data
+            delete req.session.deleteAccountVerificationId;
+            return res.status(400).json({
+                message: 'Verification expired. Please start the process again.',
+                csrfToken: generateToken(req, res)
+            });
+        }
+
+        // Mark the verification as used
         await db.query('UPDATE email_verifications SET used_at = NOW() WHERE id = ?', [records[0].id]);
+
+        // Delete the user
         await db.query('DELETE FROM users WHERE id = ?', [user.id]);
 
+        // Clear session data
+        delete req.session.deleteAccountVerificationId;
+
         req.session.destroy(() => { });
-        res.json({ success: true, message: 'Account deleted' });
+        res.json({ success: true, message: 'Account deleted successfully' });
     } catch (error) {
         console.error('Delete account error:', error);
         sendServerError(res, error, 'Failed to delete account');

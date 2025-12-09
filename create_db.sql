@@ -18,6 +18,7 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
+    is_admin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

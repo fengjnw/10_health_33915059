@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <h1>Manage Users</h1>
+                <p class="text-muted">Administrator view - All registered users</p>
+
+                <div class="admin-nav">
+                    <a href="/admin/users" class="btn btn-secondary">Users</a>
+                    <a href="/admin/activities" class="btn btn-secondary">All Activities</a>
+                </div>
+
+                <% if (users && users.length> 0) { %>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Admin</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% users.forEach(u=> { %>
+                                    <tr data-user-id="<%= u.id %>">
+                                        <td>
+                                            <%= u.id %>
+                                        </td>
+                                        <td>
+                                            <%= u.username %>
+                                        </td>
+                                        <td>
+                                            <%= u.email %>
+                                        </td>
+                                        <td>
+                                            <%= u.first_name || '' %>
+                                                <%= u.last_name || '' %>
+                                        </td>
+                                        <td>
+                                            <%= u.is_admin ? 'Yes' : 'No' %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(u.created_at).toLocaleDateString() %>
+                                        </td>
+                                        <td>
+                                            <% if (u.id !==user.id) { %>
+                                                <button class="btn btn-danger btn-small delete-user-btn"
+                                                    data-user-id="<%= u.id %>" data-username="<%= u.username %>">
+                                                    Delete
+                                                </button>
+                                                <% } else { %>
+                                                    <span class="text-muted">(You)</span>
+                                                    <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } else { %>
+                        <p class="text-muted">No users found.</p>
+                        <% } %>
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const deleteButtons = document.querySelectorAll('.delete-user-btn');
+
+                    deleteButtons.forEach(btn => {
+                        btn.addEventListener('click', async function () {
+                            const userId = this.dataset.userId;
+                            const username = this.dataset.username;
+
+                            if (!confirm(`Are you sure you want to delete user "${username}"? This will delete all their activities and cannot be undone.`)) {
+                                return;
+                            }
+
+                            try {
+                                const response = await fetch(`/admin/users/${userId}/delete`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+
+                                const data = await response.json();
+
+                                if (data.success) {
+                                    // Remove the row from the table
+                                    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                                    if (row) {
+                                        row.remove();
+                                    }
+                                    alert('User deleted successfully');
+                                } else {
+                                    alert('Error: ' + (data.error || 'Failed to delete user'));
+                                }
+                            } catch (error) {
+                                console.error('Delete error:', error);
+                                alert('Failed to delete user');
+                            }
+                        });
+                    });
+                });
+            </script>
+</body>
+
+</html>

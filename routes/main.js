@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { EventTypes, logDataChange } = require('../utils/audit-logger');
+const { requireAdmin } = require('../middleware/admin');
 const { sendVerificationEmail } = require('../utils/email-service');
 const { generateToken } = require('../middleware/csrf');
 const { generateVerificationCode } = require('../utils/code-generator');
@@ -723,13 +724,8 @@ router.get('/api/audit-logs', async (req, res) => {
     }
 });
 
-// Logs page - view audit logs (requires login)
-router.get('/logs', async (req, res) => {
-    // Check if user is logged in
-    if (!req.session.user) {
-        return res.redirect('/auth/login');
-    }
-
+// Logs page - view audit logs (requires admin)
+router.get('/logs', requireAdmin, async (req, res) => {
     try {
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 200);
@@ -931,6 +927,97 @@ router.post('/account/delete', async (req, res) => {
     } catch (error) {
         console.error('Delete account error:', error);
         sendServerError(res, error, 'Failed to delete account');
+    }
+});
+
+// API Builder page (requires admin)
+router.get('/api-builder', requireAdmin, (req, res) => {
+    res.render('api-builder', {
+        title: 'API Builder - Developer Tools'
+    });
+});
+
+// Admin: Manage Users page (requires admin)
+router.get('/admin/users', requireAdmin, async (req, res) => {
+    try {
+        const [users] = await db.query(
+            'SELECT id, username, email, first_name, last_name, is_admin, created_at FROM users ORDER BY created_at DESC'
+        );
+
+        res.render('admin-users', {
+            title: 'Manage Users - Admin',
+            users
+        });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Failed to load users list',
+            user: req.session.user
+        });
+    }
+});
+
+// Admin: Delete user (requires admin)
+router.post('/admin/users/:id/delete', requireAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id, 10);
+
+        // Prevent admin from deleting themselves
+        if (userId === req.session.user.id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Cannot delete your own account'
+            });
+        }
+
+        await db.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        res.json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete user'
+        });
+    }
+});
+
+// Admin: Manage all activities (requires admin)
+router.get('/admin/activities', requireAdmin, async (req, res) => {
+    try {
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 10), 100);
+        const offset = (page - 1) * limit;
+
+        // Get all activities with user information
+        const [activities] = await db.query(`
+            SELECT a.*, u.username, u.email
+            FROM fitness_activities a
+            JOIN users u ON a.user_id = u.id
+            ORDER BY a.activity_time DESC
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
+
+        const [[{ total }]] = await db.query('SELECT COUNT(*) as total FROM fitness_activities');
+
+        res.render('admin-activities', {
+            title: 'Manage All Activities - Admin',
+            activities,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalCount: total,
+                limit
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching activities:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Failed to load activities',
+            user: req.session.user
+        });
     }
 });
 

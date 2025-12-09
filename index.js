@@ -68,6 +68,7 @@ app.use(sessionTimeoutMiddleware);
 // Make CSRF token and user session data available to all views
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
+    res.locals.isAdmin = req.session.isAdmin || false;
     res.locals.csrfToken = generateToken(req, res);
     next();
 });

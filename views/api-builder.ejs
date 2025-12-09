@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* API Builder specific compact styles */
+        body {
+            margin: 10px;
+            font-size: 13px;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0 0 5px 0;
+        }
+
+        h2 {
+            font-size: 14px;
+            margin: 10px 0 8px 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 3px;
+        }
+
+        .section {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        .method-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            margin-left: 5px;
+            border-radius: 3px;
+        }
+
+        .method-get {
+            background: #d0e8ff;
+            color: #0066cc;
+        }
+
+        .method-post {
+            background: #d0f0d0;
+            color: #006600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .form-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input,
+        select {
+            padding: 4px;
+            font-size: 12px;
+        }
+
+        .button-group {
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 5px 12px;
+            margin-right: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .output-box {
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 8px;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .output-box.empty {
+            display: none;
+        }
+
+        .result-box {
+            background: #f9f9f9;
+            border: 1px solid #27ae60;
+            padding: 8px;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result-box.empty {
+            display: none;
+        }
+
+        .result-box.error {
+            border-color: #e74c3c;
+            background: #ffe6e6;
+        }
+
+        .result-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .result-header.success {
+            color: #27ae60;
+        }
+
+        .result-header.error {
+            color: #e74c3c;
+        }
+
+        .json-key {
+            color: #881391;
+        }
+
+        .json-string {
+            color: #1a1aa6;
+        }
+
+        .json-number {
+            color: #c41a16;
+        }
+
+        .json-boolean {
+            color: #0d22aa;
+        }
+
+        .json-null {
+            color: #808080;
+        }
+
+        .copy-btn {
+            padding: 3px 8px;
+            background: #16a085;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            border-radius: 3px;
+        }
+
+        .copy-btn:hover {
+            background: #1abc9c;
+        }
+
+        .copy-btn.copied {
+            background: #27ae60;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border-radius: 4px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 3px solid #16a085;
+            padding: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 3px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <h1>API Request Builder</h1>
+                <p class="text-muted text-small">Generate and test API requests</p>
+
+                <!-- Bearer Token Section -->
+                <div class="section">
+                    <h2>Get Bearer Token <span class="method-badge method-post">POST</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Username <span class="required">*</span></label>
+                            <input type="text" id="token_username" placeholder="your_username">
+                        </div>
+                        <div class="form-group">
+                            <label>Password <span class="required">*</span></label>
+                            <input type="password" id="token_password" placeholder="your_password">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeTokenBtn">Execute</button>
+                        <button class="btn-secondary" id="buildTokenBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearTokenBtn">Clear</button>
+                    </div>
+                    <div id="tokenOutput" class="output-box empty"></div>
+                    <div id="tokenResult" class="result-box empty"></div>
+                </div>
+
+                <!-- GET Activities List -->
+                <div class="section">
+                    <h2>List Activities <span class="method-badge method-get">GET</span> <span
+                            style="font-size: 11px; color: #666; font-weight: normal;">(No token = public activities,
+                            With token =
+                            user's all activities)</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Activity Type</label>
+                            <select id="list_activity_type">
+                                <option value="">All</option>
+                                <option value="Running">Running</option>
+                                <option value="Cycling">Cycling</option>
+                                <option value="Swimming">Swimming</option>
+                                <option value="Gym">Gym</option>
+                                <option value="Yoga">Yoga</option>
+                                <option value="Walking">Walking</option>
+                                <option value="Hiking">Hiking</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date From</label>
+                            <input type="date" id="list_date_from">
+                        </div>
+                        <div class="form-group">
+                            <label>Date To</label>
+                            <input type="date" id="list_date_to">
+                        </div>
+                        <div class="form-group">
+                            <label>Min Duration (min)</label>
+                            <input type="number" id="list_duration_min" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Duration (min)</label>
+                            <input type="number" id="list_duration_max" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Sort By</label>
+                            <select id="list_sort">
+                                <option value="date_desc">Date (Newest)</option>
+                                <option value="date_asc">Date (Oldest)</option>
+                                <option value="calories_desc">Calories (High)</option>
+                                <option value="calories_asc">Calories (Low)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Page</label>
+                            <input type="number" id="list_page" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Page Size</label>
+                            <input type="number" id="list_pageSize" value="10" min="1" max="50">
+                        </div>
+                        <div class="form-group">
+                            <label>Bearer Token</label>
+                            <input type="text" id="list_token" placeholder="optional">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeListBtn">Execute</button>
+                        <button class="btn-secondary" id="buildListBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearListBtn">Clear</button>
+                    </div>
+                    <div id="listOutput" class="output-box empty"></div>
+                    <div id="listResult" class="result-box empty"></div>
+                </div>
+
+                <!-- GET Single Activity -->
+                <div class="section">
+                    <h2>Get Activity by ID <span class="method-badge method-get">GET</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Activity ID <span class="required">*</span></label>
+                            <input type="number" id="single_id" min="1" placeholder="e.g. 23">
+                        </div>
+                        <div class="form-group">
+                            <label>Bearer Token</label>
+                            <input type="text" id="single_token" placeholder="optional">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeSingleBtn">Execute</button>
+                        <button class="btn-secondary" id="buildSingleBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearSingleBtn">Clear</button>
+                    </div>
+                    <div id="singleOutput" class="output-box empty"></div>
+                    <div id="singleResult" class="result-box empty"></div>
+                </div>
+
+                <!-- GET Activities Stats -->
+                <div class="section">
+                    <h2>Get Activities Stats <span class="method-badge method-get">GET</span> </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Activity Type</label>
+                            <select id="stats_activity_type">
+                                <option value="">All</option>
+                                <option value="Running">Running</option>
+                                <option value="Cycling">Cycling</option>
+                                <option value="Swimming">Swimming</option>
+                                <option value="Gym">Gym</option>
+                                <option value="Yoga">Yoga</option>
+                                <option value="Walking">Walking</option>
+                                <option value="Hiking">Hiking</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date From</label>
+                            <input type="date" id="stats_date_from">
+                        </div>
+                        <div class="form-group">
+                            <label>Date To</label>
+                            <input type="date" id="stats_date_to">
+                        </div>
+                        <div class="form-group">
+                            <label>Min Duration (min)</label>
+                            <input type="number" id="stats_duration_min" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Duration (min)</label>
+                            <input type="number" id="stats_duration_max" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Min Calories</label>
+                            <input type="number" id="stats_calories_min" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Calories</label>
+                            <input type="number" id="stats_calories_max" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Bearer Token <span class="required">*</span></label>
+                            <input type="text" id="stats_token" placeholder="required for auth">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeStatsBtn">Execute</button>
+                        <button class="btn-secondary" id="buildStatsBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearStatsBtn">Clear</button>
+                    </div>
+                    <div id="statsOutput" class="output-box empty"></div>
+                    <div id="statsResult" class="result-box empty"></div>
+                </div>
+
+                <!-- POST Create Activity -->
+                <div class="section">
+                    <h2>Create Activity <span class="method-badge method-post">POST</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Activity Type <span class="required">*</span></label>
+                            <select id="create_activity_type">
+                                <option value="Running">Running</option>
+                                <option value="Cycling">Cycling</option>
+                                <option value="Swimming">Swimming</option>
+                                <option value="Gym">Gym</option>
+                                <option value="Yoga">Yoga</option>
+                                <option value="Walking">Walking</option>
+                                <option value="Hiking">Hiking</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (minutes) <span class="required">*</span></label>
+                            <input type="number" id="create_duration" min="1" placeholder="e.g. 45">
+                        </div>
+                        <div class="form-group">
+                            <label>Distance (km)</label>
+                            <input type="number" step="0.01" id="create_distance" min="0" placeholder="optional">
+                        </div>
+                        <div class="form-group">
+                            <label>Calories <span class="required">*</span></label>
+                            <input type="number" id="create_calories" min="1" placeholder="e.g. 300">
+                        </div>
+                        <div class="form-group">
+                            <label>Date & Time <span class="required">*</span></label>
+                            <input type="datetime-local" id="create_activity_time">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <input type="text" id="create_notes" placeholder="optional">
+                        </div>
+                        <div class="form-group">
+                            <label>Public?</label>
+                            <select id="create_is_public">
+                                <option value="1">Yes (public)</option>
+                                <option value="0">No (private)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bearer Token <span class="required">*</span></label>
+                            <input type="text" id="create_token" placeholder="required for auth">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeCreateBtn">Execute</button>
+                        <button class="btn-secondary" id="buildCreateBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearCreateBtn">Clear</button>
+                    </div>
+                    <div id="createOutput" class="output-box empty"></div>
+                    <div id="createResult" class="result-box empty"></div>
+                </div>
+
+                <!-- PATCH Update Activity -->
+                <div class="section">
+                    <h2>Update Activity <span class="method-badge method-post">PATCH</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Activity ID <span class="required">*</span></label>
+                            <input type="number" id="update_id" min="1" placeholder="e.g. 49">
+                        </div>
+                        <div class="form-group">
+                            <label>Activity Type</label>
+                            <select id="update_activity_type">
+                                <option value="">Unchanged</option>
+                                <option value="Running">Running</option>
+                                <option value="Cycling">Cycling</option>
+                                <option value="Swimming">Swimming</option>
+                                <option value="Gym">Gym</option>
+                                <option value="Yoga">Yoga</option>
+                                <option value="Walking">Walking</option>
+                                <option value="Hiking">Hiking</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (minutes)</label>
+                            <input type="number" id="update_duration" min="1" placeholder="leave empty to keep">
+                        </div>
+                        <div class="form-group">
+                            <label>Distance (km)</label>
+                            <input type="number" step="0.01" id="update_distance" min="0"
+                                placeholder="leave empty to keep">
+                        </div>
+                        <div class="form-group">
+                            <label>Calories</label>
+                            <input type="number" id="update_calories" min="1" placeholder="leave empty to keep">
+                        </div>
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="update_activity_time">
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <input type="text" id="update_notes" placeholder="leave empty to keep">
+                        </div>
+                        <div class="form-group">
+                            <label>Public?</label>
+                            <select id="update_is_public">
+                                <option value="">Unchanged</option>
+                                <option value="1">Yes (public)</option>
+                                <option value="0">No (private)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bearer Token <span class="required">*</span></label>
+                            <input type="text" id="update_token" placeholder="required for auth">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeUpdateBtn">Execute</button>
+                        <button class="btn-secondary" id="buildUpdateBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearUpdateBtn">Clear</button>
+                    </div>
+                    <div id="updateOutput" class="output-box empty"></div>
+                    <div id="updateResult" class="result-box empty"></div>
+                </div>
+
+                <!-- DELETE Activity -->
+                <div class="section">
+                    <h2>️Delete Activity <span class="method-badge method-post">DELETE</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Activity ID <span class="required">*</span></label>
+                            <input type="number" id="delete_id" min="1" placeholder="e.g. 49">
+                        </div>
+                        <div class="form-group">
+                            <label>Bearer Token <span class="required">*</span></label>
+                            <input type="text" id="delete_token" placeholder="required for auth">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="executeDeleteBtn">Execute</button>
+                        <button class="btn-secondary" id="buildDeleteBtn">Generate curl</button>
+                        <button class="btn-secondary" id="clearDeleteBtn">Clear</button>
+                    </div>
+                    <div id="deleteOutput" class="output-box empty"></div>
+                    <div id="deleteResult" class="result-box empty"></div>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>How to use:</strong> Fill form -> Generate curl -> Copy -> Paste in terminal</p>
+                </div>
+
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+
+            <script src="/js/api-builder.js"></script>
+</body>
+
+</html>

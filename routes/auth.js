@@ -107,6 +107,7 @@ router.post('/register', registerLimiter, attachRateLimitHelpers(registerStore),
             first_name: first_name,
             last_name: last_name
         };
+        req.session.isAdmin = false; // New users are not admins by default
 
         // Log successful registration
         await logAuth(EventTypes.REGISTER, req, result.insertId, username);
@@ -303,6 +304,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
             first_name: user.first_name,
             last_name: user.last_name
         };
+        req.session.isAdmin = user.is_admin || false;
 
         // Log successful login
         await logAuth(EventTypes.LOGIN_SUCCESS, req, user.id, username);

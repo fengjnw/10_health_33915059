@@ -24,6 +24,7 @@ document.getElementById('clearTokenBtn').addEventListener('click', () => {
     document.getElementById('token_username').value = '';
     document.getElementById('token_password').value = '';
     hideOutput('tokenOutput');
+    hideResult('tokenResult');
 });
 
 // ===== List Activities Section =====
@@ -71,6 +72,7 @@ document.getElementById('clearListBtn').addEventListener('click', () => {
     document.getElementById('list_pageSize').value = '10';
     document.getElementById('list_token').value = '';
     hideOutput('listOutput');
+    hideResult('listResult');
 });
 
 // ===== Single Activity Section =====
@@ -96,6 +98,7 @@ document.getElementById('clearSingleBtn').addEventListener('click', () => {
     document.getElementById('single_id').value = '';
     document.getElementById('single_token').value = '';
     hideOutput('singleOutput');
+    hideResult('singleResult');
 });
 
 // ===== Create Activity Section =====
@@ -154,6 +157,7 @@ document.getElementById('clearCreateBtn').addEventListener('click', () => {
     document.getElementById('create_is_public').value = '1';
     document.getElementById('create_token').value = '';
     hideOutput('createOutput');
+    hideResult('createResult');
 });
 
 // ===== Update Activity Section =====
@@ -213,6 +217,7 @@ document.getElementById('clearUpdateBtn').addEventListener('click', () => {
     document.getElementById('update_is_public').value = '';
     document.getElementById('update_token').value = '';
     hideOutput('updateOutput');
+    hideResult('updateResult');
 });
 
 // ===== Delete Activity Section =====
@@ -240,6 +245,7 @@ document.getElementById('clearDeleteBtn').addEventListener('click', () => {
     document.getElementById('delete_id').value = '';
     document.getElementById('delete_token').value = '';
     hideOutput('deleteOutput');
+    hideResult('deleteResult');
 });
 
 // ===== Helper Functions =====

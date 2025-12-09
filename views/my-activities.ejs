@@ -27,7 +27,7 @@
                 </div>
 
                 <% if (activities && activities.length> 0) { %>
-                    <div id="advanced-filters" class="advanced-filters" style="display: none;">
+                    <div id="advanced-filters" class="advanced-filters hidden">
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label for="activity-type-filter">Activity Type:</label>
@@ -219,12 +219,10 @@
                                                                 <% } %>
                                                     </td>
                                                     <td>
-                                                        <div style="display: flex; gap: 8px;">
+                                                        <div class="flex-row">
                                                             <a href="/my-activities/<%= activity.id %>/edit"
-                                                                class="btn btn-small"
-                                                                style="flex: 1; display: flex; align-items: center; justify-content: center;">Edit</a>
-                                                            <button class="btn btn-small btn-delete delete-btn"
-                                                                style="flex: 1;"
+                                                                class="btn btn-small flex-1 flex-center">Edit</a>
+                                                            <button class="btn btn-small btn-delete delete-btn flex-1"
                                                                 data-activity-id="<%= activity.id %>">Delete</button>
                                                         </div>
                                                     </td>

@@ -1347,3 +1347,123 @@ footer .dev-tools-separator {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+/* Utility Classes */
+.flex-row {
+    display: flex;
+    gap: 8px;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flex-gap-12 {
+    display: flex;
+    gap: 12px;
+}
+
+.flex-gap-sm {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-align {
+    display: flex;
+    align-items: center;
+}
+
+.gap-sm {
+    gap: 0.5rem;
+}
+
+.text-muted {
+    color: #666;
+}
+
+.text-small {
+    font-size: 0.9rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.center {
+    text-align: center;
+}
+
+.modal-step {
+    display: none;
+}
+
+.modal-step.active {
+    display: block;
+}
+
+.modal.show {
+    display: block;
+}
+
+.text-success {
+    color: #16a085;
+    font-weight: bold;
+}
+
+.text-error {
+    color: #e74c3c;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.dev-note {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f0f9f7;
+    border-radius: 4px;
+}
+
+.dev-note p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.dev-note a {
+    word-break: break-all;
+    font-size: 0.8rem;
+}
+
+.input-auto {
+    width: auto;
+}
+
+.label-checkbox {
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.modal-content.center {
+    max-width: 420px;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+}
+
+.text-light-gray {
+    color: #999;
+}

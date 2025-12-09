@@ -56,19 +56,18 @@
 
                         <div class="form-group">
                             <label for="email">Email:</label>
-                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <div class="flex-gap-sm flex-align">
                                 <input type="email" id="email" name="email" value="<%= user.email %>" disabled readonly
-                                    style="flex: 1;">
+                                    class="flex-1">
                                 <button type="button" id="changeEmailBtn" class="btn btn-secondary btn-compact">Change
                                     Email</button>
                             </div>
                             <span class="form-help muted">Click the button to change your email</span>
                         </div>
 
-                        <div class="form-group" style="display: flex; gap: 12px;">
-                            <button type="submit" class="btn btn-primary" style="flex: 1;">Update Profile</button>
-                            <a href="/my-activities" class="btn btn-secondary"
-                                style="flex: 1; display: flex; align-items: center; justify-content: center;">Cancel</a>
+                        <div class="form-group flex-gap-12">
+                            <button type="submit" class="btn btn-primary flex-1">Update Profile</button>
+                            <a href="/my-activities" class="btn btn-secondary flex-1 flex-center">Cancel</a>
                         </div>
                     </form>
                 </div>
@@ -80,10 +79,10 @@
             <%- include('partials/change-email-modal') %>
 
                 <!-- Profile update success modal -->
-                <div id="profileSuccessModal" class="modal profile-success" style="display: none;">
-                    <div class="modal-content" style="max-width: 420px; text-align: center;">
-                        <h3 style="margin-top: 0;">Profile Updated</h3>
-                        <p style="color: #34495e;">Your profile information has been saved.</p>
+                <div id="profileSuccessModal" class="modal profile-success hidden">
+                    <div class="modal-content center">
+                        <h3>Profile Updated</h3>
+                        <p class="text-muted">Your profile information has been saved.</p>
                     </div>
                 </div>
 

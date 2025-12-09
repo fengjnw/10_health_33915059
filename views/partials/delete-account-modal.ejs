@@ -1,0 +1,43 @@
+<!-- Delete Account Modal -->
+<div id="deleteAccountModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Delete Account</h2>
+
+        <div id="deleteStep1" class="modal-step active">
+            <h3>⚠️ Warning</h3>
+            <p class="text-error">This action cannot be undone!</p>
+            <p>All your data including activities and profile information will be permanently deleted.</p>
+            <form id="deleteRequestCodeForm">
+                <button type="submit" class="btn btn-danger">Send Verification Code</button>
+                <button type="button" class="btn btn-secondary" id="deleteCancelBtn">Cancel</button>
+            </form>
+        </div>
+
+        <div id="deleteStep2" class="modal-step">
+            <h3>Verify Deletion</h3>
+            <p class="text-muted text-small">We've sent a verification code to your email address. Enter it below to
+                confirm account deletion.</p>
+
+            <form id="deleteVerifyForm">
+                <div class="form-group">
+                    <label for="deleteVerificationCode">Verification Code:</label>
+                    <input type="text" id="deleteVerificationCode" name="deleteVerificationCode"
+                        placeholder="e.g., 123456" maxlength="6" required>
+                </div>
+                <div id="deleteVerificationError" class="hidden text-error"></div>
+                <div id="deletePreviewUrl" class="dev-note hidden">
+                    <p>Development: Click the link below to preview the verification email:</p>
+                    <a id="deletePreviewLink" href="" target="_blank">Preview Email</a>
+                </div>
+                <button type="submit" class="btn btn-danger">Confirm Delete Account</button>
+                <button type="button" class="btn btn-secondary" id="deleteBackBtn">Back</button>
+            </form>
+        </div>
+
+        <div id="deleteErrorStep" class="modal-step">
+            <p id="deleteErrorMessage" class="text-error"></p>
+            <button type="button" class="btn btn-secondary" id="deleteErrorBackBtn">Back</button>
+        </div>
+    </div>
+</div>

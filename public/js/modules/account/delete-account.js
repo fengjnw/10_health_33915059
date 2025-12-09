@@ -1,127 +1,137 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('deleteAccountModal');
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
-    const closeBtn = modal ? modal.querySelector('.close') : null;
-    const requestCodeForm = document.getElementById('deleteRequestCodeForm');
-    const verifyDeleteForm = document.getElementById('deleteVerifyForm');
-    const backBtn = document.getElementById('deleteBackBtn');
-    const cancelBtn = document.getElementById('deleteCancelBtn');
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
+    const deleteCloseBtn = deleteAccountModal.querySelector('.close');
+    const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+    const deleteBackBtn = document.getElementById('deleteBackBtn');
+    const deleteErrorBackBtn = document.getElementById('deleteErrorBackBtn');
 
-    let csrfToken = getCSRFToken();
+    const deleteStep1 = document.getElementById('deleteStep1');
+    const deleteStep2 = document.getElementById('deleteStep2');
+    const deleteErrorStep = document.getElementById('deleteErrorStep');
+
+    const deleteRequestCodeForm = document.getElementById('deleteRequestCodeForm');
+    const deleteVerifyForm = document.getElementById('deleteVerifyForm');
+
+    // Show/hide steps
+    function showStep(step) {
+        deleteStep1.classList.remove('active');
+        deleteStep2.classList.remove('active');
+        deleteErrorStep.classList.remove('active');
+
+        if (step === 'step1') deleteStep1.classList.add('active');
+        else if (step === 'step2') deleteStep2.classList.add('active');
+        else if (step === 'error') deleteErrorStep.classList.add('active');
+    }
 
     // Open modal
-    if (deleteAccountBtn && modal) {
-        deleteAccountBtn.addEventListener('click', function () {
-            modal.style.display = 'block';
-            resetModal();
-        });
-    }
+    deleteAccountBtn.addEventListener('click', function () {
+        deleteAccountModal.style.display = 'block';
+        showStep('step1');
+    });
 
     // Close modal
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function () {
-            modal.style.display = 'none';
-        });
+    function closeModal() {
+        deleteAccountModal.style.display = 'none';
+        showStep('step1');
+        deleteRequestCodeForm.reset();
+        deleteVerifyForm.reset();
+        document.getElementById('deleteVerificationError').textContent = '';
+        document.getElementById('deleteVerificationError').classList.add('hidden');
+        document.getElementById('deletePreviewUrl').classList.add('hidden');
     }
 
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function () {
-            modal.style.display = 'none';
-        });
-    }
+    deleteCloseBtn.addEventListener('click', closeModal);
+    deleteCancelBtn.addEventListener('click', closeModal);
+    deleteBackBtn.addEventListener('click', function () {
+        showStep('step1');
+        deleteVerifyForm.reset();
+        document.getElementById('deleteVerificationError').textContent = '';
+        document.getElementById('deleteVerificationError').classList.add('hidden');
+        document.getElementById('deletePreviewUrl').classList.add('hidden');
+    });
+
+    deleteErrorBackBtn.addEventListener('click', function () {
+        showStep('step1');
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function (event) {
+        if (event.target === deleteAccountModal) {
+            closeModal();
+        }
+    });
 
     // Step 1: Request verification code
-    if (requestCodeForm) {
-        requestCodeForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
+    deleteRequestCodeForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-            try {
-                const response = await fetch('/account/delete/request-code', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({})
-                });
+        try {
+            const response = await fetch('/account/delete/request-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': getCSRFToken()
+                },
+                body: JSON.stringify({})
+            });
 
-                const data = await parseJsonResponse(response);
-                csrfToken = handleCSRFUpdate(data) || csrfToken;
+            const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to send verification code');
+            if (response.ok) {
+                // Show step 2
+                showStep('step2');
+
+                // Show preview URL if available (development mode)
+                if (data.previewUrl) {
+                    const previewDiv = document.getElementById('deletePreviewUrl');
+                    const previewLink = document.getElementById('deletePreviewLink');
+                    previewLink.href = data.previewUrl;
+                    previewDiv.classList.remove('hidden');
                 }
-
-                // Move to verification step
-                document.getElementById('deleteStep1').style.display = 'none';
-                document.getElementById('deleteStep2').style.display = 'block';
-                document.getElementById('deleteVerificationError').style.display = 'none';
-            } catch (error) {
-                showDeleteError(error.message, 'deleteRequestError');
+            } else {
+                document.getElementById('deleteErrorMessage').textContent = data.message || 'Failed to send verification code';
+                showStep('error');
             }
-        });
-    }
-
-    // Step 2: Verify code and confirm deletion
-    if (verifyDeleteForm) {
-        verifyDeleteForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const code = document.getElementById('deleteVerificationCode').value;
-
-            if (!confirm('Are you absolutely sure? This action cannot be undone!')) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/account/delete', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: JSON.stringify({ code })
-                });
-
-                const data = await parseJsonResponse(response);
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to delete account');
-                }
-
-                // Success - redirect to goodbye page
-                window.location.href = '/goodbye';
-            } catch (error) {
-                showDeleteError(error.message, 'deleteVerificationError');
-            }
-        });
-    }
-
-    // Back button
-    if (backBtn) {
-        backBtn.addEventListener('click', function () {
-            document.getElementById('deleteStep2').style.display = 'none';
-            document.getElementById('deleteStep1').style.display = 'block';
-            document.getElementById('deleteVerificationCode').value = '';
-        });
-    }
-
-    function resetModal() {
-        document.getElementById('deleteStep1').style.display = 'block';
-        document.getElementById('deleteStep2').style.display = 'none';
-        document.getElementById('deleteVerificationCode').value = '';
-        document.getElementById('deleteRequestError').style.display = 'none';
-        document.getElementById('deleteVerificationError').style.display = 'none';
-    }
-
-    function showDeleteError(message, elementId) {
-        const errorElement = document.getElementById(elementId);
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
+        } catch (error) {
+            console.error('Error requesting verification code:', error);
+            document.getElementById('deleteErrorMessage').textContent = 'An error occurred. Please try again.';
+            showStep('error');
         }
-    }
+    });
 
-    function parseJsonResponse(response) {
-        return response.json().catch(() => ({ error: 'Invalid response from server' }));
-    }
+    // Step 2: Verify code and delete account
+    deleteVerifyForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const code = document.getElementById('deleteVerificationCode').value;
+        const errorDiv = document.getElementById('deleteVerificationError');
+        errorDiv.textContent = '';
+        errorDiv.classList.add('hidden');
+
+        try {
+            const response = await fetch('/account/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': getCSRFToken()
+                },
+                body: JSON.stringify({ verificationCode: code })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Redirect to goodbye page
+                window.location.href = '/goodbye';
+            } else {
+                errorDiv.textContent = data.message || 'Verification failed';
+                errorDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error verifying code:', error);
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.classList.remove('hidden');
+        }
+    });
 });

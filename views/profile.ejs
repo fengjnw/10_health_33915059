@@ -77,63 +77,21 @@
         <%- include('partials/footer') %>
 
             <%- include('partials/change-email-modal') %>
+                <%- include('partials/delete-account-modal') %>
 
-                <!-- Delete Account Modal -->
-                <div id="deleteAccountModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close">&times;</span>
-
-                        <!-- Step 1: Confirm and request code -->
-                        <div id="deleteStep1">
-                            <h3>Delete Account</h3>
-                            <p class="warning-text">⚠️ Warning: This action cannot be undone!</p>
-                            <p>All your data including activities and profile information will be permanently deleted.
-                            </p>
-                            <form id="deleteRequestCodeForm">
-                                <div class="error-message" id="deleteRequestError" style="display: none;"></div>
-                                <div class="form-group flex-gap-12">
-                                    <button type="submit" class="btn btn-danger flex-1">Send Verification Code</button>
-                                    <button type="button" id="deleteCancelBtn"
-                                        class="btn btn-secondary flex-1">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Step 2: Verify code -->
-                        <div id="deleteStep2" style="display: none;">
-                            <h3>Verify Deletion</h3>
-                            <p>A verification code has been sent to your email. Enter it below to confirm account
-                                deletion.</p>
-                            <form id="deleteVerifyForm">
-                                <div class="form-group">
-                                    <label for="deleteVerificationCode">Verification Code:</label>
-                                    <input type="text" id="deleteVerificationCode" required maxlength="8"
-                                        autocomplete="one-time-code">
-                                </div>
-                                <div class="error-message" id="deleteVerificationError" style="display: none;"></div>
-                                <div class="form-group flex-gap-12">
-                                    <button type="submit" class="btn btn-danger flex-1">Confirm Delete Account</button>
-                                    <button type="button" id="deleteBackBtn"
-                                        class="btn btn-secondary flex-1">Back</button>
-                                </div>
-                            </form>
+                    <!-- Profile update success modal -->
+                    <div id="profileSuccessModal" class="modal profile-success hidden">
+                        <div class="modal-content center">
+                            <h3>Profile Updated</h3>
+                            <p class="text-muted">Your profile information has been saved.</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Profile update success modal -->
-                <div id="profileSuccessModal" class="modal profile-success hidden">
-                    <div class="modal-content center">
-                        <h3>Profile Updated</h3>
-                        <p class="text-muted">Your profile information has been saved.</p>
-                    </div>
-                </div>
-
-                <script src="/js/utils/csrf-helper.js"></script>
-                <script src="/js/utils/form-helper.js"></script>
-                <script src="/js/modules/account/profile.js"></script>
-                <script src="/js/modules/account/change-email.js"></script>
-                <script src="/js/modules/account/delete-account.js"></script>
+                    <script src="/js/utils/csrf-helper.js"></script>
+                    <script src="/js/utils/form-helper.js"></script>
+                    <script src="/js/modules/account/profile.js"></script>
+                    <script src="/js/modules/account/change-email.js"></script>
+                    <script src="/js/modules/account/delete-account.js"></script>
 </body>
 
 </html>

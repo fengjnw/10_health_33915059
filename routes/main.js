@@ -818,13 +818,20 @@ router.post('/account/delete/request-code', async (req, res) => {
             [user.id, user.email, verificationCode, expiresAt]
         );
 
-        await sendVerificationEmail(user.email, verificationCode);
+        const emailResult = await sendVerificationEmail(user.email, verificationCode);
 
-        res.json({
+        const response = {
             success: true,
             message: 'Verification code sent to your email',
             csrfToken: generateToken(req, res)
-        });
+        };
+
+        // Add preview URL in development mode
+        if (emailResult.previewUrl) {
+            response.previewUrl = emailResult.previewUrl;
+        }
+
+        res.json(response);
     } catch (error) {
         console.error('Send delete account code error:', error);
         sendServerError(res, error, 'Failed to send verification code');
@@ -837,8 +844,8 @@ router.post('/account/delete', async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const { code } = req.body;
-    if (!code) {
+    const { verificationCode } = req.body;
+    if (!verificationCode) {
         return sendValidationError(res, 'Verification code required', req);
     }
 
@@ -847,7 +854,7 @@ router.post('/account/delete', async (req, res) => {
 
         const [records] = await db.query(
             'SELECT * FROM email_verifications WHERE user_id = ? AND new_email = ? AND verification_code = ? AND used_at IS NULL AND expires_at > NOW()',
-            [user.id, user.email, code]
+            [user.id, user.email, verificationCode]
         );
 
         if (records.length === 0) {

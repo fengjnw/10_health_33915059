@@ -18,6 +18,7 @@ function waitForChartJs(callback, maxWait = 5000) {
 // Helper function to get CSRF token from DOM
 function getCSRFToken() {
     return document.querySelector('input[name="_csrf"]')?.value ||
+        document.querySelector('input#csrf-token')?.value ||
         document.querySelector('meta[name="csrf-token"]')?.content ||
         window.csrfToken || '';
 }
@@ -33,6 +34,8 @@ async function loadAndRenderCharts() {
         console.log('Starting chart load...');
 
         const csrfToken = getCSRFToken();
+        console.log('CSRF Token:', csrfToken ? 'found' : 'not found');
+
         const fetchOptions = {
             credentials: 'include',
             headers: {
@@ -41,12 +44,28 @@ async function loadAndRenderCharts() {
         };
 
         // Fetch type distribution data
+        console.log('Fetching type distribution from /internal/activities/charts/type-distribution');
         const typeRes = await fetch('/internal/activities/charts/type-distribution', fetchOptions);
+        console.log('Type distribution response status:', typeRes.status);
+
+        if (!typeRes.ok) {
+            console.error('Type distribution fetch failed:', typeRes.status, typeRes.statusText);
+            return;
+        }
+
         const typeData = await typeRes.json();
         console.log('Type distribution data:', typeData);
 
         // Fetch daily trend data
+        console.log('Fetching daily trend from /internal/activities/charts/daily-trend');
         const trendRes = await fetch('/internal/activities/charts/daily-trend?days=30', fetchOptions);
+        console.log('Daily trend response status:', trendRes.status);
+
+        if (!trendRes.ok) {
+            console.error('Daily trend fetch failed:', trendRes.status, trendRes.statusText);
+            return;
+        }
+
         const trendData = await trendRes.json();
         console.log('Daily trend data:', trendData);
 

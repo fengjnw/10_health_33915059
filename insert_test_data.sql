@@ -1,13 +1,15 @@
 -- Insert test data into the health database
 USE health;
 
--- Insert default user (username: gold, password: smiths)
--- Password is hashed using bcrypt
--- Plain password: smiths
--- Hashed password generated with bcrypt salt rounds = 10
-INSERT INTO users (username, password, email, first_name, last_name) VALUES
-('gold', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'gold@example.com', 'Gold', 'Smith'),
-('testuser', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'test@example.com', 'Test', 'User');
+-- Insert default users
+-- Password is hashed using bcrypt (salt rounds = 10)
+-- User 1: username: gold, password: smiths
+-- User 2: username: testuser, password: smiths
+-- User 3 (ADMIN): username: admin, password: qwerty
+INSERT INTO users (username, password, email, first_name, last_name, is_admin) VALUES
+('gold', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'gold@example.com', 'Gold', 'Smith', FALSE),
+('testuser', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'test@example.com', 'Test', 'User', FALSE),
+('admin', '$2b$10$6TMiIeOd.3kIvGhEAzUFBuZVtykl4MUVQU.YHtWv3dHAHoXNhdRaW', 'admin@example.com', 'Admin', 'User', TRUE);
 
 -- Insert sample fitness activities - User 1 (gold) with diverse types, durations, calories
 INSERT INTO fitness_activities (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public) VALUES

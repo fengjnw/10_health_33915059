@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .logs-container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .logs-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .logs-filters select,
+        .logs-filters input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .logs-table thead {
+            background: #f8f9fa;
+        }
+
+        .logs-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .logs-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: top;
+        }
+
+        .logs-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .event-type {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .event-login_success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .event-login_failure {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .event-logout {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .event-create,
+        .event-update,
+        .event-delete {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .event-security {
+            background: #f5c6cb;
+            color: #721c24;
+        }
+
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .log-details {
+            font-size: 0.85rem;
+            color: #6c757d;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .no-logs {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <div class="logs-container">
+                    <div class="logs-header">
+                        <h1>🔍 Audit Logs</h1>
+                        <p class="timestamp">Total: <%= pagination.totalCount %> events</p>
+                    </div>
+
+                    <form method="GET" action="/logs" class="logs-filters">
+                        <select name="event_type">
+                            <option value="">All Events</option>
+                            <option value="login_success" <%=filterParams.event_type==='login_success' ? 'selected' : ''
+                                %>>Login Success</option>
+                            <option value="login_failure" <%=filterParams.event_type==='login_failure' ? 'selected' : ''
+                                %>>Login Failure</option>
+                            <option value="logout" <%=filterParams.event_type==='logout' ? 'selected' : '' %>>Logout
+                            </option>
+                            <option value="create" <%=filterParams.event_type==='create' ? 'selected' : '' %>>Create
+                            </option>
+                            <option value="update" <%=filterParams.event_type==='update' ? 'selected' : '' %>>Update
+                            </option>
+                            <option value="delete" <%=filterParams.event_type==='delete' ? 'selected' : '' %>>Delete
+                            </option>
+                            <option value="security" <%=filterParams.event_type==='security' ? 'selected' : '' %>
+                                >Security</option>
+                        </select>
+
+                        <input type="number" name="user_id" placeholder="User ID" value="<%= filterParams.user_id %>">
+
+                        <select name="limit">
+                            <option value="50" <%=filterParams.limit==50 ? 'selected' : '' %>>50 per page</option>
+                            <option value="100" <%=filterParams.limit==100 ? 'selected' : '' %>>100 per page</option>
+                            <option value="200" <%=filterParams.limit==200 ? 'selected' : '' %>>200 per page</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-primary btn-small">Apply Filters</button>
+                        <a href="/logs" class="btn btn-secondary btn-small">Clear</a>
+                    </form>
+
+                    <% if (logs && logs.length> 0) { %>
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Event</th>
+                                    <th>User</th>
+                                    <th>IP Address</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% logs.forEach(log=> { %>
+                                    <tr>
+                                        <td class="timestamp">
+                                            <%= new Date(log.created_at).toLocaleString('en-GB', { year: 'numeric' ,
+                                                month: '2-digit' , day: '2-digit' , hour: '2-digit' , minute: '2-digit'
+                                                , second: '2-digit' }) %>
+                                        </td>
+                                        <td>
+                                            <span class="event-type event-<%= log.event_type %>">
+                                                <%= log.event_type %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <% if (log.username) { %>
+                                                <%= log.username %> (<%= log.user_id || 'N/A' %>)
+                                                        <% } else if (log.user_id) { %>
+                                                            User #<%= log.user_id %>
+                                                                <% } else { %>
+                                                                    <span style="color: #999;">N/A</span>
+                                                                    <% } %>
+                                        </td>
+                                        <td>
+                                            <%= log.ip_address || 'N/A' %>
+                                        </td>
+                                        <td class="log-details">
+                                            <% if (log.resource_type) { %>
+                                                <%= log.resource_type %>#<%= log.resource_id %>
+                                                        <% } %>
+                                                            <% if (log.changes) { %>
+                                                                <% try { const parsed=typeof log.changes==='string' ?
+                                                                    JSON.parse(log.changes) : log.changes; if
+                                                                    (parsed.reason) { %>
+                                                                    <%= parsed.reason %>
+                                                                        <% } } catch(e) {} %>
+                                                                            <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+
+                        <% if (pagination.totalPages> 1) { %>
+                            <div class="pagination">
+                                <% if (pagination.page> 1) { %>
+                                    <a href="?page=<%= pagination.page - 1 %>&limit=<%= pagination.limit %><%= filterParams.event_type ? '&event_type=' + filterParams.event_type : '' %><%= filterParams.user_id ? '&user_id=' + filterParams.user_id : '' %>"
+                                        class="page-link">Prev</a>
+                                    <% } %>
+
+                                        <span class="page-link active">Page <%= pagination.page %> of <%=
+                                                    pagination.totalPages %></span>
+
+                                        <% if (pagination.page < pagination.totalPages) { %>
+                                            <a href="?page=<%= pagination.page + 1 %>&limit=<%= pagination.limit %><%= filterParams.event_type ? '&event_type=' + filterParams.event_type : '' %><%= filterParams.user_id ? '&user_id=' + filterParams.user_id : '' %>"
+                                                class="page-link">Next</a>
+                                            <% } %>
+                            </div>
+                            <% } %>
+
+                                <% } else { %>
+                                    <div class="no-logs">
+                                        <p>No audit logs found.</p>
+                                    </div>
+                                    <% } %>
+                </div>
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+</body>
+
+</html>

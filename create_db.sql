@@ -4,6 +4,7 @@ USE health;
 
 -- Drop existing tables if they exist (in reverse dependency order)
 SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE IF EXISTS audit_logs;
 DROP TABLE IF EXISTS fitness_activities;
 DROP TABLE IF EXISTS email_verifications;
 DROP TABLE IF EXISTS users;
@@ -55,3 +56,23 @@ CREATE TABLE email_verifications (
 CREATE INDEX idx_activity_type ON fitness_activities(activity_type);
 CREATE INDEX idx_activity_time ON fitness_activities(activity_time);
 CREATE INDEX idx_user_id ON fitness_activities(user_id);
+
+-- Create audit_logs table for security logging
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    username VARCHAR(50),
+    event_type VARCHAR(50) NOT NULL,
+    resource_type VARCHAR(50),
+    resource_id INT,
+    changes JSON,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    path VARCHAR(255),
+    method VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_event_type (event_type),
+    INDEX idx_created_at (created_at),
+    INDEX idx_event_user (event_type, user_id)
+);

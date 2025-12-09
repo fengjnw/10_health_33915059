@@ -1,5 +1,13 @@
 <footer>
     <div class="container">
         <p>&copy; 2025 Health & Fitness Tracker. All rights reserved.</p>
+        <% if (locals.user) { %>
+            <div class="dev-tools">
+                <span class="dev-tools-label">🔧 Developer Tools:</span>
+                <a href="/api-builder.html" class="dev-tool-link" target="_blank">API Builder</a>
+                <span class="dev-tools-separator">|</span>
+                <a href="/logs" class="dev-tool-link">Audit Logs</a>
+            </div>
+            <% } %>
     </div>
 </footer>

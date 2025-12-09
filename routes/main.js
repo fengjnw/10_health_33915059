@@ -826,4 +826,82 @@ router.get('/api/audit-logs', async (req, res) => {
     }
 });
 
+// Logs page - view audit logs (requires login)
+router.get('/logs', async (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+
+    try {
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 200);
+        const offset = (page - 1) * limit;
+
+        // Get filter parameters
+        const { event_type, user_id } = req.query;
+
+        // Build WHERE clause
+        let whereClause = '';
+        const params = [];
+
+        if (event_type) {
+            whereClause = 'WHERE event_type = ?';
+            params.push(event_type);
+        }
+
+        if (user_id) {
+            whereClause += whereClause ? ' AND user_id = ?' : 'WHERE user_id = ?';
+            params.push(parseInt(user_id, 10));
+        }
+
+        // Get total count
+        const countQuery = `SELECT COUNT(*) as total FROM audit_logs ${whereClause}`;
+        const [countRows] = await db.query(countQuery, params);
+        const totalCount = countRows[0]?.total || 0;
+        const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
+
+        // Get logs
+        const logsQuery = `
+            SELECT * FROM audit_logs 
+            ${whereClause}
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        `;
+        const [logs] = await db.query(logsQuery, [...params, limit, offset]);
+
+        res.render('logs', {
+            title: 'Audit Logs - Health & Fitness Tracker',
+            logs,
+            pagination: {
+                page,
+                limit,
+                totalCount,
+                totalPages
+            },
+            filterParams: {
+                event_type: event_type || '',
+                user_id: user_id || ''
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching logs:', error);
+        res.render('logs', {
+            title: 'Audit Logs - Health & Fitness Tracker',
+            logs: [],
+            pagination: {
+                page: 1,
+                limit: 50,
+                totalCount: 0,
+                totalPages: 1
+            },
+            filterParams: {
+                event_type: '',
+                user_id: ''
+            },
+            error: 'Failed to load audit logs'
+        });
+    }
+});
+
 module.exports = router;

@@ -959,6 +959,35 @@ footer {
     font-weight: 500;
 }
 
+footer .dev-tools {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #d5e8e4;
+    font-size: 0.85rem;
+}
+
+footer .dev-tools-label {
+    color: #95a5a6;
+    margin-right: 0.5rem;
+}
+
+footer .dev-tool-link {
+    color: #16a085;
+    text-decoration: none;
+    padding: 0.2rem 0.5rem;
+    transition: color 0.2s;
+}
+
+footer .dev-tool-link:hover {
+    color: #1abc9c;
+    text-decoration: underline;
+}
+
+footer .dev-tools-separator {
+    color: #bdc3c7;
+    margin: 0 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .nav-menu {

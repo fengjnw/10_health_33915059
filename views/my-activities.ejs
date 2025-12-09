@@ -9,8 +9,6 @@
     </title>
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/vendor/chart.js"></script>
-    <!-- html2pdf library for PDF generation -->
-    <script src="/js/vendor/html2pdf.bundle.min.js"></script>
     <style>
         .charts-container {
             display: grid;
@@ -41,16 +39,6 @@
 </head>
 
 <body>
-    <!-- Hidden user info for PDF generation -->
-    <div style="display: none;">
-        <div class="user-profile-name">
-            <%= user?.username || 'User' %>
-        </div>
-        <div class="user-profile-email">
-            <%= user?.email || 'user@example.com' %>
-        </div>
-    </div>
-
     <%- include('partials/header') %>
 
         <main>
@@ -158,10 +146,6 @@
                                             <button id="export-activities" class="btn btn-secondary btn-small"
                                                 title="Export filtered activities to CSV">
                                                 Export CSV
-                                            </button>
-                                            <button id="export-pdf-report" class="btn btn-secondary btn-small"
-                                                title="Generate and download PDF fitness report">
-                                                Export PDF Report
                                             </button>
                                             <div class="sort-controls">
                                                 <label for="sort-by">Sort</label>
@@ -382,7 +366,6 @@
             <script src="/js/modules/activity/export.js"></script>
             <script src="/js/modules/activity/page-size-selector.js"></script>
             <script src="/js/modules/activity/charts.js"></script>
-            <script src="/js/modules/activity/pdf-report.js"></script>
 </body>
 
 </html>

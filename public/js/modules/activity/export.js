@@ -1,27 +1,57 @@
-// Export activities to CSV
+// Export activities to CSV (all filtered data, not only current page)
 
-function collectTableRows() {
-    const rows = [];
-    const tableBody = document.querySelector('.activities-table tbody');
-    if (!tableBody) return rows;
+function getCSRFToken() {
+    return document.querySelector('#csrf-token')?.value ||
+        document.querySelector('input[name="_csrf"]')?.value ||
+        document.querySelector('meta[name="csrf-token"]')?.content ||
+        window.csrfToken || '';
+}
 
-    tableBody.querySelectorAll('tr').forEach(row => {
-        if (row.style.display !== 'none') {
-            const cells = row.querySelectorAll('td');
-            if (cells.length > 0) {
-                rows.push({
-                    date: cells[0]?.textContent?.trim() || '',
-                    type: cells[1]?.textContent?.trim() || '',
-                    duration: cells[2]?.textContent?.trim() || '',
-                    distance: cells[3]?.textContent?.trim() || '',
-                    calories: cells[4]?.textContent?.trim() || '',
-                    notes: cells[5]?.textContent?.trim() || ''
-                });
-            }
+function getFilters() {
+    return {
+        activity_type: document.getElementById('activity-type-filter')?.value || 'all',
+        date_from: document.getElementById('date-from-filter')?.value || '',
+        date_to: document.getElementById('date-to-filter')?.value || '',
+        duration_min: document.getElementById('duration-min-filter')?.value || '',
+        duration_max: document.getElementById('duration-max-filter')?.value || '',
+        calories_min: document.getElementById('calories-min-filter')?.value || '',
+        calories_max: document.getElementById('calories-max-filter')?.value || '',
+        sort: document.getElementById('sort-by')?.value || 'date_desc'
+    };
+}
+
+function buildQuery(params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== '' && value !== undefined && value !== null) {
+            searchParams.set(key, value);
+        }
+    });
+    return searchParams.toString();
+}
+
+async function fetchAllActivities() {
+    const filters = getFilters();
+    const qs = buildQuery(filters);
+    const csrfToken = getCSRFToken();
+
+    const res = await fetch(`/internal/activities/export?${qs}`, {
+        credentials: 'include',
+        headers: {
+            'X-CSRF-Token': csrfToken
         }
     });
 
-    return rows;
+    if (!res.ok) {
+        throw new Error(`Failed to fetch activities (${res.status})`);
+    }
+
+    const data = await res.json();
+    if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch activities');
+    }
+
+    return data.data || [];
 }
 
 function convertToCSV(rows) {
@@ -58,19 +88,34 @@ function downloadCSV(csv, filename) {
     document.body.removeChild(link);
 }
 
-function exportActivities(pageType) {
-    const rows = collectTableRows();
+async function exportActivities(pageType) {
+    try {
+        const activities = await fetchAllActivities();
 
-    if (rows.length === 0) {
-        alert('No activities to export. Please apply filters or ensure activities are visible.');
-        return;
+        if (!activities || activities.length === 0) {
+            alert('No activities to export. Please check your filters.');
+            return;
+        }
+
+        // Map API rows to CSV rows
+        const rows = activities.map(a => ({
+            date: a.activity_time ? new Date(a.activity_time).toLocaleString() : '',
+            type: a.activity_type || '',
+            duration: a.duration_minutes ?? '',
+            distance: a.distance_km ?? '',
+            calories: a.calories_burned ?? '',
+            notes: a.notes || ''
+        }));
+
+        const csv = convertToCSV(rows);
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const filename = `activities-export-${pageType}-${timestamp}.csv`;
+
+        downloadCSV(csv, filename);
+    } catch (err) {
+        console.error('Export failed:', err);
+        alert('Failed to export activities: ' + err.message);
     }
-
-    const csv = convertToCSV(rows);
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `activities-export-${pageType}-${timestamp}.csv`;
-
-    downloadCSV(csv, filename);
 }
 
 // Search page export

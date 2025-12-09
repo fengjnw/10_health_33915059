@@ -5,7 +5,7 @@ const db = require('../config/db');
 const { generateToken } = require('../middleware/csrf');
 const bcrypt = require('bcrypt');
 const { createToken, verifyToken } = require('../utils/api-token');
-const { apiLimiter, apiTokenLimiter } = require('../middleware/rateLimit');
+const { apiLimiter, apiTokenLimiter } = require('../middleware/rate-limit');
 
 // Apply general API rate limiting to all routes
 router.use(apiLimiter);

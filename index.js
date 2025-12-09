@@ -4,7 +4,7 @@ const session = require('express-session');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
-const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeout');
+const { sessionTimeoutMiddleware } = require('./middleware/session-timeout');
 const { initializeEmailService } = require('./utils/email-service');
 
 // Load environment variables

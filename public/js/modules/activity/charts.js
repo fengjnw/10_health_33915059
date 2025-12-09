@@ -99,6 +99,34 @@ function renderTypeDistributionChart(data) {
     const counts = data.map(d => d.count);
     const colors = generateColors(data.length);
 
+    // Inline plugin to draw values and percentages on slices (no external dependencies)
+    const sliceLabelPlugin = {
+        id: 'sliceLabelPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx, data } = chart;
+            const dataset = data.datasets[0];
+            if (!dataset) return;
+            const total = dataset.data.reduce((a, b) => a + b, 0);
+            const meta = chart.getDatasetMeta(0);
+            meta.data.forEach((element, index) => {
+                const value = dataset.data[index];
+                if (!value) return;
+                const position = element.tooltipPosition();
+                const percent = total ? ((value / total) * 100).toFixed(1) : '0.0';
+                const label = data.labels[index] || '';
+                ctx.save();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${label} (${value})`, position.x, position.y - 8);
+                ctx.font = '10px Arial';
+                ctx.fillText(percent + '%', position.x, position.y + 8);
+                ctx.restore();
+            });
+        }
+    };
+
     try {
         new Chart(ctx, {
             type: 'doughnut',
@@ -115,17 +143,7 @@ function renderTypeDistributionChart(data) {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: { size: 12 },
-                            padding: 15
-                        }
-                    },
-                    datalabels: {
-                        color: '#fff',
-                        font: { size: 12, weight: 'bold' }
-                    },
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
@@ -138,28 +156,8 @@ function renderTypeDistributionChart(data) {
                         }
                     }
                 }
-            },
-            plugins: [{
-                id: 'textCenter',
-                afterDatasetsDraw(chart) {
-                    const { data, ctx } = chart;
-                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-
-                    chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
-                        const { x, y } = datapoint.tooltipPosition();
-                        const count = data.datasets[0].data[index];
-                        const percent = ((count / total) * 100).toFixed(1);
-
-                        ctx.fillStyle = '#fff';
-                        ctx.font = 'bold 12px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(`${count}`, x, y - 8);
-                        ctx.font = '10px Arial';
-                        ctx.fillText(`${percent}%`, x, y + 8);
-                    });
-                }
-            }]
+            }
+            , plugins: [sliceLabelPlugin]
         });
         console.log('Type distribution chart rendered successfully');
     } catch (error) {

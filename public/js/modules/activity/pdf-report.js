@@ -24,8 +24,14 @@ async function generateFitnessPDFReport() {
         // Get fitness advice based on stats
         const advice = generateFitnessAdvice(stats);
 
+        // Capture chart images (if already rendered on page)
+        const charts = collectChartImages([
+            { id: 'typeDistributionChart', title: 'Activity Type Distribution' },
+            { id: 'dailyTrendChart', title: 'Daily Activity Trend (Last 30 Days)' }
+        ]);
+
         // Create HTML content for PDF
-        const htmlContent = createPDFContent(userData, stats, activities, timeRange, advice);
+        const htmlContent = createPDFContent(userData, stats, activities, timeRange, advice, charts);
 
         // Generate PDF using html2pdf
         const opt = {
@@ -110,6 +116,22 @@ async function fetchAllActivities() {
     }));
 }
 
+function collectChartImages(chartConfigs) {
+    const result = [];
+    chartConfigs.forEach(cfg => {
+        const canvas = document.getElementById(cfg.id);
+        if (canvas && canvas.toDataURL) {
+            try {
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                result.push({ title: cfg.title, src: dataUrl });
+            } catch (err) {
+                console.warn('Failed to capture chart', cfg.id, err);
+            }
+        }
+    });
+    return result;
+}
+
 function collectStatsFromPage() {
     const stats = {};
 
@@ -177,7 +199,7 @@ function generateFitnessAdvice(stats) {
     return advice;
 }
 
-function createPDFContent(userData, stats, activities, timeRange, advice) {
+function createPDFContent(userData, stats, activities, timeRange, advice, charts = []) {
     const reportDate = new Date().toLocaleString('en-US', {
         year: 'numeric',
         month: '2-digit',
@@ -191,17 +213,34 @@ function createPDFContent(userData, stats, activities, timeRange, advice) {
 <html>
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/css/style.css">
     <style>
-        /* Minimal fallbacks so pdf has borders even without site CSS loaded in html2pdf */
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-        h1, h2 { margin: 0 0 8px 0; }
-        .report-container { padding: 16px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-        .stat-box { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 6px; }
-        .info-label { font-weight: bold; }
+        /* Compact, clean PDF-specific styling */
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; color: #1f2937; background: #f7f8fb; margin: 0; padding: 0; }
+        .report-container { max-width: 900px; margin: 0 auto; background: #ffffff; padding: 24px; }
+        h1 { font-size: 24px; margin: 0 0 12px 0; text-align: center; color: #111827; }
+        h2 { font-size: 16px; margin: 18px 0 10px 0; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
+        .info-section { background: #f3f4f6; border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 16px; }
+        .info-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 6px; }
+        .info-label { font-weight: 600; font-size: 12px; color: #374151; }
+        .info-value { font-size: 12px; color: #111827; margin-top: 2px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .stat-box { border: 1px solid #e5e7eb; background: #f9fafb; padding: 10px; text-align: center; }
+        .stat-label { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+        .stat-value { font-size: 18px; font-weight: 700; color: #1f2937; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+        thead { background: #f3f4f6; display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
+        th { font-weight: 700; color: #111827; }
+
+        .advice-box { border: 1px solid #e5e7eb; background: #f9fafb; padding: 12px; }
+        .advice-item { margin-bottom: 8px; font-size: 12px; }
+        .footer { margin-top: 16px; text-align: right; font-size: 10px; color: #6b7280; }
+
+        @page { margin: 12mm; }
     </style>
 </head>
 <body>
@@ -214,21 +253,21 @@ function createPDFContent(userData, stats, activities, timeRange, advice) {
             <div class="info-row">
                 <div class="info-item">
                     <div class="info-label">Username:</div>
-                    <div>${escapeHtml(userData.username)}</div>
+                    <div class="info-value">${escapeHtml(userData.username)}</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Email:</div>
-                    <div>${escapeHtml(userData.email)}</div>
+                    <div class="info-value">${escapeHtml(userData.email)}</div>
                 </div>
             </div>
             <div class="info-row">
                 <div class="info-item">
                     <div class="info-label">Report Period:</div>
-                    <div>${timeRange.start} to ${timeRange.end} (${timeRange.days} days)</div>
+                    <div class="info-value">${timeRange.start} to ${timeRange.end} (${timeRange.days} days)</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Generated:</div>
-                    <div>${reportDate}</div>
+                    <div class="info-value">${reportDate}</div>
                 </div>
             </div>
         </div>
@@ -244,6 +283,19 @@ function createPDFContent(userData, stats, activities, timeRange, advice) {
             `).join('')}
         </div>
         
+        <!-- Charts (captured from page) -->
+        ${charts.length ? `
+        <h2>Charts</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+            ${charts.map(c => `
+                <div style="border: 1px solid #e5e7eb; padding: 8px; background: #f9fafb;">
+                    <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px; color: #111827;">${escapeHtml(c.title)}</div>
+                    <img src="${c.src}" alt="${escapeHtml(c.title)}" style="width: 100%; height: auto;" />
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+
         <!-- Activity Details -->
         <h2>Activity Details</h2>
         <table>

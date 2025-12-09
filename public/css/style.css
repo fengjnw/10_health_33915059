@@ -1237,10 +1237,6 @@ footer .dev-tools-separator {
     font-weight: 700;
 }
 
-.modal-step {
-    animation: fadeIn 0.3s ease-out;
-}
-
 .modal-content p {
     color: #34495e;
     margin-bottom: 1rem;
@@ -1407,6 +1403,7 @@ footer .dev-tools-separator {
 
 .modal-step {
     display: none;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .modal-step.active {
@@ -1466,4 +1463,119 @@ footer .dev-tools-separator {
 
 .text-light-gray {
     color: #999;
+}
+
+/* Logs Page Styles */
+.logs-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.logs-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.logs-filters select,
+.logs-filters input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.logs-table thead {
+    background: #f8f9fa;
+}
+
+.logs-table th {
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.logs-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #ecf0f1;
+    vertical-align: top;
+}
+
+.logs-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.event-type {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.event-login_success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.event-login_failure {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.event-logout {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.event-create,
+.event-update,
+.event-delete {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.event-security {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+.timestamp {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.log-details {
+    font-size: 0.85rem;
+    color: #6c757d;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.no-logs {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
 }

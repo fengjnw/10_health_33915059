@@ -2,17 +2,17 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const { EventTypes, logDataChange } = require('../utils/auditLogger');
-const { sendVerificationEmail } = require('../utils/emailService');
+const { EventTypes, logDataChange } = require('../utils/audit-logger');
+const { sendVerificationEmail } = require('../utils/email-service');
 const { generateToken } = require('../middleware/csrf');
-const { generateVerificationCode } = require('../utils/codeGenerator');
-const { addActivityFilters } = require('../utils/filterHelper');
+const { generateVerificationCode } = require('../utils/code-generator');
+const { addActivityFilters } = require('../utils/filter-helper');
 const {
     sendValidationError,
     sendAuthError,
     sendSuccess,
     sendServerError
-} = require('../utils/responseHelper');
+} = require('../utils/response-helper');
 
 // Home page route
 router.get('/', (req, res) => {
@@ -699,13 +699,13 @@ router.get('/api/audit-logs', async (req, res) => {
         let logs;
 
         if (eventType) {
-            const { getLogsByEventType } = require('../utils/auditLogger');
+            const { getLogsByEventType } = require('../utils/audit-logger');
             logs = await getLogsByEventType(eventType, limit);
         } else if (username) {
-            const { getLogsByUser } = require('../utils/auditLogger');
+            const { getLogsByUser } = require('../utils/audit-logger');
             logs = await getLogsByUser(username, limit);
         } else {
-            const { getRecentLogs } = require('../utils/auditLogger');
+            const { getRecentLogs } = require('../utils/audit-logger');
             logs = await getRecentLogs(limit);
         }
 

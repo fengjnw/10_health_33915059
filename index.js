@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const helmet = require('helmet');
 const { generateToken, doubleCsrfProtection } = require('./middleware/csrf');
 const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeout');
-const { initializeEmailService } = require('./utils/emailService');
+const { initializeEmailService } = require('./utils/email-service');
 
 // Load environment variables
 dotenv.config();

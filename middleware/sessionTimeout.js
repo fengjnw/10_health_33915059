@@ -1,6 +1,6 @@
 // Session timeout middleware - idle timeout: 30 minutes
 
-const { EventTypes, logAuth } = require('../utils/auditLogger');
+const { EventTypes, logAuth } = require('../utils/audit-logger');
 
 const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_THRESHOLD = 25 * 60 * 1000; // Show warning at 25 minutes

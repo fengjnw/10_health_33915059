@@ -5,10 +5,10 @@ const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
 const { loginLimiter, registerLimiter, loginStore, registerStore, attachRateLimitHelpers } = require('../middleware/rateLimit');
-const { EventTypes, logAuth } = require('../utils/auditLogger');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+const { EventTypes, logAuth } = require('../utils/audit-logger');
+const { sendPasswordResetEmail } = require('../utils/email-service');
 const { generateToken } = require('../middleware/csrf');
-const { generateVerificationCode } = require('../utils/codeGenerator');
+const { generateVerificationCode } = require('../utils/code-generator');
 
 // Register page route - GET request shows the form
 router.get('/register', (req, res) => {

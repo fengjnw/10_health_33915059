@@ -32,48 +32,63 @@
                             <div class="filter-group">
                                 <label for="activity-type-filter">Activity Type:</label>
                                 <select id="activity-type-filter">
-                                    <option value="all" <%= filterParams && filterParams.activity_type === '' ? 'selected' : '' %>>All Activities</option>
-                                    <option value="Running" <%= filterParams && filterParams.activity_type === 'Running' ? 'selected' : '' %>>Running</option>
-                                    <option value="Cycling" <%= filterParams && filterParams.activity_type === 'Cycling' ? 'selected' : '' %>>Cycling</option>
-                                    <option value="Swimming" <%= filterParams && filterParams.activity_type === 'Swimming' ? 'selected' : '' %>>Swimming</option>
-                                    <option value="Gym" <%= filterParams && filterParams.activity_type === 'Gym' ? 'selected' : '' %>>Gym</option>
-                                    <option value="Yoga" <%= filterParams && filterParams.activity_type === 'Yoga' ? 'selected' : '' %>>Yoga</option>
-                                    <option value="Walking" <%= filterParams && filterParams.activity_type === 'Walking' ? 'selected' : '' %>>Walking</option>
-                                    <option value="Hiking" <%= filterParams && filterParams.activity_type === 'Hiking' ? 'selected' : '' %>>Hiking</option>
-                                    <option value="Other" <%= filterParams && filterParams.activity_type === 'Other' ? 'selected' : '' %>>Other</option>
+                                    <option value="all" <%=filterParams && filterParams.activity_type==='' ? 'selected'
+                                        : '' %>>All Activities</option>
+                                    <option value="Running" <%=filterParams && filterParams.activity_type==='Running'
+                                        ? 'selected' : '' %>>Running</option>
+                                    <option value="Cycling" <%=filterParams && filterParams.activity_type==='Cycling'
+                                        ? 'selected' : '' %>>Cycling</option>
+                                    <option value="Swimming" <%=filterParams && filterParams.activity_type==='Swimming'
+                                        ? 'selected' : '' %>>Swimming</option>
+                                    <option value="Gym" <%=filterParams && filterParams.activity_type==='Gym'
+                                        ? 'selected' : '' %>>Gym</option>
+                                    <option value="Yoga" <%=filterParams && filterParams.activity_type==='Yoga'
+                                        ? 'selected' : '' %>>Yoga</option>
+                                    <option value="Walking" <%=filterParams && filterParams.activity_type==='Walking'
+                                        ? 'selected' : '' %>>Walking</option>
+                                    <option value="Hiking" <%=filterParams && filterParams.activity_type==='Hiking'
+                                        ? 'selected' : '' %>>Hiking</option>
+                                    <option value="Other" <%=filterParams && filterParams.activity_type==='Other'
+                                        ? 'selected' : '' %>>Other</option>
                                 </select>
                             </div>
 
                             <div class="filter-group">
                                 <label for="date-from-filter">Date From:</label>
-                                <input type="date" id="date-from-filter" value="<%= filterParams ? filterParams.date_from : '' %>">
+                                <input type="date" id="date-from-filter"
+                                    value="<%= filterParams ? filterParams.date_from : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="date-to-filter">Date To:</label>
-                                <input type="date" id="date-to-filter" value="<%= filterParams ? filterParams.date_to : '' %>">
+                                <input type="date" id="date-to-filter"
+                                    value="<%= filterParams ? filterParams.date_to : '' %>">
                             </div>
                         </div>
 
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label for="duration-min-filter">Min Duration (min):</label>
-                                <input type="number" id="duration-min-filter" min="0" placeholder="e.g., 30" value="<%= filterParams ? filterParams.duration_min : '' %>">
+                                <input type="number" id="duration-min-filter" min="0" placeholder="e.g., 30"
+                                    value="<%= filterParams ? filterParams.duration_min : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="duration-max-filter">Max Duration (min):</label>
-                                <input type="number" id="duration-max-filter" min="0" placeholder="e.g., 120" value="<%= filterParams ? filterParams.duration_max : '' %>">
+                                <input type="number" id="duration-max-filter" min="0" placeholder="e.g., 120"
+                                    value="<%= filterParams ? filterParams.duration_max : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="calories-min-filter">Min Calories:</label>
-                                <input type="number" id="calories-min-filter" min="0" placeholder="e.g., 100" value="<%= filterParams ? filterParams.calories_min : '' %>">
+                                <input type="number" id="calories-min-filter" min="0" placeholder="e.g., 100"
+                                    value="<%= filterParams ? filterParams.calories_min : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="calories-max-filter">Max Calories:</label>
-                                <input type="number" id="calories-max-filter" min="0" placeholder="e.g., 1000" value="<%= filterParams ? filterParams.calories_max : '' %>">
+                                <input type="number" id="calories-max-filter" min="0" placeholder="e.g., 1000"
+                                    value="<%= filterParams ? filterParams.calories_max : '' %>">
                             </div>
                         </div>
 
@@ -95,9 +110,9 @@
                                     <div class="results-bar">
                                         <p class="results-count">
                                             Showing <%= activities.length %> of
-                                            <%= pagination ? pagination.totalCount : activities.length %>
-                                            <%= (pagination ? pagination.totalCount : activities.length)===1
-                                                ? 'activity' : 'activities' %>
+                                                <%= pagination ? pagination.totalCount : activities.length %>
+                                                    <%= (pagination ? pagination.totalCount : activities.length)===1
+                                                        ? 'activity' : 'activities' %>
                                         </p>
                                         <div class="results-actions">
                                             <button id="export-activities" class="btn btn-secondary btn-small"
@@ -260,13 +275,13 @@
                                             </div>
                                         </div>
                                         <% } %>
-                                                <% } else { %>
-                                                    <div class="no-activities">
-                                                        <p>You haven't logged any activities yet.</p>
-                                                        <a href="/add-activity" class="btn btn-primary">Add Your First
-                                                            Activity</a>
-                                                    </div>
-                                                    <% } %>
+                                            <% } else { %>
+                                                <div class="no-activities">
+                                                    <p>You haven't logged any activities yet.</p>
+                                                    <a href="/add-activity" class="btn btn-primary">Add Your First
+                                                        Activity</a>
+                                                </div>
+                                                <% } %>
             </div>
         </main>
 

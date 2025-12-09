@@ -48,7 +48,7 @@ function applyServerFilters() {
 
     // Build query params
     const params = new URLSearchParams();
-    
+
     if (activityType && activityType !== 'all') params.set('activity_type', activityType);
     if (dateFrom) params.set('date_from', dateFrom);
     if (dateTo) params.set('date_to', dateTo);

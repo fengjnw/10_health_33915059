@@ -858,7 +858,11 @@ router.post('/account/delete', async (req, res) => {
         );
 
         if (records.length === 0) {
-            return sendValidationError(res, 'Invalid or expired verification code', req);
+            // Return error with new CSRF token
+            return res.status(400).json({
+                message: 'Invalid or expired verification code',
+                csrfToken: generateToken(req, res)
+            });
         }
 
         await db.query('UPDATE email_verifications SET used_at = NOW() WHERE id = ?', [records[0].id]);

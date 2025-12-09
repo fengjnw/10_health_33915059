@@ -86,6 +86,12 @@ app.use('/api', apiRoutes);
 app.use((err, req, res, next) => {
     if (err.code === 'EBADCSRFTOKEN') {
         // Handle CSRF token errors
+        // Check if this is an AJAX request
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(403).json({
+                error: 'Invalid CSRF token. Please refresh the page and try again.'
+            });
+        }
         res.status(403);
         return res.render('error', {
             title: 'CSRF Error',

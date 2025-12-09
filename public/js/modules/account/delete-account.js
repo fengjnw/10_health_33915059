@@ -78,6 +78,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
+            // Update CSRF token if provided
+            if (data.csrfToken) {
+                updateCSRFToken(data.csrfToken);
+            }
+
             if (response.ok) {
                 // Show step 2
                 showStep('step2');
@@ -87,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const previewDiv = document.getElementById('deletePreviewUrl');
                     const previewLink = document.getElementById('deletePreviewLink');
                     previewLink.href = data.previewUrl;
+                    previewLink.textContent = data.previewUrl; // Show full URL text
                     previewDiv.classList.remove('hidden');
                 }
             } else {
@@ -119,13 +125,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ verificationCode: code })
             });
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type');
+            let data;
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                throw new Error(`Expected JSON response, got ${response.status}: ${text.substring(0, 100)}`);
+            }
+
+            // Update CSRF token if provided
+            if (data.csrfToken) {
+                updateCSRFToken(data.csrfToken);
+            }
 
             if (response.ok) {
                 // Redirect to goodbye page
                 window.location.href = '/goodbye';
             } else {
-                errorDiv.textContent = data.message || 'Verification failed';
+                errorDiv.textContent = data.message || data.error || 'Verification failed';
                 errorDiv.classList.remove('hidden');
             }
         } catch (error) {

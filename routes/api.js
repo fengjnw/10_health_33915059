@@ -321,6 +321,109 @@ router.get('/activities/stats', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/activities/charts/type-distribution
+ * Get activity distribution by type
+ * 
+ * Access:
+ * - Authenticated only
+ */
+router.get('/activities/charts/type-distribution', async (req, res) => {
+    try {
+        const userId = req.apiUserId || req.session?.user?.id;
+
+        if (!userId) {
+            return res.json({
+                success: true,
+                data: [],
+                message: 'Authentication required'
+            });
+        }
+
+        const query = `
+            SELECT
+                activity_type,
+                COUNT(*) as count,
+                COALESCE(SUM(duration_minutes), 0) as total_duration,
+                COALESCE(SUM(calories_burned), 0) as total_calories,
+                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) as avg_intensity
+            FROM fitness_activities
+            WHERE user_id = ?
+            GROUP BY activity_type
+            ORDER BY count DESC
+        `;
+
+        const [rows] = await db.query(query, [userId]);
+
+        res.json({
+            success: true,
+            data: rows || []
+        });
+
+    } catch (error) {
+        console.error('Error fetching type distribution:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch type distribution',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/activities/charts/daily-trend
+ * Get activity trend by date (daily aggregation)
+ * 
+ * Query Parameters:
+ * - days: Number of days to look back (default: 30)
+ * 
+ * Access:
+ * - Authenticated only
+ */
+router.get('/activities/charts/daily-trend', async (req, res) => {
+    try {
+        const userId = req.apiUserId || req.session?.user?.id;
+        const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
+
+        if (!userId) {
+            return res.json({
+                success: true,
+                data: [],
+                message: 'Authentication required'
+            });
+        }
+
+        const query = `
+            SELECT
+                DATE(activity_time) as date,
+                COUNT(*) as count,
+                COALESCE(SUM(duration_minutes), 0) as total_duration,
+                COALESCE(SUM(calories_burned), 0) as total_calories,
+                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) as avg_intensity
+            FROM fitness_activities
+            WHERE user_id = ? AND activity_time >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY DATE(activity_time)
+            ORDER BY date ASC
+        `;
+
+        const [rows] = await db.query(query, [userId, days]);
+
+        res.json({
+            success: true,
+            data: rows || [],
+            period: { days, startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }
+        });
+
+    } catch (error) {
+        console.error('Error fetching daily trend:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch daily trend',
+            message: error.message
+        });
+    }
+});
+
 // CSRF token endpoint for API testing (GET is allowed without token)
 router.get('/csrf-token', (req, res) => {
     const token = generateToken(req, res);

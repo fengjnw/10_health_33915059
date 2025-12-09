@@ -46,23 +46,19 @@ router.get('/search', async (req, res) => {
     }
 
     try {
-        const userId = req.session.user ? req.session.user.id : null;
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 10, 10), 20);
         const offset = (page - 1) * pageSize;
 
-        // Build WHERE clause with filters
-        let whereClause = 'WHERE (fa.user_id = ? OR fa.is_public = 1)';
-        let params = [userId || 0];
-
+        // Build WHERE clause with filters - only show public activities
         const { whereClause: filterWhere, params: filterParams } = addActivityFilters(
-            'WHERE (fa.user_id = ? OR fa.is_public = 1)',
-            [userId || 0],
+            'WHERE fa.is_public = 1',
+            [],
             req.query
         );
 
-        whereClause = filterWhere;
-        params = filterParams;
+        const whereClause = filterWhere;
+        const params = filterParams;
 
         const countQuery = `SELECT COUNT(*) as total FROM fitness_activities fa ${whereClause}`;
         const [countRows] = await db.query(countQuery, params);

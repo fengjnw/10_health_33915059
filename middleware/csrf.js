@@ -22,14 +22,12 @@ function doubleCsrfProtection(req, res, next) {
     // Bearer token is for external API consumption (no need for CSRF)
     const authHeader = req.get('authorization');
     if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
-        console.log('Bearer token detected, skipping CSRF check for external API');
         return next();
     }
 
     // Skip CSRF for token issuance endpoint (POST /api/auth/token)
     // This is intentionally public for getting tokens
     if (req.path === '/api/auth/token' && req.method === 'POST') {
-        console.log('Token issuance endpoint, skipping CSRF check');
         return next();
     }
 

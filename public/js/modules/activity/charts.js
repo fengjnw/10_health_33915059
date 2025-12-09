@@ -6,11 +6,10 @@ function waitForChartJs(callback, maxWait = 5000) {
     const checkInterval = setInterval(() => {
         if (typeof Chart !== 'undefined') {
             clearInterval(checkInterval);
-            console.log('Chart.js loaded successfully');
             callback();
         } else if (Date.now() - startTime > maxWait) {
             clearInterval(checkInterval);
-            console.error('Chart.js failed to load within timeout');
+            alert('Charts failed to load. Please refresh the page.');
         }
     }, 100);
 }
@@ -25,16 +24,12 @@ function getCSRFToken() {
 
 // Initialize charts on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded');
     waitForChartJs(loadAndRenderCharts);
 });
 
 async function loadAndRenderCharts() {
     try {
-        console.log('Starting chart load...');
-
         const csrfToken = getCSRFToken();
-        console.log('CSRF Token:', csrfToken ? 'found' : 'not found');
 
         const fetchOptions = {
             credentials: 'include',
@@ -44,57 +39,48 @@ async function loadAndRenderCharts() {
         };
 
         // Fetch type distribution data
-        console.log('Fetching type distribution from /internal/activities/charts/type-distribution');
         const typeRes = await fetch('/internal/activities/charts/type-distribution', fetchOptions);
-        console.log('Type distribution response status:', typeRes.status);
 
         if (!typeRes.ok) {
-            console.error('Type distribution fetch failed:', typeRes.status, typeRes.statusText);
+            alert('Failed to load type distribution data.');
             return;
         }
 
         const typeData = await typeRes.json();
-        console.log('Type distribution data:', typeData);
 
         // Fetch daily trend data
-        console.log('Fetching daily trend from /internal/activities/charts/daily-trend');
         const trendRes = await fetch('/internal/activities/charts/daily-trend?days=30', fetchOptions);
-        console.log('Daily trend response status:', trendRes.status);
 
         if (!trendRes.ok) {
-            console.error('Daily trend fetch failed:', trendRes.status, trendRes.statusText);
+            alert('Failed to load daily trend data.');
             return;
         }
 
         const trendData = await trendRes.json();
-        console.log('Daily trend data:', trendData);
 
         if (typeData.success && typeData.data && typeData.data.length > 0) {
-            console.log('Rendering type distribution chart with', typeData.data.length, 'types');
             renderTypeDistributionChart(typeData.data);
         } else {
-            console.warn('No type distribution data available:', typeData);
+            alert('No type distribution data available.');
         }
 
         if (trendData.success && trendData.data && trendData.data.length > 0) {
-            console.log('Rendering daily trend chart with', trendData.data.length, 'days');
             renderDailyTrendChart(trendData.data);
         } else {
-            console.warn('No daily trend data available:', trendData);
+            alert('No daily trend data available.');
         }
     } catch (error) {
-        console.error('Error loading charts:', error);
+        alert('Error loading charts. Please try again later.');
     }
 }
 
 function renderTypeDistributionChart(data) {
     const ctx = document.getElementById('typeDistributionChart');
     if (!ctx) {
-        console.error('Canvas element typeDistributionChart not found');
+        alert('Chart canvas not found.');
         return;
     }
 
-    console.log('Canvas found, rendering chart');
     const labels = data.map(d => d.activity_type);
     const counts = data.map(d => d.count);
     const colors = generateColors(data.length);
@@ -159,20 +145,18 @@ function renderTypeDistributionChart(data) {
             }
             , plugins: [sliceLabelPlugin]
         });
-        console.log('Type distribution chart rendered successfully');
     } catch (error) {
-        console.error('Error rendering type distribution chart:', error);
+        alert('Failed to render type distribution chart.');
     }
 }
 
 function renderDailyTrendChart(data) {
     const ctx = document.getElementById('dailyTrendChart');
     if (!ctx) {
-        console.error('Canvas element dailyTrendChart not found');
+        alert('Chart canvas not found.');
         return;
     }
 
-    console.log('Canvas found, rendering trend chart');
     // Format labels to YYYY-MM-DD
     const labels = data.map(d => {
         const date = new Date(d.date);
@@ -264,9 +248,8 @@ function renderDailyTrendChart(data) {
                 }
             }
         });
-        console.log('Daily trend chart rendered successfully');
     } catch (error) {
-        console.error('Error rendering daily trend chart:', error);
+        alert('Failed to render daily trend chart.');
     }
 }
 

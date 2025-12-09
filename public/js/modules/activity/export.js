@@ -113,7 +113,6 @@ async function exportActivities(pageType) {
 
         downloadCSV(csv, filename);
     } catch (err) {
-        console.error('Export failed:', err);
         alert('Failed to export activities: ' + err.message);
     }
 }

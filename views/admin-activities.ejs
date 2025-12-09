@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<%= csrfToken %>">
     <title>
         <%= title %>
     </title>
@@ -111,6 +112,8 @@
         <%- include('partials/footer') %>
 
             <script>
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
                 document.addEventListener('DOMContentLoaded', () => {
                     const deleteButtons = document.querySelectorAll('.delete-activity-btn');
 
@@ -123,10 +126,11 @@
                             }
 
                             try {
-                                const response = await fetch(`/delete-activity/${activityId}`, {
+                                const response = await fetch(`/admin/activities/${activityId}/delete`, {
                                     method: 'POST',
                                     headers: {
-                                        'Content-Type': 'application/json'
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-Token': csrfToken
                                     }
                                 });
 
@@ -142,7 +146,6 @@
                                     alert('Error: ' + (data.error || 'Failed to delete activity'));
                                 }
                             } catch (error) {
-                                console.error('Delete error:', error);
                                 alert('Failed to delete activity');
                             }
                         });

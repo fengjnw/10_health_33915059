@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteStep3.classList.remove('active');
         deleteErrorStep.classList.remove('active');
         deleteSuccessStep.classList.remove('active');
-        
+
         if (step === 'step1') deleteStep1.classList.add('active');
         else if (step === 'step2') deleteStep2.classList.add('active');
         else if (step === 'step3') deleteStep3.classList.add('active');
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     deleteCloseBtn.addEventListener('click', closeModal);
     deleteCancelBtn.addEventListener('click', closeModal);
-    
+
     deleteBackBtn.addEventListener('click', function () {
         showStep('step1');
         deleteVerifyForm.reset();
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showStep('error');
             }
         } catch (error) {
-            console.error('Error requesting verification code:', error);
+            alert('Failed to request verification code.');
             document.getElementById('deleteErrorMessage').textContent = 'An error occurred. Please try again.';
             showStep('error');
         }
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const contentType = response.headers.get('content-type');
             let data;
-            
+
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
             } else {
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 errorDiv.classList.remove('hidden');
             }
         } catch (error) {
-            console.error('Error verifying code:', error);
+            alert('Failed to verify code.');
             errorDiv.textContent = 'An error occurred. Please try again.';
             errorDiv.classList.remove('hidden');
         }
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response.ok) {
                 // Show success step
                 showStep('success');
-                
+
                 // Redirect after 3 seconds
                 setTimeout(function () {
                     window.location.href = '/';
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showStep('error');
             }
         } catch (error) {
-            console.error('Error deleting account:', error);
+            alert('Failed to delete account.');
             document.getElementById('deleteErrorMessage').textContent = 'An error occurred. Please try again.';
             showStep('error');
         }

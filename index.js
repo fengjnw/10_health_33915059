@@ -22,7 +22,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline needed for inline styles
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'"],
@@ -32,7 +32,6 @@ app.use(helmet({
             frameSrc: ["'none'"]
         }
     },
-    xssFilter: true, // Enable XSS filter
     noSniff: true, // Prevent MIME type sniffing
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));

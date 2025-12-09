@@ -15,9 +15,22 @@
             font-size: 13px;
         }
 
+        .container {
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
         h1 {
-            font-size: 18px;
-            margin: 0 0 5px 0;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
 
         h2 {
@@ -210,8 +223,15 @@
 
         <main>
             <div class="container">
-                <h1>API Request Builder</h1>
+                <h1>API Builder</h1>
                 <p class="text-muted text-small">Generate and test API requests</p>
+
+                <div class="admin-nav">
+                    <a href="/admin/api-builder" class="btn btn-secondary">API Builder</a>
+                    <a href="/admin/logs" class="btn btn-secondary">Audit Logs</a>
+                    <a href="/admin/users" class="btn btn-secondary">User Management</a>
+                    <a href="/admin/activities" class="btn btn-secondary">Activity Management</a>
+                </div>
 
                 <!-- Bearer Token Section -->
                 <div class="section">

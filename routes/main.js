@@ -740,7 +740,7 @@ router.get('/api/audit-logs', async (req, res) => {
 });
 
 // Logs page - view audit logs (requires admin)
-router.get('/logs', requireAdmin, async (req, res) => {
+router.get('/admin/logs', requireAdmin, async (req, res) => {
     try {
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 200);
@@ -946,7 +946,7 @@ router.post('/account/delete', async (req, res) => {
 });
 
 // API Builder page (requires admin)
-router.get('/api-builder', requireAdmin, (req, res) => {
+router.get('/admin/api-builder', requireAdmin, (req, res) => {
     res.render('api-builder', {
         title: 'API Builder - Developer Tools'
     });

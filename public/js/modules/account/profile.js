@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
             username: data.username,
             first_name: data.first_name,
             last_name: data.last_name
-            // Note: email cannot be changed through this form - use the Change Email button instead
         };
 
         try {

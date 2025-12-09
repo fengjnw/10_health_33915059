@@ -198,7 +198,8 @@ router.get('/my-activities', async (req, res) => {
                 COUNT(*) as total_count,
                 COALESCE(SUM(duration_minutes), 0) as total_duration,
                 COALESCE(SUM(distance_km), 0) as total_distance,
-                COALESCE(SUM(calories_burned), 0) as total_calories
+                COALESCE(SUM(calories_burned), 0) as total_calories,
+                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) AS avg_intensity
             FROM fitness_activities 
             ${whereClause}
         `;

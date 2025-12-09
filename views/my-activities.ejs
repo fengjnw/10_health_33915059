@@ -270,6 +270,15 @@
                                                     </div>
                                                     <div class="stat-meta">cal</div>
                                                 </div>
+                                                <div class="stat-card">
+                                                    <h3>Avg Intensity</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= Number(stats.avg_intensity || 0).toFixed(2) %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="stat-meta">cal / min</div>
+                                                </div>
                                             </div>
                                         </div>
                                         <% } %>

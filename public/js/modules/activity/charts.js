@@ -103,6 +103,10 @@ function renderTypeDistributionChart(data) {
                             padding: 15
                         }
                     },
+                    datalabels: {
+                        color: '#fff',
+                        font: { size: 12, weight: 'bold' }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
@@ -115,7 +119,28 @@ function renderTypeDistributionChart(data) {
                         }
                     }
                 }
-            }
+            },
+            plugins: [{
+                id: 'textCenter',
+                afterDatasetsDraw(chart) {
+                    const { data, ctx } = chart;
+                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+
+                    chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+                        const { x, y } = datapoint.tooltipPosition();
+                        const count = data.datasets[0].data[index];
+                        const percent = ((count / total) * 100).toFixed(1);
+
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(`${count}`, x, y - 8);
+                        ctx.font = '10px Arial';
+                        ctx.fillText(`${percent}%`, x, y + 8);
+                    });
+                }
+            }]
         });
         console.log('Type distribution chart rendered successfully');
     } catch (error) {
@@ -131,7 +156,11 @@ function renderDailyTrendChart(data) {
     }
 
     console.log('Canvas found, rendering trend chart');
-    const labels = data.map(d => d.date);
+    // Format labels to YYYY-MM-DD
+    const labels = data.map(d => {
+        const date = new Date(d.date);
+        return date.toISOString().split('T')[0];
+    });
     const durations = data.map(d => d.total_duration);
     const calories = data.map(d => d.total_calories);
     const counts = data.map(d => d.count);

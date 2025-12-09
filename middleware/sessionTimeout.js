@@ -24,16 +24,9 @@ function sessionTimeoutMiddleware(req, res, next) {
 
         // Log session timeout before destroying
         logAuth(EventTypes.SESSION_TIMEOUT, req, userId, username, 'Idle timeout exceeded')
-            .catch(err => console.error('Error logging session timeout:', err));
+            .catch(() => { });
 
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Session destruction error:', err);
-            }
-        });
-
-        // Log the automatic logout
-        console.log(`[${new Date().toISOString()}] User "${username}" automatically logged out due to inactivity`);
+        req.session.destroy(() => { });
 
         // Check if this is an AJAX/API request
         const isAjaxRequest = req.xhr || req.headers.accept?.includes('application/json');

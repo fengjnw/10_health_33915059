@@ -6,6 +6,7 @@ const { EventTypes, logDataChange } = require('../utils/auditLogger');
 const { sendVerificationEmail } = require('../utils/emailService');
 const { generateToken } = require('../middleware/csrf');
 const { generateVerificationCode } = require('../utils/codeGenerator');
+const { addActivityFilters } = require('../utils/filterHelper');
 const {
     sendValidationError,
     sendAuthError,
@@ -26,12 +27,10 @@ router.get('/about', (req, res) => {
 // Search page route - GET request shows the form and processes search with pagination
 router.get('/search', async (req, res) => {
     // Check if this is a search request (form was submitted)
-    // Look for search-related parameters (not just pagination)
     const searchParams = ['activity_type', 'date_from', 'date_to', 'duration_min', 'duration_max', 'calories_min', 'calories_max'];
     const isSearchRequest = searchParams.some(param => param in req.query);
 
     if (!isSearchRequest) {
-        // No search request, just show the form
         return res.render('search', {
             title: 'Search Activities - Health & Fitness Tracker',
             activities: null,
@@ -41,69 +40,37 @@ router.get('/search', async (req, res) => {
         });
     }
 
-    // Process search with pagination
     try {
-        const { activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max } = req.query;
         const userId = req.session.user ? req.session.user.id : null;
-
-        // Pagination (10-20 per page)
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-        const rawPageSize = parseInt(req.query.pageSize, 10) || 10;
-        const pageSize = Math.min(Math.max(rawPageSize, 10), 20);
+        const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 10, 10), 20);
         const offset = (page - 1) * pageSize;
 
-        // Build dynamic SQL query based on search parameters
-        let baseWhere = 'WHERE (fa.user_id = ? OR fa.is_public = 1)';
-        let params = [userId || 0]; // 0 if not logged in (won't match any user_id)
+        // Build WHERE clause with filters
+        let whereClause = 'WHERE (fa.user_id = ? OR fa.is_public = 1)';
+        let params = [userId || 0];
 
-        if (activity_type) {
-            baseWhere += ' AND fa.activity_type = ?';
-            params.push(activity_type);
-        }
+        const { whereClause: filterWhere, params: filterParams } = addActivityFilters(
+            'WHERE (fa.user_id = ? OR fa.is_public = 1)',
+            [userId || 0],
+            req.query
+        );
 
-        if (date_from) {
-            baseWhere += ' AND fa.activity_time >= ?';
-            params.push(date_from);
-        }
+        whereClause = filterWhere;
+        params = filterParams;
 
-        if (date_to) {
-            baseWhere += ' AND fa.activity_time <= ?';
-            params.push(date_to);
-        }
-
-        if (duration_min) {
-            baseWhere += ' AND fa.duration_minutes >= ?';
-            params.push(parseInt(duration_min));
-        }
-
-        if (duration_max) {
-            baseWhere += ' AND fa.duration_minutes <= ?';
-            params.push(parseInt(duration_max));
-        }
-
-        if (calories_min) {
-            baseWhere += ' AND fa.calories_burned >= ?';
-            params.push(parseInt(calories_min));
-        }
-
-        if (calories_max) {
-            baseWhere += ' AND fa.calories_burned <= ?';
-            params.push(parseInt(calories_max));
-        }
-
-        const countQuery = `SELECT COUNT(*) as total FROM fitness_activities fa ${baseWhere}`;
-        const dataQuery = `SELECT fa.*, u.username FROM fitness_activities fa 
-                           JOIN users u ON fa.user_id = u.id 
-                           ${baseWhere}
-                           ORDER BY fa.activity_time DESC
-                           LIMIT ? OFFSET ?`;
-
+        const countQuery = `SELECT COUNT(*) as total FROM fitness_activities fa ${whereClause}`;
         const [countRows] = await db.query(countQuery, params);
         const totalCount = countRows[0]?.total || 0;
         const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
 
-        const dataParams = [...params, pageSize, offset];
-        const [activities] = await db.query(dataQuery, dataParams);
+        const dataQuery = `SELECT fa.*, u.username FROM fitness_activities fa 
+                           JOIN users u ON fa.user_id = u.id 
+                           ${whereClause}
+                           ORDER BY fa.activity_time DESC
+                           LIMIT ? OFFSET ?`;
+
+        const [activities] = await db.query(dataQuery, [...params, pageSize, offset]);
 
         res.render('search', {
             title: 'Search Activities - Health & Fitness Tracker',
@@ -111,12 +78,7 @@ router.get('/search', async (req, res) => {
             searchPerformed: true,
             searchParams: req.query,
             error: null,
-            pagination: {
-                page,
-                pageSize,
-                totalCount,
-                totalPages
-            }
+            pagination: { page, pageSize, totalCount, totalPages }
         });
     } catch (error) {
         console.error('Search error:', error);
@@ -126,12 +88,7 @@ router.get('/search', async (req, res) => {
             searchPerformed: true,
             error: 'An error occurred while searching',
             searchParams: req.query,
-            pagination: {
-                page: 1,
-                pageSize: 10,
-                totalCount: 0,
-                totalPages: 1
-            }
+            pagination: { page: 1, pageSize: 10, totalCount: 0, totalPages: 1 }
         });
     }
 });
@@ -213,59 +170,16 @@ router.get('/my-activities', async (req, res) => {
 
     try {
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-        const rawPageSize = parseInt(req.query.pageSize, 10) || 10;
-        const pageSize = Math.min(Math.max(rawPageSize, 10), 50);
+        const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 10, 10), 50);
         const offset = (page - 1) * pageSize;
-
-        // Get filter parameters
-        const {
-            activity_type,
-            date_from,
-            date_to,
-            duration_min,
-            duration_max,
-            calories_min,
-            calories_max
-        } = req.query;
 
         // Build WHERE clause with filters
         let whereClause = 'WHERE user_id = ?';
-        const params = [req.session.user.id];
+        let params = [req.session.user.id];
 
-        if (activity_type && activity_type !== 'all') {
-            whereClause += ' AND activity_type = ?';
-            params.push(activity_type);
-        }
-
-        if (date_from) {
-            whereClause += ' AND activity_time >= ?';
-            params.push(date_from);
-        }
-
-        if (date_to) {
-            whereClause += ' AND activity_time <= ?';
-            params.push(date_to);
-        }
-
-        if (duration_min) {
-            whereClause += ' AND duration_minutes >= ?';
-            params.push(parseInt(duration_min, 10));
-        }
-
-        if (duration_max) {
-            whereClause += ' AND duration_minutes <= ?';
-            params.push(parseInt(duration_max, 10));
-        }
-
-        if (calories_min) {
-            whereClause += ' AND calories_burned >= ?';
-            params.push(parseInt(calories_min, 10));
-        }
-
-        if (calories_max) {
-            whereClause += ' AND calories_burned <= ?';
-            params.push(parseInt(calories_max, 10));
-        }
+        const { whereClause: filterWhere, params: filterParams } = addActivityFilters(whereClause, params, req.query);
+        whereClause = filterWhere;
+        params = filterParams;
 
         // Get total count with filters
         const countQuery = `SELECT COUNT(*) as total FROM fitness_activities ${whereClause}`;
@@ -274,16 +188,10 @@ router.get('/my-activities', async (req, res) => {
         const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
 
         // Get activities with filters
-        const dataQuery = `
-            SELECT * FROM fitness_activities 
-            ${whereClause}
-            ORDER BY activity_time DESC
-            LIMIT ? OFFSET ?
-        `;
-
+        const dataQuery = `SELECT * FROM fitness_activities ${whereClause} ORDER BY activity_time DESC LIMIT ? OFFSET ?`;
         const [activities] = await db.query(dataQuery, [...params, pageSize, offset]);
 
-        // Calculate statistics based on all filtered results (not just current page)
+        // Calculate statistics based on all filtered results
         const statsQuery = `
             SELECT 
                 COUNT(*) as total_count,
@@ -294,31 +202,21 @@ router.get('/my-activities', async (req, res) => {
             ${whereClause}
         `;
         const [statsRows] = await db.query(statsQuery, params);
-        const stats = statsRows[0] || {
-            total_count: 0,
-            total_duration: 0,
-            total_distance: 0,
-            total_calories: 0
-        };
+        const stats = statsRows[0] || { total_count: 0, total_duration: 0, total_distance: 0, total_calories: 0 };
 
         res.render('my-activities', {
             title: 'My Activities - Health & Fitness Tracker',
             activities,
-            pagination: {
-                page,
-                pageSize,
-                totalCount,
-                totalPages
-            },
+            pagination: { page, pageSize, totalCount, totalPages },
             stats: stats,
             filterParams: {
-                activity_type: activity_type || '',
-                date_from: date_from || '',
-                date_to: date_to || '',
-                duration_min: duration_min || '',
-                duration_max: duration_max || '',
-                calories_min: calories_min || '',
-                calories_max: calories_max || ''
+                activity_type: req.query.activity_type || '',
+                date_from: req.query.date_from || '',
+                date_to: req.query.date_to || '',
+                duration_min: req.query.duration_min || '',
+                duration_max: req.query.duration_max || '',
+                calories_min: req.query.calories_min || '',
+                calories_max: req.query.calories_max || ''
             }
         });
     } catch (error) {
@@ -326,12 +224,7 @@ router.get('/my-activities', async (req, res) => {
         res.render('my-activities', {
             title: 'My Activities - Health & Fitness Tracker',
             activities: [],
-            pagination: {
-                page: 1,
-                pageSize: 10,
-                totalCount: 0,
-                totalPages: 1
-            },
+            pagination: { page: 1, pageSize: 10, totalCount: 0, totalPages: 1 },
             error: 'An error occurred while loading your activities'
         });
     }

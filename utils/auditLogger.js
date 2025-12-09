@@ -59,12 +59,8 @@ async function logAuth(eventType, req, userId = null, username = null, reason = 
             ]
         );
 
-        // Log to console in development
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`[AUDIT] ${eventType}: ${username || userId}`, reason ? `(${reason})` : '');
-        }
     } catch (error) {
-        console.error('Error writing audit log:', error);
+        // Silent fail for audit logging to not disrupt user experience
     }
 }
 
@@ -95,16 +91,14 @@ async function logDataChange(eventType, req, resourceType, resourceId, changes =
             ]
         );
 
-        // Log to console in development
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`[AUDIT] ${eventType} - ${resourceType}:${resourceId}`, changes ? JSON.stringify(changes) : '');
-        }
     } catch (error) {
-        console.error('Error writing audit log:', error);
+        // Silent fail for audit logging to not disrupt user experience
     }
 }
 
-// Log security violations
+/**
+ * Log security violations
+ */
 async function logSecurityEvent(eventType, req, details = {}) {
     try {
         const clientInfo = getClientInfo(req);
@@ -127,12 +121,8 @@ async function logSecurityEvent(eventType, req, details = {}) {
             ]
         );
 
-        // Log to console in development
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`[AUDIT] SECURITY: ${eventType}`, details);
-        }
     } catch (error) {
-        console.error('Error writing audit log:', error);
+        // Silent fail for audit logging to not disrupt user experience
     }
 }
 
@@ -228,10 +218,9 @@ async function purgeOldLogs(daysToKeep = 90) {
             WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)`,
             [daysToKeep]
         );
-        console.log(`✓ Purged audit logs older than ${daysToKeep} days`);
         return result;
     } catch (error) {
-        console.error('Error purging old logs:', error);
+        // Silent fail for audit logging to not disrupt user experience
         throw error;
     }
 }

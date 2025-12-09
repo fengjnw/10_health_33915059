@@ -17,12 +17,8 @@ async function initializeEmailService() {
             }
         });
 
-        console.log('✓ Email service initialized with Ethereal test account');
-        console.log(`  Test account: ${testAccount.user}`);
-
         return transporter;
     } catch (error) {
-        console.error('✗ Failed to initialize email service:', error);
         throw error;
     }
 }
@@ -50,17 +46,8 @@ async function sendVerificationEmail(to, verificationCode) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-
-        // Log the preview URL for development
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        console.log('✓ Verification email sent. Preview URL:', previewUrl);
-
-        return {
-            success: true,
-            previewUrl: previewUrl
-        };
+        return { success: true, previewUrl: nodemailer.getTestMessageUrl(info) };
     } catch (error) {
-        console.error('✗ Failed to send verification email:', error);
         throw error;
     }
 }
@@ -88,17 +75,8 @@ async function sendPasswordResetEmail(to, verificationCode, userName) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-
-        // Log the preview URL for development
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        console.log('✓ Password reset email sent. Preview URL:', previewUrl);
-
-        return {
-            success: true,
-            previewUrl: previewUrl
-        };
+        return { success: true, previewUrl: nodemailer.getTestMessageUrl(info) };
     } catch (error) {
-        console.error('✗ Failed to send password reset email:', error);
         throw error;
     }
 }

@@ -292,8 +292,7 @@ function copyToClipboard(elementId, button) {
             button.textContent = 'Copy';
             button.classList.remove('copied');
         }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy:', err);
+    }).catch(() => {
         alert('Failed to copy to clipboard');
     });
 }

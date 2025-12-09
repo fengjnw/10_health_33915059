@@ -20,7 +20,6 @@ function showMessage(containerId, message, type = 'error') {
 
 // Handle fetch errors with message display
 function handleFetchError(error, containerId, defaultMessage = 'An error occurred') {
-    console.error('Error:', error);
     showMessage(containerId, defaultMessage, 'error');
 }
 

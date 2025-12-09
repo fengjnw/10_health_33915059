@@ -1,4 +1,6 @@
 // Filter activities by multiple criteria - server-side filtering
+// Import sort helper at the top (in actual HTML, include the script tag before this one)
+
 document.addEventListener('DOMContentLoaded', function () {
     // Toggle advanced filters
     const toggleBtn = document.getElementById('toggle-filters');
@@ -31,10 +33,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const sortSelect = document.getElementById('sort-by');
     if (sortSelect) {
         sortSelect.addEventListener('change', applySorting);
+        applySorting();
     }
-
-    // Apply initial sorting if needed
-    applySorting();
 });
 
 function applyServerFilters() {
@@ -70,62 +70,6 @@ function applyServerFilters() {
 
 function applySorting() {
     const sortBy = document.getElementById('sort-by')?.value || 'date-desc';
-    sortRows(sortBy);
-}
-
-function sortRows(sortBy) {
     const tbody = document.querySelector('.activities-table tbody');
-    if (!tbody) return;
-
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-
-    const getNumeric = (row, key) => {
-        const val = row.dataset[key];
-        const num = val ? parseFloat(val) : 0;
-        return Number.isNaN(num) ? 0 : num;
-    };
-
-    const getTime = (row) => {
-        const val = row.dataset.activityTime;
-        const ts = val ? new Date(val).getTime() : 0;
-        return Number.isNaN(ts) ? 0 : ts;
-    };
-
-    const [field, direction] = (() => {
-        switch (sortBy) {
-            case 'date-asc':
-                return ['time', 'asc'];
-            case 'calories-desc':
-                return ['calories', 'desc'];
-            case 'calories-asc':
-                return ['calories', 'asc'];
-            case 'duration-desc':
-                return ['duration', 'desc'];
-            case 'duration-asc':
-                return ['duration', 'asc'];
-            case 'date-desc':
-            default:
-                return ['time', 'desc'];
-        }
-    })();
-
-    rows.sort((a, b) => {
-        let aVal;
-        let bVal;
-
-        if (field === 'time') {
-            aVal = getTime(a);
-            bVal = getTime(b);
-        } else {
-            aVal = getNumeric(a, field);
-            bVal = getNumeric(b, field);
-        }
-
-        if (direction === 'asc') {
-            return aVal - bVal;
-        }
-        return bVal - aVal;
-    });
-
-    rows.forEach(row => tbody.appendChild(row));
+    sortTableRows(tbody, sortBy);
 }

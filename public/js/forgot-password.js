@@ -53,7 +53,6 @@ step1Form.addEventListener('submit', async (e) => {
 
         showStep2();
     } catch (error) {
-        console.error('Error:', error);
         alert('An error occurred. Please try again later.');
     }
 });
@@ -93,7 +92,6 @@ step2Form.addEventListener('submit', async (e) => {
         csrfToken = handleCSRFUpdate(data) || csrfToken;
         window.location.href = '/auth/change-password?resetMode=true';
     } catch (error) {
-        console.error('Error:', error);
         errorDiv.textContent = 'An error occurred. Please try again later.';
         errorDiv.style.display = 'block';
     }
@@ -139,7 +137,6 @@ resendBtn.addEventListener('click', async (e) => {
             }, 3000);
         }
     } catch (error) {
-        console.error('Resend error:', error);
     }
 });
 

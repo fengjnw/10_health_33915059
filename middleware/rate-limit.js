@@ -84,7 +84,8 @@ const loginLimiter = rateLimit({
         return res.render('error', {
             title: 'Too Many Attempts',
             message: 'Too many failed login attempts. Please try again later.',
-            user: res.locals?.user || req.session?.user || null
+            user: res.locals?.user || req.session?.user || null,
+            error: null
         });
     },
     skip: () => true, // We manually control counting via recordIncrement
@@ -102,7 +103,8 @@ const registerLimiter = rateLimit({
         return res.render('error', {
             title: 'Too Many Attempts',
             message: 'Too many registration attempts. Please try again later.',
-            user: res.locals?.user || req.session?.user || null
+            user: res.locals?.user || req.session?.user || null,
+            error: null
         });
     },
     skip: () => true, // We manually control counting

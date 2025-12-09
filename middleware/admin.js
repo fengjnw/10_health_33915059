@@ -1,11 +1,12 @@
 // Middleware to check if user is an administrator
 
 function requireAdmin(req, res, next) {
-    if (!req.session.userId) {
+    if (!req.session.user || !req.session.user.id) {
         return res.status(401).render('error', {
             title: 'Unauthorized',
             message: 'You must be logged in to access this page.',
-            user: null
+            user: null,
+            error: null
         });
     }
 
@@ -13,7 +14,8 @@ function requireAdmin(req, res, next) {
         return res.status(403).render('error', {
             title: 'Forbidden',
             message: 'Access denied. Administrator privileges required.',
-            user: req.session.userId ? { username: req.session.username } : null
+            user: req.session.user || null,
+            error: null
         });
     }
 

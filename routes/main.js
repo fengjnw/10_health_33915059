@@ -251,7 +251,10 @@ router.get('/my-activities/:id/edit', async (req, res) => {
 
         if (activities.length === 0) {
             return res.status(404).render('error', {
-                message: 'Activity not found'
+                title: 'Error',
+                message: 'Activity not found',
+                user: req.session.user,
+                error: null
             });
         }
 
@@ -260,7 +263,10 @@ router.get('/my-activities/:id/edit', async (req, res) => {
         // Check if the user owns this activity
         if (activity.user_id !== req.session.user.id) {
             return res.status(403).render('error', {
-                message: 'You do not have permission to edit this activity'
+                title: 'Error',
+                message: 'You do not have permission to edit this activity',
+                user: req.session.user,
+                error: null
             });
         }
 
@@ -272,7 +278,10 @@ router.get('/my-activities/:id/edit', async (req, res) => {
     } catch (error) {
         console.error('Edit activity get error:', error);
         res.status(500).render('error', {
-            message: 'An error occurred while loading the activity'
+            title: 'Error',
+            message: 'An error occurred while loading the activity',
+            user: req.session.user,
+            error: null
         });
     }
 });
@@ -434,7 +443,10 @@ router.get('/profile', async (req, res) => {
 
         if (users.length === 0) {
             return res.status(404).render('error', {
-                message: 'User not found'
+                title: 'Error',
+                message: 'User not found',
+                user: req.session.user,
+                error: null
             });
         }
 
@@ -445,7 +457,10 @@ router.get('/profile', async (req, res) => {
     } catch (error) {
         console.error('Profile page error:', error);
         res.status(500).render('error', {
-            message: 'An error occurred while loading your profile'
+            title: 'Error',
+            message: 'An error occurred while loading your profile',
+            user: req.session.user,
+            error: null
         });
     }
 });
@@ -953,7 +968,8 @@ router.get('/admin/users', requireAdmin, async (req, res) => {
         res.status(500).render('error', {
             title: 'Error',
             message: 'Failed to load users list',
-            user: req.session.user
+            user: req.session.user,
+            error: null
         });
     }
 });
@@ -1016,7 +1032,8 @@ router.get('/admin/activities', requireAdmin, async (req, res) => {
         res.status(500).render('error', {
             title: 'Error',
             message: 'Failed to load activities',
-            user: req.session.user
+            user: req.session.user,
+            error: null
         });
     }
 });

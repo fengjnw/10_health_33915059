@@ -76,11 +76,15 @@ app.use((req, res, next) => {
 const mainRoutes = require('./routes/main');
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
+const internalRoutes = require('./routes/internal');
 
-// Use route handlers (CSRF protection applied to POST/PUT/DELETE routes)
+// Use route handlers
+// CSRF protection applied to /internal routes (session-based)
+// /api routes require Bearer token auth (no CSRF needed)
 app.use('/', mainRoutes);
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.use('/internal', internalRoutes);
 
 // CSRF error handler - must come after routes
 app.use((err, req, res, next) => {

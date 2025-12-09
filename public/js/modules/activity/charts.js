@@ -15,6 +15,13 @@ function waitForChartJs(callback, maxWait = 5000) {
     }, 100);
 }
 
+// Helper function to get CSRF token from DOM
+function getCSRFToken() {
+    return document.querySelector('input[name="_csrf"]')?.value ||
+        document.querySelector('meta[name="csrf-token"]')?.content ||
+        window.csrfToken || '';
+}
+
 // Initialize charts on page load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded');
@@ -25,17 +32,21 @@ async function loadAndRenderCharts() {
     try {
         console.log('Starting chart load...');
 
+        const csrfToken = getCSRFToken();
+        const fetchOptions = {
+            credentials: 'include',
+            headers: {
+                'X-CSRF-Token': csrfToken
+            }
+        };
+
         // Fetch type distribution data
-        const typeRes = await fetch('/api/activities/charts/type-distribution', {
-            credentials: 'include'
-        });
+        const typeRes = await fetch('/internal/activities/charts/type-distribution', fetchOptions);
         const typeData = await typeRes.json();
         console.log('Type distribution data:', typeData);
 
         // Fetch daily trend data
-        const trendRes = await fetch('/api/activities/charts/daily-trend?days=30', {
-            credentials: 'include'
-        });
+        const trendRes = await fetch('/internal/activities/charts/daily-trend?days=30', fetchOptions);
         const trendData = await trendRes.json();
         console.log('Daily trend data:', trendData);
 

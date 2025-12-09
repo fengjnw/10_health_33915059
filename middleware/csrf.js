@@ -18,23 +18,27 @@ function generateToken(req, res) {
 
 // CSRF protection middleware
 function doubleCsrfProtection(req, res, next) {
-    // Skip CSRF for API routes that use token-based auth
-    // 1. If Authorization Bearer is present, treat as API token request
+    // Skip CSRF for routes that explicitly use Bearer token auth
+    // Bearer token is for external API consumption (no need for CSRF)
     const authHeader = req.get('authorization');
     if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+        console.log('Bearer token detected, skipping CSRF check for external API');
         return next();
     }
 
-    // 2. Skip CSRF for token issuance endpoint (POST /api/auth/token)
+    // Skip CSRF for token issuance endpoint (POST /api/auth/token)
+    // This is intentionally public for getting tokens
     if (req.path === '/api/auth/token' && req.method === 'POST') {
+        console.log('Token issuance endpoint, skipping CSRF check');
         return next();
     }
 
-    // Skip CSRF check for GET, HEAD, OPTIONS
+    // Skip CSRF check for GET, HEAD, OPTIONS (safe methods)
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
     }
 
+    // All other requests (including /internal/* with session auth) require CSRF
     // Ensure session exists
     if (!req.session) {
         req.session = {};

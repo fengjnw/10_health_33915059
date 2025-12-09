@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Request Builder - Health & Fitness Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
     <style>
+        /* API Builder specific compact styles */
         body {
-            font-family: Arial, sans-serif;
             margin: 10px;
             font-size: 13px;
         }
@@ -28,6 +29,8 @@
             border: 1px solid #ddd;
             padding: 10px;
             margin-bottom: 10px;
+            background: #fff;
+            border-radius: 4px;
         }
 
         .method-badge {
@@ -54,9 +57,8 @@
             margin-bottom: 8px;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        .form-grid .form-group {
+            margin-bottom: 0;
         }
 
         label {
@@ -65,13 +67,12 @@
         }
 
         .required {
-            color: red;
+            color: #e74c3c;
         }
 
         input,
         select {
             padding: 4px;
-            border: 1px solid #ccc;
             font-size: 12px;
         }
 
@@ -84,17 +85,7 @@
             margin-right: 5px;
             cursor: pointer;
             font-size: 12px;
-        }
-
-        .btn-primary {
-            background: #0066cc;
-            color: white;
-            border: none;
-        }
-
-        .btn-secondary {
-            background: #ddd;
-            border: 1px solid #999;
+            border-radius: 4px;
         }
 
         .output-box {
@@ -104,34 +95,29 @@
             margin-top: 8px;
             font-family: monospace;
             font-size: 11px;
+            border-radius: 4px;
         }
 
         .output-box.empty {
             display: none;
         }
 
-        .output-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-
-        .output-label {
-            font-weight: bold;
-            font-size: 11px;
-        }
-
         .copy-btn {
             padding: 3px 8px;
-            background: #0066cc;
+            background: #16a085;
             color: white;
             border: none;
             cursor: pointer;
             font-size: 11px;
+            border-radius: 3px;
+        }
+
+        .copy-btn:hover {
+            background: #1abc9c;
         }
 
         .copy-btn.copied {
-            background: #28a745;
+            background: #27ae60;
         }
 
         .code-block {
@@ -141,37 +127,27 @@
             overflow-x: auto;
             white-space: pre-wrap;
             word-break: break-all;
+            border-radius: 4px;
         }
 
         .info-box {
-            background: #e7f3ff;
-            border-left: 3px solid #0066cc;
+            background: #e3f2fd;
+            border-left: 3px solid #16a085;
             padding: 8px;
             margin-top: 10px;
             font-size: 12px;
+            border-radius: 4px;
         }
 
         .info-box p {
             margin: 3px 0;
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        @media (max-width: 900px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 
 <body>
     <h1>API Request Builder</h1>
-    <p style="margin-bottom: 10px; color: #666;">Generate curl commands for testing</p>
+    <p class="text-muted text-small">Generate curl commands for testing</p>
 
     <!-- Bearer Token Section -->
     <div class="section">

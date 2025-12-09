@@ -104,7 +104,7 @@ async function exportActivities(pageType) {
             duration: a.duration_minutes ?? '',
             distance: a.distance_km ?? '',
             calories: a.calories_burned ?? '',
-            notes: a.notes || ''
+            notes: (a.notes || '').replace(/\r?\n/g, ' ')
         }));
 
         const csv = convertToCSV(rows);

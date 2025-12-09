@@ -191,139 +191,17 @@ function createPDFContent(userData, stats, activities, timeRange, advice) {
 <html>
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.5;
-            color: #333;
-            font-size: 12px;
-        }
-        
-        .report-container {
-            width: 100%;
-            background: white;
-            padding: 20px;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            text-align: center;
-            color: #333;
-        }
-        
-        h2 {
-            font-size: 16px;
-            margin-top: 20px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #999;
-            padding-bottom: 5px;
-        }
-        
-        .info-section {
-            margin-bottom: 20px;
-            background: #f5f5f5;
-            padding: 12px;
-            border-radius: 3px;
-        }
-        
-        .info-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 8px;
-        }
-        
-        .info-item {
-            font-size: 11px;
-        }
-        
-        .info-label {
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-box {
-            background: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-            border-radius: 3px;
-        }
-        
-        .stat-label {
-            font-size: 10px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .stat-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 10px;
-        }
-        
-        table thead {
-            background: #f0f0f0;
-        }
-        
-        table th {
-            padding: 8px;
-            text-align: left;
-            font-weight: bold;
-            border-bottom: 1px solid #999;
-        }
-        
-        table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .advice-box {
-            background: #f9f9f9;
-            padding: 12px;
-            border-left: 3px solid #666;
-            margin-bottom: 20px;
-        }
-        
-        .advice-item {
-            margin-bottom: 8px;
-            font-size: 11px;
-            line-height: 1.4;
-        }
-        
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #999;
-            text-align: right;
-            font-size: 10px;
-            color: #666;
-        }
-        
-        @page {
-            margin: 10mm;
-        }
+        /* Minimal fallbacks so pdf has borders even without site CSS loaded in html2pdf */
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+        h1, h2 { margin: 0 0 8px 0; }
+        .report-container { padding: 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+        .stat-box { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 6px; }
+        .info-label { font-weight: bold; }
     </style>
 </head>
 <body>

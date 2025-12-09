@@ -469,6 +469,81 @@ document.getElementById('executeSingleBtn').addEventListener('click', async () =
     await executeRequest(url, { method: 'GET', headers }, 'singleResult');
 });
 
+document.getElementById('buildStatsBtn').addEventListener('click', () => {
+    const params = new URLSearchParams();
+    const activityType = document.getElementById('stats_activity_type').value;
+    const dateFrom = document.getElementById('stats_date_from').value;
+    const dateTo = document.getElementById('stats_date_to').value;
+    const durationMin = document.getElementById('stats_duration_min').value;
+    const durationMax = document.getElementById('stats_duration_max').value;
+    const caloriesMin = document.getElementById('stats_calories_min').value;
+    const caloriesMax = document.getElementById('stats_calories_max').value;
+    const token = document.getElementById('stats_token').value.trim();
+
+    if (activityType) params.append('activity_type', activityType);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    if (durationMin) params.append('duration_min', durationMin);
+    if (durationMax) params.append('duration_max', durationMax);
+    if (caloriesMin) params.append('calories_min', caloriesMin);
+    if (caloriesMax) params.append('calories_max', caloriesMax);
+
+    const queryString = params.toString();
+    const url = `${BASE_URL}/api/activities/stats${queryString ? '?' + queryString : ''}`;
+
+    let curlCommand = `curl -X GET '${url}'`;
+    if (token) {
+        curlCommand += ` \\\n  -H "Authorization: Bearer ${token}"`;
+    }
+
+    displayOutput('statsOutput', curlCommand, 'GET /api/activities/stats');
+});
+
+document.getElementById('clearStatsBtn').addEventListener('click', () => {
+    document.getElementById('stats_activity_type').value = '';
+    document.getElementById('stats_date_from').value = '';
+    document.getElementById('stats_date_to').value = '';
+    document.getElementById('stats_duration_min').value = '';
+    document.getElementById('stats_duration_max').value = '';
+    document.getElementById('stats_calories_min').value = '';
+    document.getElementById('stats_calories_max').value = '';
+    document.getElementById('stats_token').value = '';
+    hideOutput('statsOutput');
+    hideResult('statsResult');
+});
+
+document.getElementById('executeStatsBtn').addEventListener('click', async () => {
+    const params = new URLSearchParams();
+    const activityType = document.getElementById('stats_activity_type').value;
+    const dateFrom = document.getElementById('stats_date_from').value;
+    const dateTo = document.getElementById('stats_date_to').value;
+    const durationMin = document.getElementById('stats_duration_min').value;
+    const durationMax = document.getElementById('stats_duration_max').value;
+    const caloriesMin = document.getElementById('stats_calories_min').value;
+    const caloriesMax = document.getElementById('stats_calories_max').value;
+    const token = document.getElementById('stats_token').value.trim();
+
+    if (!token) {
+        alert('Bearer token is required for statistics');
+        return;
+    }
+
+    if (activityType) params.append('activity_type', activityType);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    if (durationMin) params.append('duration_min', durationMin);
+    if (durationMax) params.append('duration_max', durationMax);
+    if (caloriesMin) params.append('calories_min', caloriesMin);
+    if (caloriesMax) params.append('calories_max', caloriesMax);
+
+    const queryString = params.toString();
+    const url = `${BASE_URL}/api/activities/stats${queryString ? '?' + queryString : ''}`;
+
+    const headers = { 'Authorization': `Bearer ${token}` };
+
+    await executeRequest(url, { method: 'GET', headers }, 'statsResult');
+});
+
 document.getElementById('executeCreateBtn').addEventListener('click', async () => {
     const activityType = document.getElementById('create_activity_type').value;
     const duration = document.getElementById('create_duration').value.trim();

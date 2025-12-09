@@ -318,6 +318,63 @@
         <div id="singleResult" class="result-box empty"></div>
     </div>
 
+    <!-- GET Activities Stats -->
+    <div class="section">
+        <h2>Get Activities Stats <span class="method-badge method-get">GET</span> <span
+                style="font-size: 11px; color: #666; font-weight: normal;">(Authenticated only)</span></h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Activity Type</label>
+                <select id="stats_activity_type">
+                    <option value="">All</option>
+                    <option value="Running">Running</option>
+                    <option value="Cycling">Cycling</option>
+                    <option value="Swimming">Swimming</option>
+                    <option value="Gym">Gym</option>
+                    <option value="Yoga">Yoga</option>
+                    <option value="Walking">Walking</option>
+                    <option value="Hiking">Hiking</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date From</label>
+                <input type="date" id="stats_date_from">
+            </div>
+            <div class="form-group">
+                <label>Date To</label>
+                <input type="date" id="stats_date_to">
+            </div>
+            <div class="form-group">
+                <label>Min Duration (min)</label>
+                <input type="number" id="stats_duration_min" min="0">
+            </div>
+            <div class="form-group">
+                <label>Max Duration (min)</label>
+                <input type="number" id="stats_duration_max" min="0">
+            </div>
+            <div class="form-group">
+                <label>Min Calories</label>
+                <input type="number" id="stats_calories_min" min="0">
+            </div>
+            <div class="form-group">
+                <label>Max Calories</label>
+                <input type="number" id="stats_calories_max" min="0">
+            </div>
+            <div class="form-group">
+                <label>Bearer Token <span class="required">*</span></label>
+                <input type="text" id="stats_token" placeholder="required">
+            </div>
+        </div>
+        <div class="button-group">
+            <button class="btn-primary" id="executeStatsBtn">Execute</button>
+            <button class="btn-secondary" id="buildStatsBtn">Generate curl</button>
+            <button class="btn-secondary" id="clearStatsBtn">Clear</button>
+        </div>
+        <div id="statsOutput" class="output-box empty"></div>
+        <div id="statsResult" class="result-box empty"></div>
+    </div>
+
     <!-- POST Create Activity -->
     <div class="section">
         <h2>Create Activity <span class="method-badge method-post">POST</span></h2>

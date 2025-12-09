@@ -199,12 +199,14 @@ router.get('/my-activities', async (req, res) => {
                 COALESCE(SUM(duration_minutes), 0) as total_duration,
                 COALESCE(SUM(distance_km), 0) as total_distance,
                 COALESCE(SUM(calories_burned), 0) as total_calories,
-                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) AS avg_intensity
+                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) AS avg_intensity,
+                COALESCE(MIN(calories_burned / NULLIF(duration_minutes, 0)), 0) AS min_intensity,
+                COALESCE(MAX(calories_burned / NULLIF(duration_minutes, 0)), 0) AS max_intensity
             FROM fitness_activities 
             ${whereClause}
         `;
         const [statsRows] = await db.query(statsQuery, params);
-        const stats = statsRows[0] || { total_count: 0, total_duration: 0, total_distance: 0, total_calories: 0 };
+        const stats = statsRows[0] || { total_count: 0, total_duration: 0, total_distance: 0, total_calories: 0, avg_intensity: 0, min_intensity: 0, max_intensity: 0 };
 
         res.render('my-activities', {
             title: 'My Activities - Health & Fitness Tracker',

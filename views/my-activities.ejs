@@ -279,6 +279,24 @@
                                                     </div>
                                                     <div class="stat-meta">cal / min</div>
                                                 </div>
+                                                <div class="stat-card">
+                                                    <h3>Min Intensity</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= Number(stats.min_intensity || 0).toFixed(2) %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="stat-meta">cal / min</div>
+                                                </div>
+                                                <div class="stat-card">
+                                                    <h3>Max Intensity</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= Number(stats.max_intensity || 0).toFixed(2) %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="stat-meta">cal / min</div>
+                                                </div>
                                             </div>
                                         </div>
                                         <% } %>

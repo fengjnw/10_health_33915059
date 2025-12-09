@@ -190,23 +190,6 @@ router.get('/activities', async (req, res) => {
         const dataParams = [...params, itemsPerPage, offset];
         const [activities] = await db.query(dataQuery, dataParams);
 
-        // Calculate stats only when authenticated (private to the user)
-        let stats = null;
-        if (userId) {
-            const statsQuery = `
-                SELECT
-                    COUNT(*) AS total_count,
-                    COALESCE(SUM(calories_burned), 0) AS total_calories,
-                    COALESCE(SUM(duration_minutes), 0) AS total_duration,
-                    COALESCE(SUM(distance_km), 0) AS total_distance,
-                    COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) AS avg_intensity
-                FROM fitness_activities fa
-                ${whereClause}
-            `;
-            const [statsRows] = await db.query(statsQuery, params);
-            stats = statsRows && statsRows[0] ? statsRows[0] : null;
-        }
-
         // Return successful response
         res.json({
             success: true,
@@ -219,8 +202,7 @@ router.get('/activities', async (req, res) => {
                 totalPages: totalPages,
                 hasNextPage: currentPage < totalPages,
                 hasPreviousPage: currentPage > 1
-            },
-            stats: stats
+            }
         });
 
     } catch (error) {
@@ -228,6 +210,112 @@ router.get('/activities', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to fetch activities',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/activities/stats
+ * Get aggregated statistics for activities with optional filtering
+ * 
+ * Query Parameters: Same as /api/activities (filters)
+ * 
+ * Access:
+ * - Unauthenticated: Returns null (stats private to authenticated users)
+ * - Authenticated: Returns stats for user's activities (public + private)
+ */
+router.get('/activities/stats', async (req, res) => {
+    try {
+        const {
+            activity_type,
+            date_from,
+            date_to,
+            duration_min,
+            duration_max,
+            calories_min,
+            calories_max
+        } = req.query;
+
+        // Get userId from session/token
+        const userId = req.apiUserId || req.session?.user?.id;
+
+        // Unauthenticated users cannot access stats
+        if (!userId) {
+            return res.json({
+                success: true,
+                stats: null,
+                message: 'Authentication required for statistics'
+            });
+        }
+
+        // Build WHERE clause for authenticated user
+        let whereClause = 'WHERE (fa.is_public = 1 OR fa.user_id = ?)';
+        const params = [userId];
+
+        // Add same filters as activities endpoint
+        if (activity_type && activity_type !== 'all') {
+            whereClause += ' AND fa.activity_type = ?';
+            params.push(activity_type);
+        }
+
+        if (date_from) {
+            whereClause += ' AND fa.activity_time >= ?';
+            params.push(date_from);
+        }
+
+        if (date_to) {
+            whereClause += ' AND fa.activity_time <= ?';
+            params.push(date_to);
+        }
+
+        if (duration_min) {
+            whereClause += ' AND fa.duration_minutes >= ?';
+            params.push(parseInt(duration_min, 10));
+        }
+
+        if (duration_max) {
+            whereClause += ' AND fa.duration_minutes <= ?';
+            params.push(parseInt(duration_max, 10));
+        }
+
+        if (calories_min) {
+            whereClause += ' AND fa.calories_burned >= ?';
+            params.push(parseInt(calories_min, 10));
+        }
+
+        if (calories_max) {
+            whereClause += ' AND fa.calories_burned <= ?';
+            params.push(parseInt(calories_max, 10));
+        }
+
+        // Calculate comprehensive stats
+        const statsQuery = `
+            SELECT
+                COUNT(*) AS total_count,
+                COALESCE(SUM(calories_burned), 0) AS total_calories,
+                COALESCE(SUM(duration_minutes), 0) AS total_duration,
+                COALESCE(SUM(distance_km), 0) AS total_distance,
+                COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) AS avg_intensity,
+                COALESCE(MIN(calories_burned / NULLIF(duration_minutes, 0)), 0) AS min_intensity,
+                COALESCE(MAX(calories_burned / NULLIF(duration_minutes, 0)), 0) AS max_intensity
+            FROM fitness_activities fa
+            ${whereClause}
+        `;
+
+        const [statsRows] = await db.query(statsQuery, params);
+        const stats = statsRows && statsRows[0] ? statsRows[0] : null;
+
+        res.json({
+            success: true,
+            stats: stats
+        });
+
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch statistics',
             message: error.message
         });
     }

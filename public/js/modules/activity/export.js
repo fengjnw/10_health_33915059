@@ -99,12 +99,12 @@ async function exportActivities(pageType) {
 
         // Map API rows to CSV rows
         const rows = activities.map(a => ({
-            date: a.activity_time ? new Date(a.activity_time).toLocaleString() : '',
-            type: a.activity_type || '',
-            duration: a.duration_minutes ?? '',
-            distance: a.distance_km ?? '',
-            calories: a.calories_burned ?? '',
-            notes: (a.notes || '').replace(/\r?\n/g, ' ')
+            date: a.activity_time ? new Date(a.activity_time).toLocaleString() : (a.date || ''),
+            type: a.activity_type ?? a.type ?? '',
+            duration: a.duration_minutes ?? a.duration ?? '',
+            distance: a.distance_km ?? a.distance ?? '',
+            calories: a.calories_burned ?? a.calories ?? '',
+            notes: (a.notes ?? '').replace(/\r?\n/g, ' ')
         }));
 
         const csv = convertToCSV(rows);

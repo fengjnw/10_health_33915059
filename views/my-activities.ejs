@@ -32,48 +32,48 @@
                             <div class="filter-group">
                                 <label for="activity-type-filter">Activity Type:</label>
                                 <select id="activity-type-filter">
-                                    <option value="all">All Activities</option>
-                                    <option value="Running">Running</option>
-                                    <option value="Cycling">Cycling</option>
-                                    <option value="Swimming">Swimming</option>
-                                    <option value="Gym">Gym</option>
-                                    <option value="Yoga">Yoga</option>
-                                    <option value="Walking">Walking</option>
-                                    <option value="Hiking">Hiking</option>
-                                    <option value="Other">Other</option>
+                                    <option value="all" <%= filterParams && filterParams.activity_type === '' ? 'selected' : '' %>>All Activities</option>
+                                    <option value="Running" <%= filterParams && filterParams.activity_type === 'Running' ? 'selected' : '' %>>Running</option>
+                                    <option value="Cycling" <%= filterParams && filterParams.activity_type === 'Cycling' ? 'selected' : '' %>>Cycling</option>
+                                    <option value="Swimming" <%= filterParams && filterParams.activity_type === 'Swimming' ? 'selected' : '' %>>Swimming</option>
+                                    <option value="Gym" <%= filterParams && filterParams.activity_type === 'Gym' ? 'selected' : '' %>>Gym</option>
+                                    <option value="Yoga" <%= filterParams && filterParams.activity_type === 'Yoga' ? 'selected' : '' %>>Yoga</option>
+                                    <option value="Walking" <%= filterParams && filterParams.activity_type === 'Walking' ? 'selected' : '' %>>Walking</option>
+                                    <option value="Hiking" <%= filterParams && filterParams.activity_type === 'Hiking' ? 'selected' : '' %>>Hiking</option>
+                                    <option value="Other" <%= filterParams && filterParams.activity_type === 'Other' ? 'selected' : '' %>>Other</option>
                                 </select>
                             </div>
 
                             <div class="filter-group">
                                 <label for="date-from-filter">Date From:</label>
-                                <input type="date" id="date-from-filter">
+                                <input type="date" id="date-from-filter" value="<%= filterParams ? filterParams.date_from : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="date-to-filter">Date To:</label>
-                                <input type="date" id="date-to-filter">
+                                <input type="date" id="date-to-filter" value="<%= filterParams ? filterParams.date_to : '' %>">
                             </div>
                         </div>
 
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label for="duration-min-filter">Min Duration (min):</label>
-                                <input type="number" id="duration-min-filter" min="0" placeholder="e.g., 30">
+                                <input type="number" id="duration-min-filter" min="0" placeholder="e.g., 30" value="<%= filterParams ? filterParams.duration_min : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="duration-max-filter">Max Duration (min):</label>
-                                <input type="number" id="duration-max-filter" min="0" placeholder="e.g., 120">
+                                <input type="number" id="duration-max-filter" min="0" placeholder="e.g., 120" value="<%= filterParams ? filterParams.duration_max : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="calories-min-filter">Min Calories:</label>
-                                <input type="number" id="calories-min-filter" min="0" placeholder="e.g., 100">
+                                <input type="number" id="calories-min-filter" min="0" placeholder="e.g., 100" value="<%= filterParams ? filterParams.calories_min : '' %>">
                             </div>
 
                             <div class="filter-group">
                                 <label for="calories-max-filter">Max Calories:</label>
-                                <input type="number" id="calories-max-filter" min="0" placeholder="e.g., 1000">
+                                <input type="number" id="calories-max-filter" min="0" placeholder="e.g., 1000" value="<%= filterParams ? filterParams.calories_max : '' %>">
                             </div>
                         </div>
 
@@ -94,12 +94,8 @@
                                     <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
                                     <div class="results-bar">
                                         <p class="results-count">
-                                            Showing <span id="visible-count">
-                                                <%= activities.length %>
-                                            </span> of
-                                            <span id="total-count">
-                                                <%= pagination ? pagination.totalCount : activities.length %>
-                                            </span>
+                                            Showing <%= activities.length %> of
+                                            <%= pagination ? pagination.totalCount : activities.length %>
                                             <%= (pagination ? pagination.totalCount : activities.length)===1
                                                 ? 'activity' : 'activities' %>
                                         </p>
@@ -222,54 +218,48 @@
                                         </tbody>
                                     </table>
 
-                                    <% const totalDuration=activities.reduce((sum, a)=> sum +
-                                        (Number(a.duration_minutes) || 0), 0); %>
-                                        <% const totalDistance=activities.reduce((sum, a)=> sum +
-                                            (parseFloat(a.distance_km) || 0), 0); %>
-                                            <% const totalCalories=activities.reduce((sum, a)=> sum +
-                                                (Number(a.calories_burned) || 0), 0); %>
-
-                                                <div class="activity-stats">
-                                                    <h2>Statistics</h2>
-                                                    <div class="stats-grid">
-                                                        <div class="stat-card">
-                                                            <h3>Activities</h3>
-                                                            <div class="stat-value">
-                                                                <span class="stat-visible">
-                                                                    <%= activities.length %>
-                                                                </span>
-                                                            </div>
-                                                            <!-- <div class="stat-meta">activities</div> -->
-                                                        </div>
-                                                        <div class="stat-card">
-                                                            <h3>Duration</h3>
-                                                            <div class="stat-value">
-                                                                <span class="stat-visible">
-                                                                    <%= totalDuration %>
-                                                                </span>
-                                                            </div>
-                                                            <div class="stat-meta">min</div>
-                                                        </div>
-                                                        <div class="stat-card">
-                                                            <h3>Distance</h3>
-                                                            <div class="stat-value">
-                                                                <span class="stat-visible">
-                                                                    <%= totalDistance.toFixed(2) %>
-                                                                </span>
-                                                            </div>
-                                                            <div class="stat-meta">km</div>
-                                                        </div>
-                                                        <div class="stat-card">
-                                                            <h3>Calories</h3>
-                                                            <div class="stat-value">
-                                                                <span class="stat-visible">
-                                                                    <%= totalCalories %>
-                                                                </span>
-                                                            </div>
-                                                            <div class="stat-meta">cal</div>
-                                                        </div>
+                                    <% if (stats) { %>
+                                        <div class="activity-stats">
+                                            <h2>Statistics</h2>
+                                            <div class="stats-grid">
+                                                <div class="stat-card">
+                                                    <h3>Activities</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= stats.total_count %>
+                                                        </span>
                                                     </div>
                                                 </div>
+                                                <div class="stat-card">
+                                                    <h3>Duration</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= stats.total_duration %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="stat-meta">min</div>
+                                                </div>
+                                                <div class="stat-card">
+                                                    <h3>Distance</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= Number(stats.total_distance).toFixed(2) %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="stat-meta">km</div>
+                                                </div>
+                                                <div class="stat-card">
+                                                    <h3>Calories</h3>
+                                                    <div class="stat-value">
+                                                        <span class="stat-visible">
+                                                            <%= stats.total_calories %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="stat-meta">cal</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% } %>
                                                 <% } else { %>
                                                     <div class="no-activities">
                                                         <p>You haven't logged any activities yet.</p>

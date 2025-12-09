@@ -1,4 +1,4 @@
-// Filter activities by multiple criteria
+// Filter activities by multiple criteria - server-side filtering
 document.addEventListener('DOMContentLoaded', function () {
     // Toggle advanced filters
     const toggleBtn = document.getElementById('toggle-filters');
@@ -13,129 +13,64 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Apply filters button
+    // Apply filters button - redirect to server with query params
     const applyBtn = document.getElementById('apply-filters');
     if (applyBtn) {
-        applyBtn.addEventListener('click', applyFilters);
+        applyBtn.addEventListener('click', applyServerFilters);
     }
 
-    // Clear filters button
+    // Clear filters button - redirect to page without filters
     const clearBtn = document.getElementById('clear-filters');
     if (clearBtn) {
         clearBtn.addEventListener('click', function () {
-            document.getElementById('activity-type-filter').value = 'all';
-            document.getElementById('date-from-filter').value = '';
-            document.getElementById('date-to-filter').value = '';
-            document.getElementById('duration-min-filter').value = '';
-            document.getElementById('duration-max-filter').value = '';
-            document.getElementById('calories-min-filter').value = '';
-            document.getElementById('calories-max-filter').value = '';
-            applyFilters();
+            window.location.href = '/my-activities';
         });
     }
 
-    // Sorting
+    // Sorting - client-side only (doesn't need server reload)
     const sortSelect = document.getElementById('sort-by');
     if (sortSelect) {
-        sortSelect.addEventListener('change', applyFilters);
+        sortSelect.addEventListener('change', applySorting);
     }
 
-    // Sync stats/counts on initial load
-    applyFilters();
+    // Apply initial sorting if needed
+    applySorting();
 });
 
-function applyFilters() {
-    const sortBy = document.getElementById('sort-by')?.value || 'date-desc';
-    const activityType = document.getElementById('activity-type-filter')?.value || 'all';
+function applyServerFilters() {
+    const activityType = document.getElementById('activity-type-filter')?.value || '';
     const dateFrom = document.getElementById('date-from-filter')?.value || '';
     const dateTo = document.getElementById('date-to-filter')?.value || '';
-    const durationMin = parseInt(document.getElementById('duration-min-filter')?.value) || 0;
-    const durationMax = parseInt(document.getElementById('duration-max-filter')?.value) || Infinity;
-    const caloriesMin = parseInt(document.getElementById('calories-min-filter')?.value) || 0;
-    const caloriesMax = parseInt(document.getElementById('calories-max-filter')?.value) || Infinity;
+    const durationMin = document.getElementById('duration-min-filter')?.value || '';
+    const durationMax = document.getElementById('duration-max-filter')?.value || '';
+    const caloriesMin = document.getElementById('calories-min-filter')?.value || '';
+    const caloriesMax = document.getElementById('calories-max-filter')?.value || '';
 
-    const rows = document.querySelectorAll('.activities-table tbody tr');
-    const totalCount = rows.length;
-    let visibleCount = 0;
+    // Build query params
+    const params = new URLSearchParams();
+    
+    if (activityType && activityType !== 'all') params.set('activity_type', activityType);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
+    if (durationMin) params.set('duration_min', durationMin);
+    if (durationMax) params.set('duration_max', durationMax);
+    if (caloriesMin) params.set('calories_min', caloriesMin);
+    if (caloriesMax) params.set('calories_max', caloriesMax);
 
-    rows.forEach(row => {
-        let shouldShow = true;
-
-        const rowActivityType = row.getAttribute('data-activity-type');
-
-        // Activity type filter
-        if (activityType !== 'all' && rowActivityType !== activityType) {
-            shouldShow = false;
-        }
-
-        // Date range filter
-        if (dateFrom || dateTo) {
-            const dateCell = row.querySelector('td:first-child');
-            if (dateCell) {
-                const activityDateStr = dateCell.textContent.trim();
-                const activityDate = new Date(activityDateStr);
-
-                if (dateFrom) {
-                    const fromDate = new Date(dateFrom);
-                    if (activityDate < fromDate) {
-                        shouldShow = false;
-                    }
-                }
-
-                if (dateTo) {
-                    const toDate = new Date(dateTo);
-                    toDate.setHours(23, 59, 59, 999);
-                    if (activityDate > toDate) {
-                        shouldShow = false;
-                    }
-                }
-            }
-        }
-
-        // Duration filter
-        const durationCell = row.querySelector('td:nth-child(3)');
-        if (durationCell) {
-            const duration = parseInt(durationCell.textContent.trim()) || 0;
-            if (duration < durationMin || duration > durationMax) {
-                shouldShow = false;
-            }
-        }
-
-        // Calories filter
-        const caloriesCell = row.querySelector('td:nth-child(5)');
-        if (caloriesCell) {
-            const caloriesText = caloriesCell.textContent.trim();
-            if (caloriesText !== 'N/A') {
-                const calories = parseInt(caloriesText) || 0;
-                if (calories < caloriesMin || calories > caloriesMax) {
-                    shouldShow = false;
-                }
-            }
-        }
-
-        // Show/hide row
-        if (shouldShow) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    // Update the count display (table header area)
-    const visibleCountSpan = document.getElementById('visible-count');
-    const totalCountSpan = document.getElementById('total-count');
-
-    if (visibleCountSpan) {
-        visibleCountSpan.textContent = visibleCount;
-    }
-    if (totalCountSpan) {
-        totalCountSpan.textContent = totalCount;
+    // Keep current pageSize if exists
+    const url = new URL(window.location);
+    const currentPageSize = url.searchParams.get('pageSize');
+    if (currentPageSize) {
+        params.set('pageSize', currentPageSize);
     }
 
-    // Sort and update stats
+    // Redirect to filtered page
+    window.location.href = '/my-activities?' + params.toString();
+}
+
+function applySorting() {
+    const sortBy = document.getElementById('sort-by')?.value || 'date-desc';
     sortRows(sortBy);
-    updateStats(visibleCount, totalCount);
 }
 
 function sortRows(sortBy) {
@@ -193,48 +128,4 @@ function sortRows(sortBy) {
     });
 
     rows.forEach(row => tbody.appendChild(row));
-}
-
-function updateStats(visibleCount, totalCount) {
-    const statsContainer = document.querySelector('.stats-grid');
-    if (!statsContainer) return;
-
-    const rows = document.querySelectorAll('.activities-table tbody tr');
-    let visibleDuration = 0;
-    let visibleDistance = 0;
-    let visibleCalories = 0;
-    let totalDuration = 0;
-    let totalDistance = 0;
-    let totalCalories = 0;
-
-    rows.forEach(row => {
-        const duration = parseFloat(row.dataset.duration || '0') || 0;
-        const distance = parseFloat(row.dataset.distance || '0') || 0;
-        const calories = parseFloat(row.dataset.calories || '0') || 0;
-
-        totalDuration += duration;
-        totalDistance += distance;
-        totalCalories += calories;
-
-        if (row.style.display !== 'none') {
-            visibleDuration += duration;
-            visibleDistance += distance;
-            visibleCalories += calories;
-        }
-    });
-
-    const statCards = statsContainer.querySelectorAll('.stat-card');
-    const setCardNumbers = (card, visible, total, formatter = (v) => v) => {
-        const visibleEl = card.querySelector('.stat-visible');
-        const totalEl = card.querySelector('.stat-total');
-        if (visibleEl) visibleEl.textContent = formatter(visible);
-        if (totalEl) totalEl.textContent = formatter(total);
-    };
-
-    if (statCards.length >= 4) {
-        setCardNumbers(statCards[0], visibleCount, totalCount);
-        setCardNumbers(statCards[1], visibleDuration, totalDuration);
-        setCardNumbers(statCards[2], visibleDistance, totalDistance, (val) => val.toFixed(2));
-        setCardNumbers(statCards[3], visibleCalories, totalCalories);
-    }
 }

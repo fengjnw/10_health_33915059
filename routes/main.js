@@ -214,22 +214,92 @@ router.get('/my-activities', async (req, res) => {
     try {
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const rawPageSize = parseInt(req.query.pageSize, 10) || 10;
-        const pageSize = Math.min(Math.max(rawPageSize, 10), 20);
+        const pageSize = Math.min(Math.max(rawPageSize, 10), 50);
         const offset = (page - 1) * pageSize;
 
-        const countQuery = 'SELECT COUNT(*) as total FROM fitness_activities WHERE user_id = ?';
-        const [countRows] = await db.query(countQuery, [req.session.user.id]);
+        // Get filter parameters
+        const {
+            activity_type,
+            date_from,
+            date_to,
+            duration_min,
+            duration_max,
+            calories_min,
+            calories_max
+        } = req.query;
+
+        // Build WHERE clause with filters
+        let whereClause = 'WHERE user_id = ?';
+        const params = [req.session.user.id];
+
+        if (activity_type && activity_type !== 'all') {
+            whereClause += ' AND activity_type = ?';
+            params.push(activity_type);
+        }
+
+        if (date_from) {
+            whereClause += ' AND activity_time >= ?';
+            params.push(date_from);
+        }
+
+        if (date_to) {
+            whereClause += ' AND activity_time <= ?';
+            params.push(date_to);
+        }
+
+        if (duration_min) {
+            whereClause += ' AND duration_minutes >= ?';
+            params.push(parseInt(duration_min, 10));
+        }
+
+        if (duration_max) {
+            whereClause += ' AND duration_minutes <= ?';
+            params.push(parseInt(duration_max, 10));
+        }
+
+        if (calories_min) {
+            whereClause += ' AND calories_burned >= ?';
+            params.push(parseInt(calories_min, 10));
+        }
+
+        if (calories_max) {
+            whereClause += ' AND calories_burned <= ?';
+            params.push(parseInt(calories_max, 10));
+        }
+
+        // Get total count with filters
+        const countQuery = `SELECT COUNT(*) as total FROM fitness_activities ${whereClause}`;
+        const [countRows] = await db.query(countQuery, params);
         const totalCount = countRows[0]?.total || 0;
         const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
 
+        // Get activities with filters
         const dataQuery = `
             SELECT * FROM fitness_activities 
-            WHERE user_id = ? 
+            ${whereClause}
             ORDER BY activity_time DESC
             LIMIT ? OFFSET ?
         `;
 
-        const [activities] = await db.query(dataQuery, [req.session.user.id, pageSize, offset]);
+        const [activities] = await db.query(dataQuery, [...params, pageSize, offset]);
+
+        // Calculate statistics based on all filtered results (not just current page)
+        const statsQuery = `
+            SELECT 
+                COUNT(*) as total_count,
+                COALESCE(SUM(duration_minutes), 0) as total_duration,
+                COALESCE(SUM(distance_km), 0) as total_distance,
+                COALESCE(SUM(calories_burned), 0) as total_calories
+            FROM fitness_activities 
+            ${whereClause}
+        `;
+        const [statsRows] = await db.query(statsQuery, params);
+        const stats = statsRows[0] || {
+            total_count: 0,
+            total_duration: 0,
+            total_distance: 0,
+            total_calories: 0
+        };
 
         res.render('my-activities', {
             title: 'My Activities - Health & Fitness Tracker',
@@ -239,6 +309,16 @@ router.get('/my-activities', async (req, res) => {
                 pageSize,
                 totalCount,
                 totalPages
+            },
+            stats: stats,
+            filterParams: {
+                activity_type: activity_type || '',
+                date_from: date_from || '',
+                date_to: date_to || '',
+                duration_min: duration_min || '',
+                duration_max: duration_max || '',
+                calories_min: calories_min || '',
+                calories_max: calories_max || ''
             }
         });
     } catch (error) {

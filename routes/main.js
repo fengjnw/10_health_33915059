@@ -149,7 +149,14 @@ router.post('/add-activity', async (req, res) => {
             req,
             'fitness_activity',
             result.insertId,
-            { activity_type, duration_minutes, activity_time }
+            {
+                activity_type,
+                duration_minutes,
+                distance_km: distance_km || null,
+                calories_burned: calories_burned || null,
+                activity_time,
+                is_public: 0
+            }
         );
 
         res.redirect('/my-activities');
@@ -350,12 +357,18 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
                 old: {
                     activity_type: activity.activity_type,
                     duration_minutes: activity.duration_minutes,
-                    activity_time: activity.activity_time
+                    distance_km: activity.distance_km,
+                    calories_burned: activity.calories_burned,
+                    activity_time: activity.activity_time,
+                    is_public: activity.is_public
                 },
                 new: {
                     activity_type,
                     duration_minutes,
-                    activity_time
+                    distance_km: distance_km || null,
+                    calories_burned: calories_burned || null,
+                    activity_time,
+                    is_public: is_public || 0
                 }
             }
         );
@@ -386,7 +399,7 @@ router.delete('/my-activities/:id', async (req, res) => {
 
         // Get the activity to verify ownership
         const [activities] = await db.query(
-            'SELECT id, user_id, activity_type, duration_minutes, activity_time FROM fitness_activities WHERE id = ?',
+            'SELECT id, user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_time, is_public FROM fitness_activities WHERE id = ?',
             [id]
         );
 
@@ -417,7 +430,10 @@ router.delete('/my-activities/:id', async (req, res) => {
                 deleted: {
                     activity_type: activity.activity_type,
                     duration_minutes: activity.duration_minutes,
-                    activity_time: activity.activity_time
+                    distance_km: activity.distance_km,
+                    calories_burned: activity.calories_burned,
+                    activity_time: activity.activity_time,
+                    is_public: activity.is_public
                 }
             }
         );
@@ -987,11 +1003,42 @@ router.post('/admin/users/:id/delete', requireAdmin, async (req, res) => {
             });
         }
 
+        // Get user info before deleting
+        const [users] = await db.query('SELECT id, username, email FROM users WHERE id = ?', [userId]);
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        const deletedUser = users[0];
+
+        // Delete the user
         await db.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        // Log admin action
+        await logDataChange(
+            EventTypes.ADMIN_DELETE_USER,
+            req,
+            'user',
+            userId,
+            {
+                deleted_user: {
+                    id: deletedUser.id,
+                    username: deletedUser.username,
+                    email: deletedUser.email
+                },
+                admin_user: {
+                    id: req.session.user.id,
+                    username: req.session.user.username
+                }
+            }
+        );
 
         res.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
-        console.error('Error deleting user:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to delete user'
@@ -1046,7 +1093,45 @@ router.post('/admin/activities/:id/delete', requireAdmin, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid activity id' });
         }
 
+        // Get activity info before deleting
+        const [activities] = await db.query(
+            `SELECT a.*, u.username, u.email 
+             FROM fitness_activities a 
+             JOIN users u ON a.user_id = u.id 
+             WHERE a.id = ?`,
+            [activityId]
+        );
+
+        if (activities.length === 0) {
+            return res.status(404).json({ success: false, error: 'Activity not found' });
+        }
+
+        const deletedActivity = activities[0];
+
+        // Delete the activity
         await db.query('DELETE FROM fitness_activities WHERE id = ?', [activityId]);
+
+        // Log admin action
+        await logDataChange(
+            EventTypes.ADMIN_DELETE_ACTIVITY,
+            req,
+            'fitness_activity',
+            activityId,
+            {
+                deleted_activity: {
+                    id: deletedActivity.id,
+                    activity_type: deletedActivity.activity_type,
+                    duration_minutes: deletedActivity.duration_minutes,
+                    activity_time: deletedActivity.activity_time,
+                    owner_username: deletedActivity.username,
+                    owner_email: deletedActivity.email
+                },
+                admin_user: {
+                    id: req.session.user.id,
+                    username: req.session.user.username
+                }
+            }
+        );
 
         res.json({ success: true, message: 'Activity deleted successfully' });
     } catch (error) {

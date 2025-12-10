@@ -1,5 +1,9 @@
 // Activity charts visualization module
 
+// Store chart instances globally for updates
+let typeChart = null;
+let trendChart = null;
+
 // Wait for Chart.js to load
 function waitForChartJs(callback, maxWait = 5000) {
     const startTime = Date.now();
@@ -38,8 +42,13 @@ async function loadAndRenderCharts() {
             }
         };
 
-        // Fetch type distribution data
-        const typeRes = await fetch('/internal/activities/charts/type-distribution', fetchOptions);
+        // Get current filter parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterQuery = urlParams.toString();
+
+        // Fetch type distribution data with current filters
+        const typeUrl = '/internal/activities/charts/type-distribution' + (filterQuery ? '?' + filterQuery : '');
+        const typeRes = await fetch(typeUrl, fetchOptions);
 
         if (!typeRes.ok) {
             return;
@@ -47,8 +56,9 @@ async function loadAndRenderCharts() {
 
         const typeData = await typeRes.json();
 
-        // Fetch daily trend data
-        const trendRes = await fetch('/internal/activities/charts/daily-trend?days=30', fetchOptions);
+        // Fetch daily trend data with current filters
+        const trendUrl = '/internal/activities/charts/daily-trend' + (filterQuery ? '?' + filterQuery : '');
+        const trendRes = await fetch(trendUrl, fetchOptions);
 
         if (!trendRes.ok) {
             return;
@@ -86,10 +96,25 @@ async function loadAndRenderCharts() {
     }
 }
 
+// Export function to refresh charts (can be called after sorting/filtering)
+window.refreshActivityCharts = function () {
+    if (typeof Chart !== 'undefined') {
+        loadAndRenderCharts();
+    } else {
+        waitForChartJs(loadAndRenderCharts);
+    }
+};
+
 function renderTypeDistributionChart(data) {
     const ctx = document.getElementById('typeDistributionChart');
     if (!ctx) {
         return;
+    }
+
+    // Destroy existing chart if it exists
+    if (typeChart) {
+        typeChart.destroy();
+        typeChart = null;
     }
 
     const labels = data.map(d => d.activity_type);
@@ -125,7 +150,7 @@ function renderTypeDistributionChart(data) {
     };
 
     try {
-        new Chart(ctx, {
+        typeChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -167,6 +192,12 @@ function renderDailyTrendChart(data) {
         return;
     }
 
+    // Destroy existing chart if it exists
+    if (trendChart) {
+        trendChart.destroy();
+        trendChart = null;
+    }
+
     // Format labels to YYYY-MM-DD
     const labels = data.map(d => {
         const date = new Date(d.date);
@@ -177,7 +208,7 @@ function renderDailyTrendChart(data) {
     const counts = data.map(d => d.count);
 
     try {
-        new Chart(ctx, {
+        trendChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,

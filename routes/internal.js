@@ -4,6 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { addActivityFilters } = require('../utils/filter-helper');
 
 /**
  * GET /internal/activities/stats
@@ -211,6 +212,9 @@ router.get('/activities/export', async (req, res) => {
  * GET /internal/activities/charts/type-distribution
  * Get activity distribution by type
  * 
+ * Query Parameters: Same filter parameters as /my-activities
+ * - activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max
+ * 
  * Access:
  * - Session authenticated users only
  * - Requires CSRF token
@@ -226,6 +230,14 @@ router.get('/activities/charts/type-distribution', async (req, res) => {
             });
         }
 
+        // Build WHERE clause with filters
+        let whereClause = 'WHERE user_id = ?';
+        let params = [userId];
+
+        const { whereClause: filterWhere, params: filterParams } = addActivityFilters(whereClause, params, req.query);
+        whereClause = filterWhere;
+        params = filterParams;
+
         const query = `
             SELECT
                 activity_type,
@@ -234,12 +246,12 @@ router.get('/activities/charts/type-distribution', async (req, res) => {
                 COALESCE(SUM(calories_burned), 0) as total_calories,
                 COALESCE(AVG(calories_burned / NULLIF(duration_minutes, 0)), 0) as avg_intensity
             FROM fitness_activities
-            WHERE user_id = ?
+            ${whereClause}
             GROUP BY activity_type
             ORDER BY count DESC
         `;
 
-        const [rows] = await db.query(query, [userId]);
+        const [rows] = await db.query(query, params);
 
         res.json({
             success: true,
@@ -260,8 +272,8 @@ router.get('/activities/charts/type-distribution', async (req, res) => {
  * GET /internal/activities/charts/daily-trend
  * Get activity trend by date (daily aggregation)
  * 
- * Query Parameters:
- * - days: Number of days to look back (default: 30)
+ * Query Parameters: Same filter parameters as /my-activities
+ * - activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max
  * 
  * Access:
  * - Session authenticated users only
@@ -270,7 +282,6 @@ router.get('/activities/charts/type-distribution', async (req, res) => {
 router.get('/activities/charts/daily-trend', async (req, res) => {
     try {
         const userId = req.session?.user?.id;
-        const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
 
         if (!userId) {
             return res.status(401).json({
@@ -279,6 +290,14 @@ router.get('/activities/charts/daily-trend', async (req, res) => {
             });
         }
 
+        // Build WHERE clause with filters
+        let whereClause = 'WHERE user_id = ?';
+        let params = [userId];
+
+        const { whereClause: filterWhere, params: filterParams } = addActivityFilters(whereClause, params, req.query);
+        whereClause = filterWhere;
+        params = filterParams;
+
         const query = `
             SELECT
                 DATE(activity_time) as date,
@@ -286,12 +305,12 @@ router.get('/activities/charts/daily-trend', async (req, res) => {
                 COALESCE(SUM(duration_minutes), 0) as total_duration,
                 COALESCE(SUM(calories_burned), 0) as total_calories
             FROM fitness_activities
-            WHERE user_id = ? AND activity_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            ${whereClause}
             GROUP BY DATE(activity_time)
             ORDER BY date ASC
         `;
 
-        const [rows] = await db.query(query, [userId, days]);
+        const [rows] = await db.query(query, params);
 
         res.json({
             success: true,

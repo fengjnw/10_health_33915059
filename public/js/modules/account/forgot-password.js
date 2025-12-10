@@ -1,16 +1,10 @@
 const step1Form = document.getElementById('step1Form');
 const step2Form = document.getElementById('step2Form');
 const resendBtn = document.getElementById('resendBtn');
-const closeModal = document.getElementById('closeModal');
 
 let currentEmail = '';
 let currentUsername = '';
 let csrfToken = getCSRFToken();
-
-// Close modal button
-closeModal.addEventListener('click', () => {
-    window.location.href = '/auth/login';
-});
 
 // Step 1: Submit username and email
 step1Form.addEventListener('submit', async (e) => {
@@ -141,8 +135,8 @@ resendBtn.addEventListener('click', async (e) => {
 });
 
 function showStep2() {
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').style.display = 'block';
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
     document.getElementById('verificationCode').focus();
 }// Auto-format verification code input
 document.getElementById('verificationCode').addEventListener('input', (e) => {

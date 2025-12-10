@@ -47,15 +47,10 @@
 
                 <div class="activities-header">
                     <a href="/add-activity" class="btn btn-primary">Add New Activity</a>
-                    <% if (activities && activities.length> 0) { %>
-                        <button id="toggle-filters" class="btn btn-secondary">
-                            <span id="filter-icon">▼</span> Advanced Filters
-                        </button>
-                        <% } %>
                 </div>
 
                 <% if (activities && activities.length> 0) { %>
-                    <div id="advanced-filters" class="advanced-filters hidden">
+                    <div id="advanced-filters" class="advanced-filters">
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label for="activity-type-filter">Activity Type:</label>
@@ -339,7 +334,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="chart-card">
-                                                        <h3>Daily Activity Trend (Last 30 Days)</h3>
+                                                        <h3>Daily Activity Trend</h3>
                                                         <div class="chart-canvas-wrapper">
                                                             <canvas id="dailyTrendChart"></canvas>
                                                         </div>

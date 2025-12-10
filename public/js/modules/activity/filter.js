@@ -2,19 +2,6 @@
 // Import sort helper at the top (in actual HTML, include the script tag before this one)
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Toggle advanced filters
-    const toggleBtn = document.getElementById('toggle-filters');
-    const advancedFilters = document.getElementById('advanced-filters');
-    const filterIcon = document.getElementById('filter-icon');
-
-    if (toggleBtn && advancedFilters) {
-        toggleBtn.addEventListener('click', function () {
-            const isHidden = advancedFilters.style.display === 'none';
-            advancedFilters.style.display = isHidden ? 'block' : 'none';
-            filterIcon.textContent = isHidden ? '▲' : '▼';
-        });
-    }
-
     // Apply filters button - redirect to server with query params
     const applyBtn = document.getElementById('apply-filters');
     if (applyBtn) {

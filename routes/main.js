@@ -1028,13 +1028,29 @@ router.get('/admin/activities', requireAdmin, async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Error fetching activities:', error);
         res.status(500).render('error', {
             title: 'Error',
             message: 'Failed to load activities',
             user: req.session.user,
             error: null
         });
+    }
+});
+
+// Admin: Delete activity (requires admin)
+router.post('/admin/activities/:id/delete', requireAdmin, async (req, res) => {
+    try {
+        const activityId = parseInt(req.params.id, 10);
+
+        if (Number.isNaN(activityId)) {
+            return res.status(400).json({ success: false, error: 'Invalid activity id' });
+        }
+
+        await db.query('DELETE FROM fitness_activities WHERE id = ?', [activityId]);
+
+        res.json({ success: true, message: 'Activity deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete activity' });
     }
 });
 

@@ -42,7 +42,6 @@ async function loadAndRenderCharts() {
         const typeRes = await fetch('/internal/activities/charts/type-distribution', fetchOptions);
 
         if (!typeRes.ok) {
-            alert('Failed to load type distribution data.');
             return;
         }
 
@@ -52,32 +51,44 @@ async function loadAndRenderCharts() {
         const trendRes = await fetch('/internal/activities/charts/daily-trend?days=30', fetchOptions);
 
         if (!trendRes.ok) {
-            alert('Failed to load daily trend data.');
             return;
         }
 
         const trendData = await trendRes.json();
 
-        if (typeData.success && typeData.data && typeData.data.length > 0) {
-            renderTypeDistributionChart(typeData.data);
-        } else {
-            alert('No type distribution data available.');
+        // Check if we have any data at all
+        const hasTypeData = typeData.success && typeData.data && typeData.data.length > 0;
+        const hasTrendData = trendData.success && trendData.data && trendData.data.length > 0;
+
+        if (!hasTypeData && !hasTrendData) {
+            // No data at all - hide chart containers or show a message
+            const typeChartContainer = document.getElementById('typeDistributionChart')?.parentElement;
+            const trendChartContainer = document.getElementById('dailyTrendChart')?.parentElement;
+
+            if (typeChartContainer) {
+                typeChartContainer.innerHTML = '<p class="text-muted" style="text-align: center; padding: 20px;">No activity data available for charts. Add some activities to see visualizations!</p>';
+            }
+            if (trendChartContainer && trendChartContainer !== typeChartContainer) {
+                trendChartContainer.style.display = 'none';
+            }
+            return;
         }
 
-        if (trendData.success && trendData.data && trendData.data.length > 0) {
+        if (hasTypeData) {
+            renderTypeDistributionChart(typeData.data);
+        }
+
+        if (hasTrendData) {
             renderDailyTrendChart(trendData.data);
-        } else {
-            alert('No daily trend data available.');
         }
     } catch (error) {
-        alert('Error loading charts. Please try again later.');
+        // Silent fail - charts are optional
     }
 }
 
 function renderTypeDistributionChart(data) {
     const ctx = document.getElementById('typeDistributionChart');
     if (!ctx) {
-        alert('Chart canvas not found.');
         return;
     }
 
@@ -146,14 +157,13 @@ function renderTypeDistributionChart(data) {
             , plugins: [sliceLabelPlugin]
         });
     } catch (error) {
-        alert('Failed to render type distribution chart.');
+        // Silent fail
     }
 }
 
 function renderDailyTrendChart(data) {
     const ctx = document.getElementById('dailyTrendChart');
     if (!ctx) {
-        alert('Chart canvas not found.');
         return;
     }
 
@@ -249,7 +259,7 @@ function renderDailyTrendChart(data) {
             }
         });
     } catch (error) {
-        alert('Failed to render daily trend chart.');
+        // Silent fail
     }
 }
 

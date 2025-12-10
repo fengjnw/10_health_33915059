@@ -1,5 +1,5 @@
 Outline
-Health & Fitness Tracker is a full-stack web application enabling authenticated users to log and analyze fitness activities. Built with Node.js/Express/EJS/MySQL, it features comprehensive authentication (signup, login, forgot-password, change-email, delete-account with verification flows), activity CRUD operations (create, read, update, delete with type/duration/distance/calories tracking), advanced filtering/search (by type, date range, duration, calories with URL persistence), data visualization (Chart.js charts synced with filters), CSV export, and a public API documentation page. Security implemented through bcrypt password hashing, session management, CSRF protection on all forms/AJAX, Helmet headers, and audit logging for critical actions. UX emphasizes consistency with standalone page flows rather than modals, server-side filtering with pagination, and real-time chart updates reflecting filtered datasets. Compulsory features satisfied: home page with navigation, about page, database search/filtering, MySQL data storage, data entry forms, default login (gold/smiths), npm install setup, create_db.sql/insert_test_data.sql scripts, and deployment-ready configuration. Application demonstrates mastery of basic techniques (sessions, CRUD, validation), additional techniques (CSRF, Helmet, Chart.js, CSV export), and advanced techniques (filter helper utility, multi-step state management, audit logging, dynamic chart-filter synchronization).
+Health & Fitness Tracker is a full-stack web application enabling authenticated users to log and analyze fitness activities. Built with Node.js/Express/EJS/MySQL following course requirements, it implements comprehensive authentication (signup, login, forgot-password with multi-step verification, change-email, delete-account), activity CRUD operations (create, read, update, delete with type/duration/distance/calories/notes tracking), advanced filtering and search (by type, date range, duration, calories with URL persistence), data visualization (Chart.js charts synchronized with filters), CSV export, and public API documentation. Security implemented through bcrypt password hashing, express-session management, CSRF tokens on all forms/AJAX requests, Helmet security headers, express-validator input validation, express-sanitizer XSS protection, and audit logging for critical actions. Application demonstrates mastery of all lab-taught basic techniques (Express routing, EJS, forms, MySQL CRUD, bcrypt, sessions, access control, validation, sanitization, API calls), additional techniques from lectures and lab extensions (dotenv, audit logs, CSRF, Helmet, Chart.js visualization, CSV export, pagination), and advanced techniques beyond coursework (reusable filter helper utility with DRY architecture, multi-step state management system, dynamic chart-filter synchronization, integrated filter-pagination-sort-export ecosystem, self-documenting API builder). Compulsory features satisfied: home page with navigation, about page, database search/filtering, MySQL storage, data entry forms, default login (gold/smiths), npm install setup, create_db.sql/insert_test_data.sql scripts, deployment-ready configuration on port 8000.
 
 Architecture
 Diagram:
@@ -67,9 +67,11 @@ User Functionality
 **Screenshots:** See `/screenshots/` folder: `my-activities.png` (filters + charts), `add-activity.png` (form), `profile.png` (account management), `change-email.png` (multi-step flow).
 
 Advanced Techniques
-1. **Reusable Filter Helper Utility** - Centralized SQL WHERE clause builder (`utils/filter-helper.js`) prevents code duplication across routes and chart APIs. Handles type, date range, duration, and calorie filters with parameterized queries for SQL injection prevention.
+This section demonstrates techniques beyond the course material to achieve a higher grade (70%+). The course labs covered: Express routing, EJS templates, form handling (GET/POST), MySQL CRUD, bcrypt hashing, sessions, access control, express-validator/sanitizer, external API calls, and basic API creation. Additional techniques taught but not required in labs include: dotenv, audit logging (Lab 7 extension), CSRF protection (Lecture 8.2), Helmet headers (Lecture 8.1), and API filtering (Lab 9b extension). The following go beyond all coursework material:
+
+1. **Reusable Filter Helper Utility with DRY Architecture** - Created centralized `utils/filter-helper.js` module that constructs dynamic SQL WHERE clauses, shared across both page routes AND chart APIs. This prevents code duplication (DRY principle) and ensures filter logic consistency. Supports activity type, date ranges, duration ranges, and calorie ranges with parameterized queries (SQL injection prevention).
 ```javascript
-// utils/filter-helper.js - used by both page routes and chart APIs
+// utils/filter-helper.js - reused in routes/main.js and routes/internal.js
 function addActivityFilters(baseWhere, baseParams, filters) {
   let where = baseWhere;
   let params = [...baseParams];
@@ -81,26 +83,26 @@ function addActivityFilters(baseWhere, baseParams, filters) {
     where += ' AND DATE(activity_time) >= ?';
     params.push(filters.date_from);
   }
-  // ... additional filters for date_to, duration, calories
+  // ... additional filters for date_to, duration_min/max, calories_min/max
   return { whereClause: where, params };
 }
 ```
 
-2. **Multi-Step State Management** - Forgot-password, change-email, and delete-account pages use client-side step progression with `.modal-step` class toggling and server-side session state tracking. Each step validates previous steps before proceeding (see `views/change-email.ejs`, `public/js/modules/account/change-email.js`).
+2. **Multi-Step State Management System** - Implemented complex 3-4 step workflows (forgot-password, change-email, delete-account) using hybrid client-server state tracking. Client-side manages step visibility via `.modal-step` CSS class toggling; server-side tracks verification codes and email changes in session storage. Each step validates prerequisites before allowing progression. Files: `views/change-email.ejs`, `public/js/modules/account/change-email.js`, `routes/main.js` (lines 180-245).
 
-3. **Dynamic Chart API with Filter Synchronization** - Chart.js visualizations (`public/js/modules/activity/charts.js`) automatically sync with table filters by passing URL query params to `/internal/activities/charts/*` endpoints, ensuring charts reflect filtered data, not just paginated subset.
+3. **Dynamic Chart-Filter Synchronization Architecture** - Built real-time data synchronization between table filters and Chart.js visualizations. When users apply filters, both paginated table AND full-dataset charts update simultaneously. Charts fetch from `/internal/activities/charts/*` APIs with URL query parameters automatically appended, ensuring visualizations reflect filtered data (not just current page). Prevents common pitfall where charts show all data while table shows filtered subset.
 ```javascript
-// charts.js - syncs chart data with current filters
+// public/js/modules/activity/charts.js
 const urlParams = new URLSearchParams(window.location.search);
 const filterQuery = urlParams.toString();
 fetch('/internal/activities/charts/type-distribution' + (filterQuery ? '?' + filterQuery : ''))
   .then(res => res.json())
-  .then(data => { /* render Chart.js */ });
+  .then(data => { /* render Chart.js with filtered data */ });
 ```
 
-4. **Audit Logging System** - Security-critical actions (login, email change, account deletion) logged to `audit_logs` table with IP and user-agent tracking (`routes/main.js` lines 45-52, 312-318). Enables forensic analysis and suspicious activity detection.
+4. **Integrated Filter-Pagination-Sort-Export Ecosystem** - Designed comprehensive data access system where filters, pagination, sorting, and CSV export all operate on the same filtered dataset. URL query params preserve state across operations; CSV export respects current filters; pagination shows correct totals for filtered results. Requires careful SQL query construction and state management across multiple routes (`routes/main.js`, `routes/internal.js`).
 
-5. **Public API Documentation Page** - Self-documenting `/api-builder` route lists all internal endpoints with sample requests, demonstrating API-first design beyond typical CRUD apps (originally admin-only, refactored to public access for easier testing).
+5. **Self-Documenting Public API Builder** - Created `/api-builder` page that serves as interactive API documentation, listing all internal endpoints with request/response examples. Originally admin-gated, refactored to public access for easier developer testing. Demonstrates API-first design thinking and self-service documentation approach beyond typical CRUD applications.
 
 AI Declaration
 AI assistance (GitHub Copilot with Claude Sonnet 4.5) was used throughout development for code generation, debugging, refactoring suggestions, and documentation writing. Specific uses: implementing filter helper utility structure, debugging modal CSS class issues, refactoring modals to standalone pages, adding chart-filter synchronization logic, writing SQL query optimizations, and drafting this report.md documentation. All AI-generated code was reviewed, tested, modified, and integrated by the student developer. The architectural decisions, feature planning, security implementation choices, and overall application design were human-directed. AI served as a coding assistant and pair programmer, not an autonomous developer.

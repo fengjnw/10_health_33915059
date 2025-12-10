@@ -1448,11 +1448,17 @@ footer .dev-tools-separator {
 }
 
 .label-checkbox {
-    display: flex;
+    display: flex !important;
     gap: 8px;
     font-weight: 500;
     cursor: pointer;
     align-items: center;
+}
+
+.label-checkbox input[type="checkbox"] {
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0;
 }
 
 .modal-content.center {

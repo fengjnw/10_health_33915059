@@ -1448,6 +1448,7 @@ footer .dev-tools-separator {
 }
 
 .label-checkbox {
+    display: flex;
     gap: 8px;
     font-weight: 500;
     cursor: pointer;

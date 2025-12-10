@@ -476,6 +476,30 @@ router.get('/profile', async (req, res) => {
     }
 });
 
+// GET /account/change-email - Show change email page
+router.get('/account/change-email', (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+
+    res.render('change-email', {
+        title: 'Change Email - Health & Fitness Tracker'
+    });
+});
+
+// GET /account/delete - Show delete account page
+router.get('/account/delete', (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
+    }
+
+    res.render('delete-account', {
+        title: 'Delete Account - Health & Fitness Tracker'
+    });
+});
+
 // PATCH /profile - Update user profile (username, first_name, last_name)
 // Email can only be changed through the email verification process
 router.patch('/profile', async (req, res) => {

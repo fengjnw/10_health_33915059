@@ -16,38 +16,34 @@
 
         <main>
             <div class="container">
-                <h1>Reset Password</h1>
+                <h1>Change Email Address</h1>
 
                 <div class="form-container">
-                    <div id="step1" class="modal-step active">
-                        <h3>Step 1: Verify Your Identity</h3>
-                        <form id="step1Form">
+                    <div id="emailStep" class="modal-step active">
+                        <h3>Step 1: Enter New Email</h3>
+                        <form id="changeEmailForm">
                             <div class="form-group">
-                                <label for="username">Username:</label>
-                                <input type="text" id="username" name="username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email Address:</label>
-                                <input type="email" id="email" name="email" required>
+                                <label for="newEmail">New Email Address:</label>
+                                <input type="email" id="newEmail" name="newEmail" required>
                             </div>
                             <button type="submit" class="btn btn-primary">Send Verification Code</button>
+                            <a href="/profile" class="btn btn-secondary">Cancel</a>
                         </form>
                     </div>
 
-                    <div id="step2" class="modal-step">
+                    <div id="verificationStep" class="modal-step">
                         <h3>Step 2: Verify Your Email</h3>
                         <p id="verificationEmail" class="text-success"></p>
-                        <p class="text-muted text-small">We've sent a verification code to your email address. Enter it
-                            below or click the link in the email.</p>
+                        <p class="text-muted text-small">We've sent a verification code to your new email address.
+                            Enter it below or click the link in the email.</p>
 
-                        <form id="step2Form">
+                        <form id="verifyEmailForm">
                             <div class="form-group">
                                 <label for="verificationCode">Verification Code:</label>
                                 <input type="text" id="verificationCode" name="verificationCode"
                                     placeholder="e.g., 123456" maxlength="6" required>
                             </div>
-                            <div id="verificationInlineError" class="hidden text-error">
-                            </div>
+                            <div id="verificationInlineError" class="hidden text-error"></div>
                             <div id="previewUrl" class="dev-note hidden">
                                 <p>Development: Click the link below to preview the verification email:</p>
                                 <a id="previewLink" href="" target="_blank">Preview Email</a>
@@ -57,19 +53,15 @@
                         </form>
                     </div>
 
-                    <div id="step3" class="modal-step">
-                        <h3>Step 3: Set New Password</h3>
-                        <form id="step3Form">
-                            <div class="form-group">
-                                <label for="newPassword">New Password:</label>
-                                <input type="password" id="newPassword" name="newPassword" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="confirmPassword">Confirm Password:</label>
-                                <input type="password" id="confirmPassword" name="confirmPassword" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Reset Password</button>
-                        </form>
+                    <div id="successStep" class="modal-step">
+                        <h3>✓ Email Changed Successfully</h3>
+                        <p>Your email address has been updated.</p>
+                        <a href="/profile" class="btn btn-primary">Back to Profile</a>
+                    </div>
+
+                    <div id="errorStep" class="modal-step">
+                        <p id="errorMessage" class="text-error"></p>
+                        <button type="button" class="btn btn-secondary" id="backBtn">Back</button>
                     </div>
                 </div>
             </div>
@@ -78,7 +70,7 @@
         <%- include('partials/footer') %>
 
             <script src="/js/utils/csrf-helper.js"></script>
-            <script src="/js/modules/account/forgot-password.js"></script>
+            <script src="/js/modules/account/change-email.js"></script>
 </body>
 
 </html>

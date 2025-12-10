@@ -24,8 +24,7 @@
                         </div>
                         <div class="account-card__actions flex-gap-sm">
                             <a href="/auth/change-password" class="btn btn-secondary btn-compact">Change Password</a>
-                            <button type="button" id="deleteAccountBtn" class="btn btn-danger btn-compact">Delete
-                                Account</button>
+                            <a href="/account/delete" class="btn btn-danger btn-compact">Delete Account</a>
                         </div>
                     </div>
 
@@ -60,8 +59,7 @@
                             <div class="flex-gap-sm flex-align">
                                 <input type="email" id="email" name="email" value="<%= user.email %>" disabled readonly
                                     class="flex-1">
-                                <button type="button" id="changeEmailBtn" class="btn btn-secondary btn-compact">Change
-                                    Email</button>
+                                <a href="/account/change-email" class="btn btn-secondary btn-compact">Change Email</a>
                             </div>
                         </div>
 
@@ -76,22 +74,17 @@
 
         <%- include('partials/footer') %>
 
-            <%- include('partials/change-email-modal') %>
-                <%- include('partials/delete-account-modal') %>
+            <!-- Profile update success modal -->
+            <div id="profileSuccessModal" class="modal profile-success hidden">
+                <div class="modal-content center">
+                    <h3>Profile Updated</h3>
+                    <p class="text-muted">Your profile information has been saved.</p>
+                </div>
+            </div>
 
-                    <!-- Profile update success modal -->
-                    <div id="profileSuccessModal" class="modal profile-success hidden">
-                        <div class="modal-content center">
-                            <h3>Profile Updated</h3>
-                            <p class="text-muted">Your profile information has been saved.</p>
-                        </div>
-                    </div>
-
-                    <script src="/js/utils/csrf-helper.js"></script>
-                    <script src="/js/utils/form-helper.js"></script>
-                    <script src="/js/modules/account/profile.js"></script>
-                    <script src="/js/modules/account/change-email.js"></script>
-                    <script src="/js/modules/account/delete-account.js"></script>
+            <script src="/js/utils/csrf-helper.js"></script>
+            <script src="/js/utils/form-helper.js"></script>
+            <script src="/js/modules/account/profile.js"></script>
 </body>
 
 </html>

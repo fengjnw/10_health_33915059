@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <%- include('partials/header') %>
+
+        <main>
+            <div class="container">
+                <h1>Delete Account</h1>
+
+                <div class="form-container">
+                    <div id="deleteStep1" class="modal-step active">
+                        <h3>Warning</h3>
+                        <p class="text-error">This action cannot be undone!</p>
+                        <p>All your data including activities and profile information will be permanently deleted.</p>
+                        <form id="deleteRequestCodeForm">
+                            <button type="submit" class="btn btn-danger">Send Verification Code</button>
+                            <a href="/profile" class="btn btn-secondary">Cancel</a>
+                        </form>
+                    </div>
+
+                    <div id="deleteStep2" class="modal-step">
+                        <h3>✓ Verify Code</h3>
+                        <p class="text-muted text-small">We've sent a verification code to your email address. Enter it
+                            below to continue.</p>
+
+                        <form id="deleteVerifyForm">
+                            <div class="form-group">
+                                <label for="deleteVerificationCode">Verification Code:</label>
+                                <input type="text" id="deleteVerificationCode" name="deleteVerificationCode"
+                                    placeholder="e.g., 123456" maxlength="6" required>
+                            </div>
+                            <div id="deleteVerificationError" class="hidden text-error"></div>
+                            <div id="deletePreviewUrl" class="dev-note hidden">
+                                <p>Development: Click the link below to preview the verification email:</p>
+                                <a id="deletePreviewLink" href="" target="_blank">Preview Email</a>
+                            </div>
+                            <button type="submit" class="btn btn-danger">Verify Code</button>
+                            <button type="button" class="btn btn-secondary" id="deleteBackBtn">Back</button>
+                        </form>
+                    </div>
+
+                    <div id="deleteStep3" class="modal-step">
+                        <h3>Final Confirmation</h3>
+                        <p class="text-error">Are you absolutely sure you want to delete your account?</p>
+                        <p>This is the last step. Your account and all associated data will be permanently deleted.</p>
+                        <div class="form-group flex-gap-12">
+                            <button type="button" class="btn btn-danger" id="deleteConfirmBtn">Yes, Delete My
+                                Account</button>
+                            <button type="button" class="btn btn-secondary" id="deleteStep3BackBtn">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div id="deleteErrorStep" class="modal-step">
+                        <p id="deleteErrorMessage" class="text-error"></p>
+                        <button type="button" class="btn btn-secondary" id="deleteErrorBackBtn">Back</button>
+                    </div>
+
+                    <div id="deleteSuccessStep" class="modal-step">
+                        <h3 class="text-success">✓ Account Deleted</h3>
+                        <p>Your account has been successfully deleted.</p>
+                        <p class="text-muted text-small">You will be redirected to the home page in a few seconds...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <%- include('partials/footer') %>
+
+            <script src="/js/utils/csrf-helper.js"></script>
+            <script src="/js/modules/account/delete-account.js"></script>
+</body>
+
+</html>

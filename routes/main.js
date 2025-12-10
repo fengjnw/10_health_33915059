@@ -15,11 +15,6 @@ const {
     sendServerError
 } = require('../utils/response-helper');
 
-// Goodbye page after account deletion
-router.get('/goodbye', (req, res) => {
-    res.render('goodbye', { title: 'Account Deleted' });
-});
-
 // Home page route
 router.get('/', (req, res) => {
     res.render('index', { title: 'Home - Health & Fitness Tracker' });

@@ -1451,6 +1451,7 @@ footer .dev-tools-separator {
     gap: 8px;
     font-weight: 500;
     cursor: pointer;
+    align-items: center;
 }
 
 .modal-content.center {

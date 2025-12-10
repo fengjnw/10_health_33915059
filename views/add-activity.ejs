@@ -82,6 +82,14 @@
                                         placeholder="Add any notes about this activity..."><%= locals.formData ? formData.notes || '' : '' %></textarea>
                                 </div>
 
+                                <div class="form-group">
+                                    <label class="flex-align label-checkbox">
+                                        <input type="checkbox" id="is_public" name="is_public" class="input-auto"
+                                            <%=locals.formData && formData.is_public ? 'checked' : '' %>>
+                                        <span>Make this activity public</span>
+                                    </label>
+                                </div>
+
                                 <button type="submit" class="btn btn-primary">Add Activity</button>
                                 <a href="/my-activities" class="btn btn-secondary">Cancel</a>
                             </form>

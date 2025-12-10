@@ -956,8 +956,8 @@ router.post('/account/delete', async (req, res) => {
     }
 });
 
-// API Builder page (requires admin)
-router.get('/admin/api-builder', requireAdmin, (req, res) => {
+// API Builder page (public)
+router.get('/api-builder', (req, res) => {
     res.render('api-builder', {
         title: 'API Builder - Developer Tools'
     });

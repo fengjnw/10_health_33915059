@@ -25,9 +25,10 @@ chmod +x setup_database.sh
 ./setup_database.sh
 ```
 
-**Note**: Test user credentials are created via `setup_database.sh` (not version controlled). The script creates:
-- User account: `gold` / `smiths`
-- Admin account: `admin` / `qwerty`
+**Note**: Test user credentials are created via `setup_database.sh` (not version controlled). 
+- Edit `setup_database.sh` (copied from the example) with your test account credentials
+- The example template uses placeholder values - replace with actual usernames and password hashes
+- For assignment marking: actual test credentials provided separately (not in source code)
 
 3. Configure environment variables:
    - Copy `.env` file and update if needed
@@ -42,9 +43,8 @@ The application will be available at: http://localhost:8000
 
 ## Test Accounts
 
-Test accounts are created by the `setup_database.sh` script:
-- Regular user: `gold` / `smiths`
-- Administrator: `admin` / `qwerty`
+Test accounts are created by the `setup_database.sh` script (not included in repository).
+See deployment documentation or contact developer for test credentials.
 
 ## Features
 

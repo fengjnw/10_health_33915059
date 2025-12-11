@@ -16,20 +16,19 @@ mysql -u "$DB_USER" -p"$DB_PASSWORD" < create_db.sql
 
 # Insert test users (credentials kept out of version control)
 # Password hashes generated with bcrypt (salt rounds = 10)
-# gold / smiths: $2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu
-# admin / qwerty: $2b$10$6TMiIeOd.3kIvGhEAzUFBuZVtykl4MUVQU.YHtWv3dHAHoXNhdRaW
+# Replace these with your own test account credentials
+# Example: use online bcrypt generator or Node.js bcrypt.hash()
 
 mysql -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" <<EOF
 -- Insert test users for marking/demonstration
+-- Replace username, password hash, and email with your test accounts
 INSERT INTO users (username, password, email, first_name, last_name, is_admin) VALUES
-('gold', '\$2b\$10\$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'gold@example.com', 'Gold', 'Smith', FALSE),
-('admin', '\$2b\$10\$6TMiIeOd.3kIvGhEAzUFBuZVtykl4MUVQU.YHtWv3dHAHoXNhdRaW', 'admin@example.com', 'Admin', 'User', TRUE);
+('test_user', '\$2b\$10\$YOUR_PASSWORD_HASH_HERE', 'user@example.com', 'Test', 'User', FALSE),
+('test_admin', '\$2b\$10\$YOUR_ADMIN_PASSWORD_HASH_HERE', 'admin@example.com', 'Test', 'Admin', TRUE);
 EOF
 
 # Insert sample data
 mysql -u "$DB_USER" -p"$DB_PASSWORD" < insert_test_data.sql
 
 echo "Database setup complete!"
-echo "Test accounts created:"
-echo "  User: gold / smiths"
-echo "  Admin: admin / qwerty"
+echo "Remember to update test account credentials in this script before use"

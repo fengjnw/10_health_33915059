@@ -849,7 +849,7 @@ router.post('/email/verify-code', [
 
         // Find verification record
         const [verifications] = await db.query(
-            'SELECT * FROM email_verifications WHERE user_id = ? AND verification_code = ? AND new_email = ? AND is_verified = 0',
+            'SELECT * FROM email_verifications WHERE user_id = ? AND verification_code = ? AND new_email = ? AND used_at IS NULL',
             [req.session.user.id, verificationCode, newEmail]
         );
 
@@ -866,7 +866,7 @@ router.post('/email/verify-code', [
 
         // Mark verification as verified
         await db.query(
-            'UPDATE email_verifications SET is_verified = 1 WHERE id = ?',
+            'UPDATE email_verifications SET used_at = CURRENT_TIMESTAMP WHERE id = ?',
             [verification.id]
         );
 

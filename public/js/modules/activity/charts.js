@@ -47,7 +47,7 @@ async function loadAndRenderCharts() {
         const filterQuery = urlParams.toString();
 
         // Fetch type distribution data with current filters
-        const typeUrl = '/internal/activities/charts/type-distribution' + (filterQuery ? '?' + filterQuery : '');
+        const typeUrl = 'internal/activities/charts/type-distribution' + (filterQuery ? '?' + filterQuery : '');
         const typeRes = await fetch(typeUrl, fetchOptions);
 
         if (!typeRes.ok) {
@@ -57,7 +57,7 @@ async function loadAndRenderCharts() {
         const typeData = await typeRes.json();
 
         // Fetch daily trend data with current filters
-        const trendUrl = '/internal/activities/charts/daily-trend' + (filterQuery ? '?' + filterQuery : '');
+        const trendUrl = 'internal/activities/charts/daily-trend' + (filterQuery ? '?' + filterQuery : '');
         const trendRes = await fetch(trendUrl, fetchOptions);
 
         if (!trendRes.ok) {

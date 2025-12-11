@@ -102,8 +102,8 @@ HEALTH_USER=your_database_username
 HEALTH_PASSWORD=your_database_password
 HEALTH_DATABASE=your_database_name
 
-# Application
-HEALTH_BASE_PATH=your_base_path_url
+# Session
+SESSION_SECRET=your_session_secret_key
 ```
 
 ## API Documentation
@@ -181,7 +181,7 @@ Use `gold/smiths` (admin) and `testuser/smiths` (regular user) for testing.
 
 **Email not sending**: In development, check Ethereal credentials. For production, configure your email service.
 
-**Port already in use**: Change `HEALTH_BASE_PATH` and the listening port in `index.js`.
+**Port already in use**: Change the listening port in `index.js`.
 
 ## License
 

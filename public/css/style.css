@@ -655,16 +655,33 @@ main {
     box-shadow: 0 2px 6px rgba(22, 160, 133, 0.1);
 }
 
+.credentials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.credential-item {
+    padding: 0.5rem;
+}
+
 .demo-credentials p {
     margin: 0.3rem 0;
     color: #34495e;
     font-weight: 500;
 }
 
-.demo-credentials p:first-child {
-    font-weight: 700;
+.demo-credentials strong {
     color: #16a085;
-    margin-bottom: 0.7rem;
+}
+
+.demo-credentials code {
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #2c3e50;
+    border: 1px solid #d4e8e3;
 }
 
 /* Activities */

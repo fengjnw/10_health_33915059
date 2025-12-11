@@ -12,7 +12,7 @@ INSERT INTO users (username, password, email, first_name, last_name, is_admin) V
 -- The sample activities below reference user_id 1 (gold) and user_id 2 (testuser)
 
 -- Insert sample fitness activities
--- Note: These reference user_id 1, which should be created by setup_database.sh
+-- Note: These reference user_id 1 and 2 created by the seed user inserts above
 INSERT INTO fitness_activities (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public) VALUES
 (1, 'Running', 30, 5.0, 300, '2025-12-01 08:30:00', 'Morning run in the park', 1),
 (1, 'Cycling', 45, 15.0, 400, '2025-12-02 18:00:00', 'Evening bike ride', 1),

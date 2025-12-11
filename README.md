@@ -131,7 +131,12 @@ npm start          # Start development server
 ### Database
 - Schema: `create_db.sql` (creates the database and tables)
 - Sample data: `insert_test_data.sql` (inserts demo records)
-- Initialization: `setup_database.sh` (runs the above scripts; use this for fresh setups)
+- Initialization: run the SQL scripts directly for fresh setups:
+
+```bash
+mysql -u root -p < create_db.sql
+mysql -u root -p < insert_test_data.sql
+```
 
 ### Key Technologies
 - **Backend**: Express.js with middleware for sessions, CSRF, rate limiting, and security headers
@@ -153,7 +158,14 @@ npm start          # Start development server
 
 ## Testing Accounts
 
-Test accounts are created via `setup_database.sh`. Contact the development team for credentials or set up your own in the database.
+Test accounts are created via the SQL scripts used in initialization:
+
+```bash
+mysql -u root -p < create_db.sql
+mysql -u root -p < insert_test_data.sql
+```
+
+Use `gold/smiths` (admin) and `testuser/smiths` (regular user) for testing.
 
 ## Troubleshooting
 

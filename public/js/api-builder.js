@@ -27,7 +27,7 @@ document.getElementById('clearTokenBtn').addEventListener('click', () => {
     hideResult('tokenResult');
 });
 
-document.getElementById('getTokenBtn').addEventListener('click', () => {
+document.getElementById('getTokenBtn').addEventListener('click', async () => {
     const username = document.getElementById('token_username').value.trim();
     const password = document.getElementById('token_password').value.trim();
 
@@ -36,37 +36,42 @@ document.getElementById('getTokenBtn').addEventListener('click', () => {
         return;
     }
 
-    const payload = JSON.stringify({ username, password });
-    const tokenRequest = `curl -X POST ${BASE_URL}/api/auth/token \\
-  -H "Content-Type: application/json" \\
-  -d '${payload}'`;
-
-    const html = `
-        <div class="output-header">
-            <span class="output-label">Token Request</span>
-            <button class="copy-btn" data-target="tokenRequest_curl">Copy curl</button>
-        </div>
-        <div class="code-block" id="tokenRequest_curl">${escapeHtml(tokenRequest)}</div>
-        <div style="margin-top: 15px; padding: 12px; background: #f0f8ff; border-radius: 4px; border-left: 3px solid #0066cc;">
-            <p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">
-                <strong>Note:</strong> Click "Execute" button above to get your token, then copy it from the result.
-            </p>
-            <button class="btn btn-primary" style="width: 100%;" onclick="document.getElementById('executeTokenBtn').click();">
-                Get Token (Execute)
-            </button>
-        </div>
-    `;
-    
-    const tokenBox = document.getElementById('tokenBox');
-    tokenBox.innerHTML = html;
-    tokenBox.classList.remove('empty');
-    
-    // Attach event listener to the copy button
-    const copyBtn = tokenBox.querySelector('.copy-btn');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
-            copyToClipboard(this.dataset.target, this);
+    try {
+        const response = await fetch(`${BASE_URL}/api/auth/token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
         });
+
+        const data = await response.json();
+
+        if (response.ok && data.token) {
+            const html = `
+                <div class="output-header">
+                    <span class="output-label">Bearer Token</span>
+                    <button class="copy-btn" data-target="token_value">Copy</button>
+                </div>
+                <div class="code-block" id="token_value">${escapeHtml(data.token)}</div>
+            `;
+            
+            const tokenBox = document.getElementById('tokenBox');
+            tokenBox.innerHTML = html;
+            tokenBox.classList.remove('empty');
+            
+            // Attach event listener to the copy button
+            const copyBtn = tokenBox.querySelector('.copy-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function () {
+                    copyToClipboard(this.dataset.target, this);
+                });
+            }
+        } else {
+            alert('Failed to get token: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
     }
 });
 

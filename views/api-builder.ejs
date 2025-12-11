@@ -268,10 +268,10 @@
 
                 <!-- GET Activities List -->
                 <div class="section">
-                    <h2>List Activities <span class="method-badge method-get">GET</span> <span
-                            style="font-size: 11px; color: #666; font-weight: normal;">(No token = public activities,
-                            With token =
-                            user's all activities)</span></h2>
+                    <h2>List Activities <span class="method-badge method-get">GET</span></h2>
+                    <div class="info-box" style="border-left-color: #FF9800; margin-bottom: 15px;">
+                        <strong>Note on Privacy:</strong> Without a token, you can only retrieve public activities. With your bearer token, you can access all your own activities (both public and private).
+                    </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Activity Type</label>
@@ -340,7 +340,9 @@
                 <div class="section">
                     <h2>Get Activity by ID <span class="method-badge method-get">GET</span></h2>
                     <div class="info-box" style="border-left-color: #FF9800; margin-bottom: 15px;">
-                        <strong>Note on Privacy:</strong> Without a token, you can only retrieve public activities. With your bearer token, you can access your own private activities, but cannot access private activities from other users.
+                        <strong>Note on Privacy:</strong> Without a token, you can only retrieve public activities. With
+                        your bearer token, you can access your own private activities, but cannot access private
+                        activities from other users.
                     </div>
                     <div class="form-grid">
                         <div class="form-group">

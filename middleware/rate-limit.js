@@ -154,7 +154,6 @@ const apiLimiter = rateLimit({
     },
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    trustProxy: 1, // Trust the single proxy (Apache) in front
     skip: (req) => {
         // Skip rate limiting for GET requests (read operations)
         return req.method === 'GET';
@@ -172,7 +171,6 @@ const apiTokenLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: 1, // Trust the single proxy (Apache) in front
     skipSuccessfulRequests: true // Don't count successful requests
 });
 

@@ -1418,12 +1418,12 @@ footer .dev-tools-separator {
     text-align: center;
 }
 
-.modal-step {
+.form-step {
     display: none;
     animation: fadeIn 0.3s ease-out;
 }
 
-.modal-step.active {
+.form-step.active {
     display: block;
 }
 

@@ -40,17 +40,30 @@ audit_logs(id, user_id, username, event_type, resource_type, resource_id,
 Users have one-to-many relationship with fitness_activities via user_id. email_verifications stores verification codes for email changes and password resets with expires_at controlling expiration. audit_logs records security operations and resource changes with JSON changes field storing detailed modifications, indexed by event_type, user_id, and created_at. Indexes on activity_time, activity_type, and user_id optimize query performance.
 
 ## User Functionality
+
 Application includes home, about, search/filter, data entry, and log viewing pages. Default credentials: `gold`/`smiths`. Admin account: `admin`/`qwerty` with access to audit logs and ability to view/delete all users and activities.
+
+**[Screenshot 1: Login page showing demo credentials display]**
 
 Users can register, login, logout, and reset forgotten passwords via email verification codes (using Nodemailer). After login, users can modify profile information, change password, change email, or delete account with critical operations recorded in audit logs.
 
+**[Screenshot 2: Forgot password page showing step 1 (enter username/email) and step 2 (enter verification code + new password)]**
+
 Search activities page is open to all visitors without login. Supports filtering public activities by activity type, date range, duration range, and calorie range with sorting by date/calories/duration and 10/25/50/100 items per page. Filter conditions persist after page refresh and can be exported directly to CSV.
+
+**[Screenshot 3: Public search page showing filters (activity type dropdown, date range, duration/calorie inputs), activity table with pagination, and Export CSV button]**
 
 Users can create, edit, and delete their own activity records including type, time, duration, distance, calories, notes, and public visibility flag.
 
+**[Screenshot 4: Add/Edit Activity modal showing all input fields (type, time, duration, distance, calories, notes, public checkbox)]**
+
 On My Activities page, users can view personal activity list with same pagination, filtering, and sorting features as search page, with ability to edit or delete existing activities. Page aggregates current filtered data showing activity count, total duration, total distance, total calories, max intensity, and average intensity, accompanied by doughnut chart (type distribution) and line chart (daily calories).
 
+**[Screenshot 5: My Activities page showing activity table, bottom statistics summary, and two charts (doughnut + line chart)]**
+
 Self-service API documentation page at `/api-builder` lists all available endpoints for quick testing and integration.
+
+**[Screenshot 6: API Builder page showing endpoint list and test interface with Bearer Token input]**
 
 ## Advanced Techniques
 
@@ -69,7 +82,7 @@ const loginLimiter = rateLimit({
 });
 ```
 
-**Email Verification & Multi-Step Security Flows**: Forgot password, email change, and account deletion implement multi-step workflows using Nodemailer to send verification codes to user email (development environment uses Ethereal test accounts). Frontend uses `.modal-step` to control step transitions while backend session stores verification codes or temporary email, only submitting final changes after completing all steps; all critical operations logged to audit trail.
+**Email Verification & Multi-Step Security Flows**: Forgot password, email change, and account deletion implement multi-step workflows using Nodemailer to send verification codes to user email (development environment uses Ethereal test accounts). These features use dedicated pages where frontend JavaScript controls step transitions while backend session stores verification codes or temporary email, only submitting final changes after completing all steps; all critical operations logged to audit trail.
 
 ```javascript
 // utils/email-service.js - Send verification code via Nodemailer

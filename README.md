@@ -88,23 +88,17 @@ Visit `http://localhost:8000` in your browser.
 
 ## Environment Variables
 
-Create a `.env` file with the following variables:
+Use `.env.example` as a template and create `.env` with at least:
 
 ```
 # Database
 HEALTH_HOST=localhost
-HEALTH_USER=health_app
-HEALTH_PASSWORD=your_password
-HEALTH_DATABASE=health
+HEALTH_USER=your_database_username
+HEALTH_PASSWORD=your_database_password
+HEALTH_DATABASE=your_database_name
 
 # Application
 HEALTH_BASE_PATH=http://localhost:8000
-NODE_ENV=development
-SESSION_SECRET=your_session_secret_key
-
-# Email (for password reset)
-ETHEREAL_USER=your_ethereal_email@ethereal.email
-ETHEREAL_PASS=your_ethereal_password
 ```
 
 ## API Documentation

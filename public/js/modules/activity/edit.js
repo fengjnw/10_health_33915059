@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 showMessage('message-container', 'Activity updated successfully! Redirecting...', 'success');
                 setTimeout(() => {
-                    window.location.href = '/my-activities';
+                    window.location.href = '../my-activities';
                 }, 1500);
             } else {
                 showMessage('message-container', result.error || 'An error occurred', 'error');

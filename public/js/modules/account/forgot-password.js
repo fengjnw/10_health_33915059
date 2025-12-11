@@ -14,7 +14,7 @@ step1Form.addEventListener('submit', async (e) => {
     const email = document.getElementById('email').value.trim();
 
     try {
-        const response = await fetch('/auth/forgot-password', {
+        const response = await fetch('forgot-password', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ step2Form.addEventListener('submit', async (e) => {
     errorDiv.textContent = '';
 
     try {
-        const response = await fetch('/auth/verify-password-reset', {
+        const response = await fetch('verify-password-reset', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ step2Form.addEventListener('submit', async (e) => {
         }
 
         csrfToken = handleCSRFUpdate(data) || csrfToken;
-        window.location.href = '/auth/change-password?resetMode=true';
+        window.location.href = 'change-password?resetMode=true';
     } catch (error) {
         errorDiv.textContent = 'An error occurred. Please try again later.';
         errorDiv.style.display = 'block';
@@ -96,7 +96,7 @@ resendBtn.addEventListener('click', async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch('/auth/forgot-password', {
+        const response = await fetch('forgot-password', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

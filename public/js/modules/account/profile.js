@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     showMessage('message-container', 'Profile updated successfully!', 'success');
                     setTimeout(() => {
-                        window.location.href = '/profile';
+                        window.location.href = 'profile';
                     }, 1500);
                 }
             } else {

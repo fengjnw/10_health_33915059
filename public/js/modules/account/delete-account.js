@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
 
             try {
-                const response = await fetch('/account/delete/request-code', {
+                const response = await fetch('../account/delete/request-code', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             try {
-                const response = await fetch('/account/delete/verify-code', {
+                const response = await fetch('../account/delete/verify-code', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (deleteConfirmBtn) {
         deleteConfirmBtn.addEventListener('click', async function () {
             try {
-                const response = await fetch('/account/delete', {
+                const response = await fetch('../account/delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.ok) {
                     showStep('success');
                     setTimeout(function () {
-                        window.location.href = '/';
+                        window.location.href = '../../';
                     }, 3000);
                 } else {
                     const errorMsg = document.getElementById('deleteErrorMessage');

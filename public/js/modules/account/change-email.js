@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const newEmail = document.getElementById('newEmail').value;
 
         try {
-            const response = await fetch('/email/request-verification', {
+            const response = await fetch('../email/request-verification', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const verificationCode = document.getElementById('verificationCode').value;
 
         try {
-            const response = await fetch('/email/verify-code', {
+            const response = await fetch('../email/verify-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (resendBtn) {
         resendBtn.addEventListener('click', async function () {
             try {
-                const response = await fetch('/email/request-verification', {
+                const response = await fetch('../email/request-verification', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

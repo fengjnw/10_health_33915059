@@ -56,9 +56,9 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
         // Redirect after success
         setTimeout(() => {
             if (resetMode) {
-                window.location.href = '/';
+                window.location.href = '../../';
             } else {
-                window.location.href = '/profile';
+                window.location.href = '../profile';
             }
         }, 2000);
 

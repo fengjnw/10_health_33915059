@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const clearBtn = document.getElementById('clear-filters');
     if (clearBtn) {
         clearBtn.addEventListener('click', function () {
-            window.location.href = '/my-activities';
+            window.location.href = '../my-activities';
         });
     }
 
@@ -52,7 +52,7 @@ function applyServerFilters() {
     }
 
     // Redirect to filtered page
-    window.location.href = '/my-activities?' + params.toString();
+    window.location.href = '../my-activities?' + params.toString();
 }
 
 function applySorting() {

@@ -45,7 +45,7 @@ CREATE TABLE email_verifications (
     new_email VARCHAR(100) NOT NULL,
     verification_code VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at DATETIME NOT NULL,
     used_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_new_email (new_email),

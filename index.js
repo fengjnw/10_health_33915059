@@ -54,7 +54,7 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
         httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
         secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production
-        sameSite: 'strict' // Prevent CSRF attacks - only send cookie for same-site requests
+        sameSite: 'lax' // Prevent CSRF attacks - only send cookie for same-site requests
     }
 }));
 

@@ -948,7 +948,8 @@ router.post('/account/delete', async (req, res) => {
 // API Builder page (public)
 router.get('/api-builder', (req, res) => {
     res.render('api-builder', {
-        title: 'API Builder - Developer Tools'
+        title: 'API Builder - Developer Tools',
+        baseUrl: process.env.HEALTH_BASE_PATH || 'http://localhost:8000'
     });
 });
 

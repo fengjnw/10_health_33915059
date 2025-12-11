@@ -75,6 +75,43 @@ document.getElementById('clearListBtn').addEventListener('click', () => {
     hideResult('listResult');
 });
 
+document.getElementById('buildListUrlBtn').addEventListener('click', () => {
+    const params = new URLSearchParams();
+
+    const activityType = document.getElementById('list_activity_type').value;
+    const dateFrom = document.getElementById('list_date_from').value;
+    const dateTo = document.getElementById('list_date_to').value;
+    const durationMin = document.getElementById('list_duration_min').value;
+    const durationMax = document.getElementById('list_duration_max').value;
+    const sort = document.getElementById('list_sort').value;
+    const page = document.getElementById('list_page').value;
+    const pageSize = document.getElementById('list_pageSize').value;
+
+    if (activityType) params.append('activity_type', activityType);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    if (durationMin) params.append('duration_min', durationMin);
+    if (durationMax) params.append('duration_max', durationMax);
+    if (sort) params.append('sort', sort);
+    if (page) params.append('page', page);
+    if (pageSize) params.append('pageSize', pageSize);
+
+    const queryString = params.toString();
+    const url = `${BASE_URL}/api/activities${queryString ? '?' + queryString : ''}`;
+
+    const urlDisplay = `<div style="padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; word-break: break-all;">
+        <strong>Direct URL:</strong><br>
+        <code style="color: #0066cc;">${url}</code><br>
+        <button onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!')).catch(err => alert('Failed to copy'))" 
+            style="margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Copy URL
+        </button>
+    </div>`;
+
+    document.getElementById('listUrlBox').innerHTML = urlDisplay;
+    document.getElementById('listUrlBox').classList.remove('empty');
+});
+
 // ===== Single Activity Section =====
 document.getElementById('buildSingleBtn').addEventListener('click', () => {
     const id = document.getElementById('single_id').value.trim();
@@ -99,6 +136,29 @@ document.getElementById('clearSingleBtn').addEventListener('click', () => {
     document.getElementById('single_token').value = '';
     hideOutput('singleOutput');
     hideResult('singleResult');
+});
+
+document.getElementById('buildSingleUrlBtn').addEventListener('click', () => {
+    const id = document.getElementById('single_id').value.trim();
+
+    if (!id) {
+        alert('Activity ID is required');
+        return;
+    }
+
+    const url = `${BASE_URL}/api/activities/${id}`;
+
+    const urlDisplay = `<div style="padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; word-break: break-all;">
+        <strong>Direct URL:</strong><br>
+        <code style="color: #0066cc;">${url}</code><br>
+        <button onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!')).catch(err => alert('Failed to copy'))" 
+            style="margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Copy URL
+        </button>
+    </div>`;
+
+    document.getElementById('singleUrlBox').innerHTML = urlDisplay;
+    document.getElementById('singleUrlBox').classList.remove('empty');
 });
 
 // ===== Create Activity Section =====
@@ -510,6 +570,40 @@ document.getElementById('clearStatsBtn').addEventListener('click', () => {
     document.getElementById('stats_token').value = '';
     hideOutput('statsOutput');
     hideResult('statsResult');
+});
+
+document.getElementById('buildStatsUrlBtn').addEventListener('click', () => {
+    const params = new URLSearchParams();
+    const activityType = document.getElementById('stats_activity_type').value;
+    const dateFrom = document.getElementById('stats_date_from').value;
+    const dateTo = document.getElementById('stats_date_to').value;
+    const durationMin = document.getElementById('stats_duration_min').value;
+    const durationMax = document.getElementById('stats_duration_max').value;
+    const caloriesMin = document.getElementById('stats_calories_min').value;
+    const caloriesMax = document.getElementById('stats_calories_max').value;
+
+    if (activityType) params.append('activity_type', activityType);
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    if (durationMin) params.append('duration_min', durationMin);
+    if (durationMax) params.append('duration_max', durationMax);
+    if (caloriesMin) params.append('calories_min', caloriesMin);
+    if (caloriesMax) params.append('calories_max', caloriesMax);
+
+    const queryString = params.toString();
+    const url = `${BASE_URL}/api/activities/stats${queryString ? '?' + queryString : ''}`;
+
+    const urlDisplay = `<div style="padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; word-break: break-all;">
+        <strong>Direct URL:</strong><br>
+        <code style="color: #0066cc;">${url}</code><br>
+        <button onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!')).catch(err => alert('Failed to copy'))" 
+            style="margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Copy URL
+        </button>
+    </div>`;
+
+    document.getElementById('statsUrlBox').innerHTML = urlDisplay;
+    document.getElementById('statsUrlBox').classList.remove('empty');
 });
 
 document.getElementById('executeStatsBtn').addEventListener('click', async () => {

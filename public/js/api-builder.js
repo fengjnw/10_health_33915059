@@ -291,7 +291,7 @@ document.getElementById('clearDeleteBtn').addEventListener('click', () => {
 function displayUrlBox(elementId, url) {
     const urlBox = document.getElementById(elementId);
     urlBox.classList.remove('empty');
-    
+
     const html = `
         <div class="output-header">
             <span class="output-label">Direct URL</span>
@@ -299,9 +299,9 @@ function displayUrlBox(elementId, url) {
         </div>
         <div class="code-block" id="${elementId}_url">${escapeHtml(url)}</div>
     `;
-    
+
     urlBox.innerHTML = html;
-    
+
     // Attach event listener to the copy button
     const copyBtn = urlBox.querySelector('.copy-btn');
     if (copyBtn) {
@@ -533,12 +533,12 @@ document.getElementById('executeSingleBtn').addEventListener('click', async () =
 
 document.getElementById('buildStatsBtn').addEventListener('click', () => {
     const token = document.getElementById('stats_token').value.trim();
-    
+
     if (!token) {
         alert('Bearer Token is required for Stats endpoint');
         return;
     }
-    
+
     const params = new URLSearchParams();
     const activityType = document.getElementById('stats_activity_type').value;
     const dateFrom = document.getElementById('stats_date_from').value;
@@ -579,12 +579,12 @@ document.getElementById('clearStatsBtn').addEventListener('click', () => {
 
 document.getElementById('buildStatsUrlBtn').addEventListener('click', () => {
     const token = document.getElementById('stats_token').value.trim();
-    
+
     if (!token) {
         alert('Bearer Token is required for Stats endpoint');
         return;
     }
-    
+
     const params = new URLSearchParams();
     const activityType = document.getElementById('stats_activity_type').value;
     const dateFrom = document.getElementById('stats_date_from').value;

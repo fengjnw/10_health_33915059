@@ -58,7 +58,7 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
             if (resetMode) {
                 window.location.href = '../../';
             } else {
-                window.location.href = '../profile';
+                window.location.href = 'profile';
             }
         }, 2000);
 

@@ -148,7 +148,9 @@ if (document.getElementById('export-results')) {
         const qs = buildQuery(filters);
 
         // Use public API endpoint for search (no auth required)
-        const res = await fetch(`../api/activities/search/export?${qs}`, {
+        // From /search page, navigate to /api/activities/search/export
+        // Using proper relative path: go up to root level then into api
+        const res = await fetch(`./api/activities/search/export?${qs}`, {
             credentials: 'include'
         });
 

@@ -19,9 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            // Get activity ID from URL - pathname is like /my-activities/123/edit
+            // Get activity ID robustly even with proxy prefixes like /usr/347
             const urlParts = window.location.pathname.split('/').filter(p => p);
-            const activityId = urlParts[1];
+            const idx = urlParts.indexOf('my-activities');
+            const activityId = idx !== -1 ? urlParts[idx + 1] : null;
+            if (!activityId) {
+                showMessage('message-container', 'Unable to determine activity ID from URL.', 'error');
+                return;
+            }
 
             const response = await makeFetchRequest(
                 `../../my-activities/${activityId}/edit`,

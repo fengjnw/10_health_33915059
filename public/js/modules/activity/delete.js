@@ -15,7 +15,8 @@ function deleteActivity(id) {
             const csrfTokenElement = document.getElementById('csrf-token');
             const csrfToken = csrfTokenElement ? csrfTokenElement.value : '';
 
-            fetch(`/my-activities/${id}`, {
+            // Use relative path to preserve proxy prefix (e.g., /usr/347)
+            fetch(`../my-activities/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,6 +30,12 @@ function deleteActivity(id) {
                     alert('Activity deleted successfully');
                     location.reload();
                 } else {
+                    if (data && data.csrfToken) {
+                        const meta = document.querySelector('meta[name="csrf-token"]');
+                        const input = document.querySelector('input[name="_csrf"]');
+                        if (meta) meta.setAttribute('content', data.csrfToken);
+                        if (input) input.value = data.csrfToken;
+                    }
                     alert('Error: ' + (data.error || 'Failed to delete activity'));
                 }
             }).catch(error => {

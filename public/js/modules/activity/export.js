@@ -35,7 +35,8 @@ async function fetchAllActivities() {
     const qs = buildQuery(filters);
     const csrfToken = getCSRFToken();
 
-    const res = await fetch(`/internal/activities/export?${qs}`, {
+    // Use relative path to preserve proxy prefix (e.g., /usr/347)
+    const res = await fetch(`internal/activities/export?${qs}`, {
         credentials: 'include',
         headers: {
             'X-CSRF-Token': csrfToken

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const clearBtn = document.getElementById('clear-filters');
     if (clearBtn) {
         clearBtn.addEventListener('click', function () {
-            window.location.href = '../my-activities';
+            window.location.href = 'my-activities';
         });
     }
 
@@ -51,8 +51,8 @@ function applyServerFilters() {
         params.set('pageSize', currentPageSize);
     }
 
-    // Redirect to filtered page
-    window.location.href = '../my-activities?' + params.toString();
+    // Redirect to filtered page (relative path from /my-activities)
+    window.location.href = 'my-activities?' + params.toString();
 }
 
 function applySorting() {

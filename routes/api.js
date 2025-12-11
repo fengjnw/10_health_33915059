@@ -763,4 +763,112 @@ router.delete('/activities/:id', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/activities/search/export
+ * Public endpoint for exporting search results (public activities only)
+ * No authentication required
+ * Query Parameters: same as search route (activity_type, date_from, date_to, duration_min, duration_max, calories_min, calories_max, sort)
+ */
+router.get('/activities/search/export', async (req, res) => {
+    try {
+        const {
+            activity_type,
+            date_from,
+            date_to,
+            duration_min,
+            duration_max,
+            calories_min,
+            calories_max,
+            sort = 'date_desc'
+        } = req.query;
+
+        // Validate and sanitize parameters (same as /search route)
+        const validActivityTypes = ['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other', 'all'];
+        const activityTypeValue = activity_type && validActivityTypes.includes(activity_type) ? activity_type : null;
+
+        let dateFromValue = null;
+        let dateToValue = null;
+        if (date_from) {
+            const dateFromParsed = new Date(date_from);
+            if (!Number.isNaN(dateFromParsed.getTime())) {
+                dateFromValue = date_from;
+            }
+        }
+        if (date_to) {
+            const dateToParsed = new Date(date_to);
+            if (!Number.isNaN(dateToParsed.getTime())) {
+                dateToValue = date_to;
+            }
+        }
+
+        const durationMinValue = duration_min ? parseInt(duration_min, 10) : null;
+        const durationMaxValue = duration_max ? parseInt(duration_max, 10) : null;
+        const caloriesMinValue = calories_min ? parseInt(calories_min, 10) : null;
+        const caloriesMaxValue = calories_max ? parseInt(calories_max, 10) : null;
+
+        // Build WHERE clause - only public activities
+        let whereClause = 'WHERE fa.is_public = 1';
+        const params = [];
+
+        if (activityTypeValue && activityTypeValue !== 'all') {
+            whereClause += ' AND fa.activity_type = ?';
+            params.push(activityTypeValue);
+        }
+        if (dateFromValue) {
+            whereClause += ' AND fa.activity_time >= ?';
+            params.push(dateFromValue);
+        }
+        if (dateToValue) {
+            whereClause += ' AND fa.activity_time <= ?';
+            params.push(dateToValue);
+        }
+        if (durationMinValue !== null && !Number.isNaN(durationMinValue)) {
+            whereClause += ' AND fa.duration_minutes >= ?';
+            params.push(durationMinValue);
+        }
+        if (durationMaxValue !== null && !Number.isNaN(durationMaxValue)) {
+            whereClause += ' AND fa.duration_minutes <= ?';
+            params.push(durationMaxValue);
+        }
+        if (caloriesMinValue !== null && !Number.isNaN(caloriesMinValue)) {
+            whereClause += ' AND fa.calories_burned >= ?';
+            params.push(caloriesMinValue);
+        }
+        if (caloriesMaxValue !== null && !Number.isNaN(caloriesMaxValue)) {
+            whereClause += ' AND fa.calories_burned <= ?';
+            params.push(caloriesMaxValue);
+        }
+
+        // Build ORDER BY clause
+        let orderBy = 'fa.activity_time DESC';
+        if (sort === 'date_asc') orderBy = 'fa.activity_time ASC';
+        else if (sort === 'calories_desc') orderBy = 'fa.calories_burned DESC';
+        else if (sort === 'calories_asc') orderBy = 'fa.calories_burned ASC';
+        else if (sort === 'duration_desc') orderBy = 'fa.duration_minutes DESC';
+        else if (sort === 'duration_asc') orderBy = 'fa.duration_minutes ASC';
+
+        const query = `
+            SELECT fa.id, fa.activity_type, fa.duration_minutes, fa.distance_km, fa.calories_burned, fa.activity_time, fa.notes, u.username
+            FROM fitness_activities fa
+            JOIN users u ON fa.user_id = u.id
+            ${whereClause}
+            ORDER BY ${orderBy}
+        `;
+
+        const [rows] = await db.query(query, params);
+
+        res.json({
+            success: true,
+            data: rows || []
+        });
+    } catch (error) {
+        console.error('Error exporting search results:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to export search results',
+            message: error.message
+        });
+    }
+});
+
 module.exports = router;

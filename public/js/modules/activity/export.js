@@ -35,8 +35,9 @@ async function fetchAllActivities() {
     const qs = buildQuery(filters);
     const csrfToken = getCSRFToken();
 
-    // Use relative path to preserve proxy prefix (e.g., /usr/347)
-    const res = await fetch(`internal/activities/export?${qs}`, {
+    // Use fetch with explicit path relative to /my-activities
+    // From /my-activities page, internal/activities/export should resolve correctly
+    const res = await fetch(`../internal/activities/export?${qs}`, {
         credentials: 'include',
         headers: {
             'X-CSRF-Token': csrfToken
@@ -44,6 +45,9 @@ async function fetchAllActivities() {
     });
 
     if (!res.ok) {
+        if (res.status === 401) {
+            throw new Error('You must be logged in to export activities.');
+        }
         throw new Error(`Failed to fetch activities (${res.status})`);
     }
 
@@ -118,7 +122,7 @@ async function exportActivities(pageType) {
     }
 }
 
-// Search page export
+// Search page export - uses public API endpoint (no auth required)
 const searchExportBtn = document.getElementById('export-results');
 if (searchExportBtn) {
     searchExportBtn.addEventListener('click', (e) => {
@@ -127,11 +131,36 @@ if (searchExportBtn) {
     });
 }
 
-// My Activities page export
+// My Activities page export - uses internal endpoint (auth required)
 const activitiesExportBtn = document.getElementById('export-activities');
 if (activitiesExportBtn) {
     activitiesExportBtn.addEventListener('click', (e) => {
         e.preventDefault();
         exportActivities('my-activities');
     });
+}
+
+// Override fetchAllActivities for search page to use public API
+if (document.getElementById('export-results')) {
+    const originalFetchAllActivities = window.fetchAllActivities;
+    window.fetchAllActivities = async function () {
+        const filters = getFilters();
+        const qs = buildQuery(filters);
+
+        // Use public API endpoint for search (no auth required)
+        const res = await fetch(`../api/activities/search/export?${qs}`, {
+            credentials: 'include'
+        });
+
+        if (!res.ok) {
+            throw new Error(`Failed to fetch activities (${res.status})`);
+        }
+
+        const data = await res.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch activities');
+        }
+
+        return data.data || [];
+    };
 }

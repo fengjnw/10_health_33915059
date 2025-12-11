@@ -14,11 +14,12 @@ A full-stack web application for recording, analyzing, and sharing fitness activ
 1. Clone the repository and install dependencies:
 ```bash
 git clone <repository-url>
-cd health-fitness-tracker
+cd <project-folder>
 npm install
 ```
 
 2. Set up the database:
+	Tip: Recommended to run `setup_database.sh` to initialize schema and sample data.
 ```bash
 # Copy the setup template
 cp setup_database.sh.example setup_database.sh
@@ -80,9 +81,6 @@ Visit `http://localhost:8000` in your browser.
 │   ├── css/                # Stylesheets
 │   ├── js/                 # Client-side logic (charts, API builder)
 │   └── images/             # Static assets
-├── docs/
-│   ├── report.md           # Technical documentation
-│   └── report-cn.md        # Chinese documentation
 └── package.json            # Dependencies and scripts
 ```
 
@@ -98,7 +96,7 @@ HEALTH_PASSWORD=your_database_password
 HEALTH_DATABASE=your_database_name
 
 # Application
-HEALTH_BASE_PATH=http://localhost:8000
+HEALTH_BASE_PATH=your_base_path_url
 ```
 
 ## API Documentation
@@ -129,8 +127,6 @@ See `/api-builder` for interactive testing and full endpoint documentation.
 ### Scripts
 ```bash
 npm start          # Start development server
-npm test           # Run tests (if available)
-npm run lint       # Check code style
 ```
 
 ### Database
@@ -170,4 +166,4 @@ Test accounts are created via `setup_database.sh`. Contact the development team 
 
 ## License
 
-This project is licensed under the MIT License - see LICENSE file for details.
+This project is licensed under the ISC License - see LICENSE file for details.

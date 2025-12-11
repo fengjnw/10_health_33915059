@@ -1,8 +1,17 @@
 -- Insert test data into the health database
 USE health;
 
--- Note: Test user accounts should be created via setup_database.sh (not version controlled)
--- This file only contains sample activity data for demonstration
+-- Insert test users (gold, testuser, admin)
+-- Passwords are bcrypt-hashed
+-- gold:   username=gold,    password=smiths,  is_admin=TRUE
+-- testuser: username=testuser, password=smiths,  is_admin=FALSE
+-- admin:  username=admin,   password=qwerty, is_admin=TRUE
+INSERT INTO users (username, password, email, first_name, last_name, is_admin) VALUES
+('gold', '$2b$10$lmy6frv8Kz0DtVpYXeU0Cezo3RnWAn6zWFbh43Y2RGdobsOoDt8le', 'gold@example.com', 'Gold', 'User', TRUE),
+('testuser', '$2b$10$IjP/vFEsQ76pVF6BWKMp3u6zcypz0zsEvjM3CGyfX35S0WYx3MymG', 'testuser@example.com', 'Test', 'User', FALSE),
+('admin', '$2b$10$he2sG0r6neRABeIBHdAK1OyWILoQ.3n52tUJtiHmFWv28EQ4YRb3i', 'admin@example.com', 'Admin', 'User', TRUE);
+
+-- The sample activities below reference user_id 1 (gold) and user_id 2 (testuser)
 
 -- Insert sample fitness activities
 -- Note: These reference user_id 1, which should be created by setup_database.sh

@@ -221,11 +221,6 @@ router.get('/activities', async (req, res) => {
  * GET /api/activities/charts/type-distribution
 /**
  * GET /api/activities/charts/daily-trend
-// CSRF token endpoint for API testing (GET is allowed without token)
-router.get('/csrf-token', (req, res) => {
-    const token = generateToken(req, res);
-    return res.json({ success: true, csrfToken: token });
-});
 
 /**
  * GET /api/activities/:id

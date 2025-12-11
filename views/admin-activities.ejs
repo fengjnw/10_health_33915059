@@ -125,7 +125,9 @@
                             }
 
                             try {
-                                const response = await fetch(`/admin/activities/${activityId}/delete`, {
+                                // Use relative path to preserve proxy prefix (e.g., /usr/347)
+                                // From /admin/activities page, delete endpoint is activities/:id/delete
+                                const response = await fetch(`activities/${activityId}/delete`, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',

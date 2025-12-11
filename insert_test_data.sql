@@ -1,15 +1,13 @@
 -- Insert test data into the health database
 USE health;
 
--- Insert test users (gold, testuser, admin)
+-- Insert test users
 -- Passwords are bcrypt-hashed
--- gold:   username=gold,    password=smiths,  is_admin=TRUE
--- testuser: username=testuser, password=smiths,  is_admin=FALSE
--- admin:  username=admin,   password=qwerty, is_admin=TRUE
+-- gold:     username=gold,     password=smiths, is_admin=TRUE  (admin account for testing all features)
+-- testuser: username=testuser, password=smiths, is_admin=FALSE (regular user for comparison)
 INSERT INTO users (username, password, email, first_name, last_name, is_admin) VALUES
 ('gold', '$2b$10$lmy6frv8Kz0DtVpYXeU0Cezo3RnWAn6zWFbh43Y2RGdobsOoDt8le', 'gold@example.com', 'Gold', 'User', TRUE),
-('testuser', '$2b$10$IjP/vFEsQ76pVF6BWKMp3u6zcypz0zsEvjM3CGyfX35S0WYx3MymG', 'testuser@example.com', 'Test', 'User', FALSE),
-('admin', '$2b$10$he2sG0r6neRABeIBHdAK1OyWILoQ.3n52tUJtiHmFWv28EQ4YRb3i', 'admin@example.com', 'Admin', 'User', TRUE);
+('testuser', '$2b$10$IjP/vFEsQ76pVF6BWKMp3u6zcypz0zsEvjM3CGyfX35S0WYx3MymG', 'testuser@example.com', 'Test', 'User', FALSE);
 
 -- The sample activities below reference user_id 1 (gold) and user_id 2 (testuser)
 

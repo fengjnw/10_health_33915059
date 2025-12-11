@@ -41,9 +41,8 @@ npm start
 Visit `http://localhost:8000` in your browser.
 
 Default login credentials (for testing):
-- gold / smiths (admin)
-- testuser / smiths (user)
-- admin / qwerty (admin)
+- `gold` / `smiths` (admin - use this to test all features)
+- `testuser` / `smiths` (regular user)
 
 ## Features
 

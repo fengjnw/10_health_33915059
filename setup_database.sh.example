@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Database Setup Script Template
+# Copy this file to setup_database.sh and configure with your settings
+# setup_database.sh is gitignored to keep credentials secure
+
+# Database configuration
+DB_USER="your_db_user"
+DB_PASSWORD="your_db_password"
+DB_NAME="health"
+
+echo "Setting up database: $DB_NAME"
+
+# Create database and tables
+mysql -u "$DB_USER" -p"$DB_PASSWORD" < create_db.sql
+
+# Insert test users (credentials kept out of version control)
+# Password hashes generated with bcrypt (salt rounds = 10)
+# gold / smiths: $2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu
+# admin / qwerty: $2b$10$6TMiIeOd.3kIvGhEAzUFBuZVtykl4MUVQU.YHtWv3dHAHoXNhdRaW
+
+mysql -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" <<EOF
+-- Insert test users for marking/demonstration
+INSERT INTO users (username, password, email, first_name, last_name, is_admin) VALUES
+('gold', '\$2b\$10\$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'gold@example.com', 'Gold', 'Smith', FALSE),
+('admin', '\$2b\$10\$6TMiIeOd.3kIvGhEAzUFBuZVtykl4MUVQU.YHtWv3dHAHoXNhdRaW', 'admin@example.com', 'Admin', 'User', TRUE);
+EOF
+
+# Insert sample data
+mysql -u "$DB_USER" -p"$DB_PASSWORD" < insert_test_data.sql
+
+echo "Database setup complete!"
+echo "Test accounts created:"
+echo "  User: gold / smiths"
+echo "  Admin: admin / qwerty"

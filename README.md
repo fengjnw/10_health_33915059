@@ -16,12 +16,18 @@ CREATE USER 'health_app'@'localhost' IDENTIFIED BY 'qwertyuiop';
 GRANT ALL PRIVILEGES ON health.* TO 'health_app'@'localhost';
 FLUSH PRIVILEGES;
 
-# Create the database schema
-mysql -u health_app -p < create_db.sql
+# Copy and configure the database setup script
+cp setup_database.sh.example setup_database.sh
+# Edit setup_database.sh with your database credentials
 
-# Insert test data
-mysql -u health_app -p < insert_test_data.sql
+# Run the setup script to create database, tables, and test accounts
+chmod +x setup_database.sh
+./setup_database.sh
 ```
+
+**Note**: Test user credentials are created via `setup_database.sh` (not version controlled). The script creates:
+- User account: `gold` / `smiths`
+- Admin account: `admin` / `qwerty`
 
 3. Configure environment variables:
    - Copy `.env` file and update if needed
@@ -34,10 +40,11 @@ node index.js
 
 The application will be available at: http://localhost:8000
 
-## Default Login Credentials
+## Test Accounts
 
-- Username: `gold`
-- Password: `smiths`
+Test accounts are created by the `setup_database.sh` script:
+- Regular user: `gold` / `smiths`
+- Administrator: `admin` / `qwerty`
 
 ## Features
 

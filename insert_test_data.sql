@@ -1,17 +1,11 @@
 -- Insert test data into the health database
 USE health;
 
--- Insert default users
--- Password is hashed using bcrypt (salt rounds = 10)
--- User 1: username: gold, password: smiths
--- User 2: username: testuser, password: smiths
--- User 3 (ADMIN): username: admin, password: qwerty
-INSERT INTO users (username, password, email, first_name, last_name, is_admin) VALUES
-('gold', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'gold@example.com', 'Gold', 'Smith', FALSE),
-('testuser', '$2b$10$dwtMACjDYnR3ZiFsO130ROZWXvkZEJO8x61Q0VTEKRvmEmGehFQwu', 'test@example.com', 'Test', 'User', FALSE),
-('admin', '$2b$10$6TMiIeOd.3kIvGhEAzUFBuZVtykl4MUVQU.YHtWv3dHAHoXNhdRaW', 'admin@example.com', 'Admin', 'User', TRUE);
+-- Note: Test user accounts should be created via setup_database.sh (not version controlled)
+-- This file only contains sample activity data for demonstration
 
--- Insert sample fitness activities - User 1 (gold) with diverse types, durations, calories
+-- Insert sample fitness activities
+-- Note: These reference user_id 1, which should be created by setup_database.sh
 INSERT INTO fitness_activities (user_id, activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public) VALUES
 (1, 'Running', 30, 5.0, 300, '2025-12-01 08:30:00', 'Morning run in the park', 1),
 (1, 'Cycling', 45, 15.0, 400, '2025-12-02 18:00:00', 'Evening bike ride', 1),

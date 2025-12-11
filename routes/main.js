@@ -1170,8 +1170,8 @@ router.post('/account/delete', async (req, res) => {
 router.get('/api-builder', (req, res) => {
     res.render('api-builder', {
         title: 'API Builder - Developer Tools',
-        // Use empty baseUrl to generate same-origin relative paths (CSP-safe)
-        baseUrl: ''
+        // Use './' so `${BASE_URL}/api/...` resolves to `./api/...` preserving proxy prefix
+        baseUrl: '.'
     });
 });
 

@@ -31,8 +31,5 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Tools
-setup_database.sh
-
 # Documentation
 docs/

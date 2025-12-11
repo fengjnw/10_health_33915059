@@ -140,9 +140,9 @@ npm run lint       # Check code style
 ```
 
 ### Database
-- Schema: `create_db.sql`
-- Test data setup: `setup_database.sh`
-- Migrations: Use `setup_database.sh` for new deployments
+- Schema: `create_db.sql` (creates the database and tables)
+- Sample data: `insert_test_data.sql` (inserts demo records)
+- Initialization: `setup_database.sh` (runs the above scripts; use this for fresh setups)
 
 ### Key Technologies
 - **Backend**: Express.js with middleware for sessions, CSRF, rate limiting, and security headers

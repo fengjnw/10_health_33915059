@@ -56,35 +56,99 @@ Self-service API documentation page at `/api-builder` lists all available endpoi
 
 **Login/Session & Security Baseline**: Uses bcrypt hashing for password storage, express-session maintains login state; all forms and AJAX requests carry CSRF tokens with Helmet security headers enabled; input validated via express-validator and sanitized with express-sanitizer; sensitive account operations (email change, account deletion) logged to `audit_logs` for tracking. Login and registration endpoints configured with rate limiting to prevent brute force attacks.
 
+```javascript
+// middleware/rate-limit.js - Login rate limiting
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 5,  // 5 attempts
+    handler: (req, res) => {
+        res.status(429).render('error', {
+            message: 'Too many failed login attempts. Please try again later.'
+        });
+    }
+});
+```
+
 **Email Verification & Multi-Step Security Flows**: Forgot password, email change, and account deletion implement multi-step workflows using Nodemailer to send verification codes to user email (development environment uses Ethereal test accounts). Frontend uses `.modal-step` to control step transitions while backend session stores verification codes or temporary email, only submitting final changes after completing all steps; all critical operations logged to audit trail.
+
+```javascript
+// utils/email-service.js - Send verification code via Nodemailer
+async function sendPasswordResetEmail(to, verificationCode) {
+    const transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        auth: { user: testAccount.user, pass: testAccount.pass }
+    });
+    
+    await transporter.sendMail({
+        from: '"Health Tracker" <noreply@healthtracker.com>',
+        to: to,
+        subject: 'Password Reset Verification',
+        html: `<p>Your verification code: <code>${verificationCode}</code></p>`
+    });
+}
+```
 
 **Public Search & Filter Engine**: Public search page and logged-in user activity lists share filter builder `utils/filter-helper.js`, dynamically constructing SQL conditions by activity type, date range, duration range, and calorie range with parameterized queries preventing injection; public search enforces `is_public=1` returning only public activities. Pagination, sorting, and CSV export all operate on same filtered results with URL query parameters persisting filter state.
 
 ```javascript
-// utils/filter-helper.js (excerpt)
+// utils/filter-helper.js - Reusable filter builder
 function addActivityFilters(baseWhere, baseParams, filters) {
-  let where = baseWhere;
-  const params = [...baseParams];
-  if (filters.activity_type) { where += ' AND activity_type = ?'; params.push(filters.activity_type); }
-  if (filters.date_from)    { where += ' AND DATE(activity_time) >= ?'; params.push(filters.date_from); }
-  // Other conditions: date_to, duration_min/max, calories_min/max
-  return { whereClause: where, params };
+    let whereClause = baseWhere;
+    const params = [...baseParams];
+    
+    if (filters.activity_type && filters.activity_type !== 'all') {
+        whereClause += (baseWhere ? ' AND ' : ' ') + 'activity_type = ?';
+        params.push(filters.activity_type);
+    }
+    if (filters.date_from) {
+        whereClause += (baseWhere ? ' AND ' : ' ') + 'activity_time >= ?';
+        params.push(filters.date_from);
+    }
+    // Additional filters: date_to, duration_min/max, calories_min/max
+    return { whereClause, params };
 }
 ```
 
 **Activity CRUD & Input Validation**: Creating/editing activities validates required fields and numeric ranges (duration, distance, calories), sanitizes notes and text, binds current user on write/update, with `is_public` controlling whether activity is readable by public search.
 
+```javascript
+// routes/main.js - Input validation example
+router.post('/add-activity', [
+    body('activity_type').notEmpty().trim().escape(),
+    body('duration_minutes').isInt({ min: 1 }),
+    body('calories_burned').isInt({ min: 0 }),
+    body('notes').optional().trim().customSanitizer(value => 
+        sanitizer.sanitize(value)
+    )
+], async (req, res) => { /* ... */ });
+```
+
 **Personal Activity Table, Stats & Chart Alignment**: My Activities table, bottom aggregated statistics (count, duration, distance, calories, max/average intensity), and Chart.js visualizations share same filtered data. Chart endpoints `/internal/activities/charts/*` read current URL query parameters to generate aggregates, ensuring table, statistics, and charts stay consistent.
 
 ```javascript
-// public/js/modules/activity/charts.js (excerpt)
-const query = window.location.search;
-fetch('/internal/activities/charts/type-distribution' + query)
-  .then(res => res.json())
-  .then(renderChart);
+// public/js/modules/activity/charts.js - Apply filters to charts
+const urlParams = new URLSearchParams(window.location.search);
+const filterQuery = urlParams.toString();
+const typeUrl = '/internal/activities/charts/type-distribution' + 
+                (filterQuery ? '?' + filterQuery : '');
+fetch(typeUrl).then(res => res.json()).then(renderChart);
 ```
 
 **REST API & Bearer Token Authentication**: `/api-builder` page provides interactive testing interface including Bearer Token authentication (`POST /api/auth/token`), activity list (`GET /api/activities`, no token returns public activities, with token returns user's all activities), single query (`GET /api/activities/:id`), statistics aggregation (`GET /api/activities/stats`), create (`POST /api/activities`), update (`PATCH /api/activities/:id`), delete (`DELETE /api/activities/:id`). Each endpoint can generate curl commands or execute directly. API routes configured with independent rate limiting to prevent abuse.
+
+```javascript
+// routes/api.js - Bearer token authentication
+router.post('/auth/token', async (req, res) => {
+    const { username, password } = req.body;
+    const user = await db.query('SELECT * FROM users WHERE username = ?', [username]);
+    if (user && await bcrypt.compare(password, user.password)) {
+        const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '24h' });
+        return res.json({ token, expiresIn: 86400 });
+    }
+    res.status(401).json({ error: 'Invalid credentials' });
+});
+```
 
 ## AI Declaration
 GitHub Copilot was used as an assistance tool during development. In requirements analysis phase, AI helped organize feature lists and database design ideas; during coding phase provided code completion and syntax suggestions; in debugging phase assisted with identifying problem causes; during refactoring provided code optimization directions; in documentation writing polished expression. All architectural design, feature implementation, and technology selection completed independently by developer, with AI-generated content reviewed, tested, and modified before integration.

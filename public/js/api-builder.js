@@ -55,11 +55,11 @@ document.getElementById('getTokenBtn').addEventListener('click', async () => {
                 </div>
                 <div class="code-block" id="token_value">${escapeHtml(data.token)}</div>
             `;
-            
+
             const tokenBox = document.getElementById('tokenBox');
             tokenBox.innerHTML = html;
             tokenBox.classList.remove('empty');
-            
+
             // Attach event listener to the copy button
             const copyBtn = tokenBox.querySelector('.copy-btn');
             if (copyBtn) {

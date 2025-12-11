@@ -1,17 +1,15 @@
 #!/bin/bash
-# Setup database for Health & Fitness Tracker
+# Simplified setup: reset database and run SQL scripts
 
-echo "Step 1: Creating database user..."
-mysql -u root -p << SQL
-CREATE USER IF NOT EXISTS 'health_app'@'localhost' IDENTIFIED BY 'qwertyuiop';
-GRANT ALL PRIVILEGES ON health.* TO 'health_app'@'localhost';
-FLUSH PRIVILEGES;
-SQL
+set -euo pipefail
 
-echo "Step 2: Creating database schema..."
-mysql -u health_app -pqwertyuiop < create_db.sql
+DB_USER="root"
+DB_PASS_PROMPT="-p" # will prompt for root password
 
-echo "Step 3: Inserting test data..."
-mysql -u health_app -pqwertyuiop < insert_test_data.sql
+echo "[1/2] Resetting database (drop + create) ..."
+mysql -u "$DB_USER" $DB_PASS_PROMPT < create_db.sql
 
-echo "Database setup complete!"
+echo "[2/2] Inserting seed/test data ..."
+mysql -u "$DB_USER" $DB_PASS_PROMPT < insert_test_data.sql
+
+echo "✅ Database initialized via SQL scripts (create_db.sql, insert_test_data.sql)"

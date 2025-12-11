@@ -18,18 +18,13 @@ cd <project-folder>
 npm install
 ```
 
-2. Set up the database:
-	Tip: Recommended to run `setup_database.sh` to initialize schema and sample data.
+2. Set up the database (via SQL scripts):
 ```bash
-# Copy the setup template
-cp setup_database.sh.example setup_database.sh
+# Create schema (drops and recreates database/tables)
+mysql -u root -p < create_db.sql
 
-# Edit with your credentials
-nano setup_database.sh
-
-# Run setup (creates database, tables, and indexes)
-chmod +x setup_database.sh
-./setup_database.sh
+# Insert seed/test data (users + activities)
+mysql -u root -p < insert_test_data.sql
 ```
 
 3. Configure environment variables:
@@ -44,6 +39,11 @@ npm start
 ```
 
 Visit `http://localhost:8000` in your browser.
+
+Default login credentials (for testing):
+- gold / smiths (admin)
+- testuser / smiths (user)
+- admin / qwerty (admin)
 
 ## Features
 

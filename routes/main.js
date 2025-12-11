@@ -739,41 +739,6 @@ router.post('/email/verify-code', async (req, res) => {
     }
 });
 
-// API: Get recent audit logs (development/debugging only)
-router.get('/api/audit-logs', async (req, res) => {
-    // Only allow in development mode
-    if (process.env.NODE_ENV === 'production') {
-        return res.status(403).json({ error: 'Not available in production' });
-    }
-
-    try {
-        const limit = req.query.limit ? parseInt(req.query.limit) : 50;
-        const eventType = req.query.eventType;
-        const username = req.query.username;
-
-        let logs;
-
-        if (eventType) {
-            const { getLogsByEventType } = require('../utils/audit-logger');
-            logs = await getLogsByEventType(eventType, limit);
-        } else if (username) {
-            const { getLogsByUser } = require('../utils/audit-logger');
-            logs = await getLogsByUser(username, limit);
-        } else {
-            const { getRecentLogs } = require('../utils/audit-logger');
-            logs = await getRecentLogs(limit);
-        }
-
-        res.json({
-            count: logs.length,
-            logs: logs
-        });
-    } catch (error) {
-        console.error('Error fetching audit logs:', error);
-        res.status(500).json({ error: 'Failed to fetch audit logs' });
-    }
-});
-
 // Logs page - view audit logs (requires admin)
 router.get('/admin/logs', requireAdmin, async (req, res) => {
     try {

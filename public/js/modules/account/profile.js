@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await makeFetchRequest('/profile', profileData, csrfToken, 'PATCH');
+            const response = await makeFetchRequest('../profile', profileData, csrfToken, 'PATCH');
             const result = await response.json();
 
             if (response.ok) {

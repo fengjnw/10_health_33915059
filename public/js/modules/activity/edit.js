@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const activityId = urlParts[1];
 
             const response = await makeFetchRequest(
-                `/my-activities/${activityId}/edit`,
+                `../../my-activities/${activityId}/edit`,
                 activityData,
                 csrfToken,
                 'PATCH'

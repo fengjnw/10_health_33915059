@@ -58,6 +58,12 @@ Default login credentials (for testing):
 - View personal statistics and charts (type distribution, daily progress)
 - Manage your account: change password, update email, delete account securely
 
+**For Administrators**
+- Three admin tools accessible at the bottom of the page:
+  - **Audit Log**: View system activity and user actions
+  - **Delete Users**: Remove user accounts from the system
+  - **Delete Activities**: Remove any activities from the system
+
 **For API Consumers**
 - Full REST API with Bearer token authentication
 - Interactive API documentation at `/api-builder` for testing endpoints

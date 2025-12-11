@@ -86,8 +86,5 @@ fetch('/internal/activities/charts/type-distribution' + query)
 
 **REST API & Bearer Token Authentication**: `/api-builder` page provides interactive testing interface including Bearer Token authentication (`POST /api/auth/token`), activity list (`GET /api/activities`, no token returns public activities, with token returns user's all activities), single query (`GET /api/activities/:id`), statistics aggregation (`GET /api/activities/stats`), create (`POST /api/activities`), update (`PATCH /api/activities/:id`), delete (`DELETE /api/activities/:id`). Each endpoint can generate curl commands or execute directly. API routes configured with independent rate limiting to prevent abuse.
 
-## Testing Instructions
-Application deployed at `https://www.doc.gold.ac.uk/usr/347/`. Test credentials listed in User Functionality section above. All functional page links provided in `links.txt` for quick marker access and testing. Database initialization script: `create_db.sql`, test data script: `insert_test_data.sql`.
-
 ## AI Declaration
 GitHub Copilot was used as an assistance tool during development. In requirements analysis phase, AI helped organize feature lists and database design ideas; during coding phase provided code completion and syntax suggestions; in debugging phase assisted with identifying problem causes; during refactoring provided code optimization directions; in documentation writing polished expression. All architectural design, feature implementation, and technology selection completed independently by developer, with AI-generated content reviewed, tested, and modified before integration.

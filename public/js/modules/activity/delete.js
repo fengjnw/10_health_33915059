@@ -15,8 +15,9 @@ function deleteActivity(id) {
             const csrfTokenElement = document.getElementById('csrf-token');
             const csrfToken = csrfTokenElement ? csrfTokenElement.value : '';
 
-            // Use relative path to preserve proxy prefix (e.g., /usr/347)
-            fetch(`../my-activities/${id}`, {
+            // Relative path from /my-activities list page: just my-activities/:id
+            // (same as the resource being shown on this page)
+            fetch(`my-activities/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

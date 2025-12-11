@@ -68,6 +68,8 @@ Default login credentials (for testing):
 
 ```
 ├── index.js                 # Application entry point
+├── config/
+│   └── db.js               # Database connection/configuration
 ├── routes/
 │   ├── auth.js             # Authentication (register, login, password reset)
 │   ├── main.js             # Core features (activities, profile, admin)
@@ -75,12 +77,18 @@ Default login credentials (for testing):
 │   └── api.js              # REST API endpoints with Bearer token
 ├── middleware/             # CSRF, rate limiting, validation
 ├── utils/                  # Helper functions (filters, email service)
-├── views/                  # EJS templates (20+ pages)
+├── views/                  # EJS templates (pages and partials)
 ├── public/
 │   ├── css/                # Stylesheets
-│   ├── js/                 # Client-side logic (charts, API builder)
-│   └── images/             # Static assets
-└── package.json            # Dependencies and scripts
+│   └── js/                 # Client-side logic
+│       ├── api-builder.js  # API builder client
+│       ├── modules/        # Feature-specific modules (charts)
+│       └── utils/          # Client utilities
+├── docs/                   # Report and documentation
+├── create_db.sql           # Schema (drop/create database/tables)
+├── insert_test_data.sql    # Seed users and activities
+├── package.json            # Dependencies and scripts
+└── .env.example            # Environment variable template
 ```
 
 ## Environment Variables

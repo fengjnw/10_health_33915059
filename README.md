@@ -166,17 +166,6 @@ npm run lint       # Check code style
 
 Test accounts are created via `setup_database.sh`. Contact the development team for credentials or set up your own in the database.
 
-## Deployment
-
-For production deployment:
-
-1. Set `NODE_ENV=production` in `.env`
-2. Use a process manager (pm2, systemd, etc.)
-3. Configure reverse proxy (nginx, Apache) with HTTPS
-4. Increase rate limits appropriately
-5. Use environment-specific `.env` values
-6. Set up database backups and monitoring
-
 ## Troubleshooting
 
 **Cannot connect to database**: Verify MySQL is running and credentials in `.env` are correct.
@@ -184,10 +173,6 @@ For production deployment:
 **Email not sending**: In development, check Ethereal credentials. For production, configure your email service.
 
 **Port already in use**: Change `HEALTH_BASE_PATH` and the listening port in `index.js`.
-
-## Contributing
-
-For issues, feature requests, or contributions, please open an issue or submit a pull request.
 
 ## License
 

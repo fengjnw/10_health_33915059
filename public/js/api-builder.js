@@ -98,17 +98,7 @@ document.getElementById('buildListUrlBtn').addEventListener('click', () => {
     const queryString = params.toString();
     const url = `${BASE_URL}/api/activities${queryString ? '?' + queryString : ''}`;
 
-    const urlDisplay = `<div style="padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; word-break: break-all;">
-        <strong>Direct URL:</strong><br>
-        <code style="color: #0066cc;">${url}</code><br>
-        <button onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!')).catch(err => alert('Failed to copy'))" 
-            style="margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Copy URL
-        </button>
-    </div>`;
-
-    document.getElementById('listUrlBox').innerHTML = urlDisplay;
-    document.getElementById('listUrlBox').classList.remove('empty');
+    displayUrlBox('listUrlBox', url);
 });
 
 // ===== Single Activity Section =====
@@ -147,17 +137,7 @@ document.getElementById('buildSingleUrlBtn').addEventListener('click', () => {
 
     const url = `${BASE_URL}/api/activities/${id}`;
 
-    const urlDisplay = `<div style="padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; word-break: break-all;">
-        <strong>Direct URL:</strong><br>
-        <code style="color: #0066cc;">${url}</code><br>
-        <button onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!')).catch(err => alert('Failed to copy'))" 
-            style="margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Copy URL
-        </button>
-    </div>`;
-
-    document.getElementById('singleUrlBox').innerHTML = urlDisplay;
-    document.getElementById('singleUrlBox').classList.remove('empty');
+    displayUrlBox('singleUrlBox', url);
 });
 
 // ===== Create Activity Section =====
@@ -308,6 +288,29 @@ document.getElementById('clearDeleteBtn').addEventListener('click', () => {
 });
 
 // ===== Helper Functions =====
+function displayUrlBox(elementId, url) {
+    const urlBox = document.getElementById(elementId);
+    urlBox.classList.remove('empty');
+    
+    const html = `
+        <div class="output-header">
+            <span class="output-label">Direct URL</span>
+            <button class="copy-btn" data-target="${elementId}_url">Copy</button>
+        </div>
+        <div class="code-block" id="${elementId}_url">${escapeHtml(url)}</div>
+    `;
+    
+    urlBox.innerHTML = html;
+    
+    // Attach event listener to the copy button
+    const copyBtn = urlBox.querySelector('.copy-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            copyToClipboard(this.dataset.target, this);
+        });
+    }
+}
+
 function displayOutput(elementId, curlCommand, endpoint, payload = null) {
     const outputBox = document.getElementById(elementId);
     outputBox.classList.remove('empty');
@@ -529,6 +532,13 @@ document.getElementById('executeSingleBtn').addEventListener('click', async () =
 });
 
 document.getElementById('buildStatsBtn').addEventListener('click', () => {
+    const token = document.getElementById('stats_token').value.trim();
+    
+    if (!token) {
+        alert('Bearer Token is required for Stats endpoint');
+        return;
+    }
+    
     const params = new URLSearchParams();
     const activityType = document.getElementById('stats_activity_type').value;
     const dateFrom = document.getElementById('stats_date_from').value;
@@ -537,7 +547,6 @@ document.getElementById('buildStatsBtn').addEventListener('click', () => {
     const durationMax = document.getElementById('stats_duration_max').value;
     const caloriesMin = document.getElementById('stats_calories_min').value;
     const caloriesMax = document.getElementById('stats_calories_max').value;
-    const token = document.getElementById('stats_token').value.trim();
 
     if (activityType) params.append('activity_type', activityType);
     if (dateFrom) params.append('date_from', dateFrom);
@@ -550,10 +559,7 @@ document.getElementById('buildStatsBtn').addEventListener('click', () => {
     const queryString = params.toString();
     const url = `${BASE_URL}/api/activities/stats${queryString ? '?' + queryString : ''}`;
 
-    let curlCommand = `curl -X GET '${url}'`;
-    if (token) {
-        curlCommand += ` \\\n  -H "Authorization: Bearer ${token}"`;
-    }
+    const curlCommand = `curl -X GET '${url}' \\\n  -H "Authorization: Bearer ${token}"`;
 
     displayOutput('statsOutput', curlCommand, 'GET /api/activities/stats');
 });
@@ -572,6 +578,13 @@ document.getElementById('clearStatsBtn').addEventListener('click', () => {
 });
 
 document.getElementById('buildStatsUrlBtn').addEventListener('click', () => {
+    const token = document.getElementById('stats_token').value.trim();
+    
+    if (!token) {
+        alert('Bearer Token is required for Stats endpoint');
+        return;
+    }
+    
     const params = new URLSearchParams();
     const activityType = document.getElementById('stats_activity_type').value;
     const dateFrom = document.getElementById('stats_date_from').value;
@@ -592,17 +605,7 @@ document.getElementById('buildStatsUrlBtn').addEventListener('click', () => {
     const queryString = params.toString();
     const url = `${BASE_URL}/api/activities/stats${queryString ? '?' + queryString : ''}`;
 
-    const urlDisplay = `<div style="padding: 12px; background: white; border: 1px solid #e0e0e0; border-radius: 4px; word-break: break-all;">
-        <strong>Direct URL:</strong><br>
-        <code style="color: #0066cc;">${url}</code><br>
-        <button onclick="navigator.clipboard.writeText('${url}').then(() => alert('URL copied to clipboard!')).catch(err => alert('Failed to copy'))" 
-            style="margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Copy URL
-        </button>
-    </div>`;
-
-    document.getElementById('statsUrlBox').innerHTML = urlDisplay;
-    document.getElementById('statsUrlBox').classList.remove('empty');
+    displayUrlBox('statsUrlBox', url);
 });
 
 document.getElementById('executeStatsBtn').addEventListener('click', async () => {

@@ -1170,7 +1170,8 @@ router.post('/account/delete', async (req, res) => {
 router.get('/api-builder', (req, res) => {
     res.render('api-builder', {
         title: 'API Builder - Developer Tools',
-        baseUrl: process.env.HEALTH_BASE_PATH || 'http://localhost:8000'
+        // Use empty baseUrl to generate same-origin relative paths (CSP-safe)
+        baseUrl: ''
     });
 });
 

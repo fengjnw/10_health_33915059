@@ -14,6 +14,9 @@ dotenv.config();
 const app = express();
 const port = 8000;
 
+// Trust reverse proxy headers (needed for correct IP detection/rate limiting behind proxy)
+app.set('trust proxy', true);
+
 // Set up EJS as the view engine
 app.set('view engine', 'ejs');
 

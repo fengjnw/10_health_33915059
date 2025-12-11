@@ -1,99 +1,93 @@
-## Outline
-Health & Fitness Tracker is a Node.js/Express/EJS/MySQL app for logging and analyzing fitness activities. Users can sign up/login, reset password (multi-step), change email, delete account, and manage activities (type/duration/distance/calories/notes/public-flag). Filtering/search by type, date range, duration, and calories persists in URLs and drives both tables and charts. Visualization uses Chart.js (type distribution, daily trend); export provides CSV of the current filtered set. API Builder documents internal endpoints. Security: bcrypt password hashing, express-session, CSRF tokens on all forms/AJAX, Helmet headers, express-validator validation, express-sanitizer XSS protection, and audit logging of critical actions. Deliverables: home/about, database-backed search/filters, MySQL storage, data entry forms, default login (gold/smiths), npm install readiness, `create_db.sql` / `insert_test_data.sql`, and port 8000 deployment.
+## Overview
+A fitness activity management application where visitors can search public activities, and registered users can record personal activities with multi-criteria filtering, statistics, charts, and data export. Provides REST API and interactive documentation. Tech stack: Node.js/Express/EJS/MySQL + Chart.js.
 
 ## Architecture
-Diagram:
 ```
 [Browser] <--HTTPS--> [Express/Node.js]
   |                        |
   | EJS + Chart.js         +-- Session Middleware
   | fetch API              +-- Helmet (Security Headers)
   | CSRF tokens            +-- CSRF Protection
+  |                        +-- Rate Limiting
   |                        +-- Static Files
-  |                        +-- Routers:
-  |                             ├── main.js (auth, CRUD, profile)
-  |                             └── internal.js (charts, export APIs)
+  |                        +-- Route Modules:
+  |                             ├── auth.js (register, login, password)
+  |                             ├── main.js (activity CRUD, profile, admin)
+  |                             ├── internal.js (charts, export, stats API)
+  |                             └── api.js (REST API + Bearer Token)
   |                        |
   |                   [MySQL Driver]
   |                        |
   |                   [MySQL Database]
                       ├── users
                       ├── fitness_activities
+                      ├── email_verifications
                       └── audit_logs
 ```
-Description: Two-tier MVC architecture. Application tier uses Express with layered middleware (sessions, helmet, CSRF) and route modules. EJS templates render server-side; Chart.js handles client visualizations via fetch to internal APIs. Data tier: MySQL stores users, activities, audit logs with parameterized queries preventing SQL injection.
+
+Two-tier MVC architecture. Application tier runs Express with layered middleware (sessions, Helmet, CSRF, Rate Limiting) and 4 route modules. EJS renders server-side; Chart.js handles client visualizations via fetch to internal APIs. Data tier uses MySQL to store users, activities, verification codes, and audit logs with parameterized queries preventing SQL injection.
 
 ## Data Model
-Diagram:
 ```
-users(id, name, email, password_hash, created_at)
+users(id, username, password, email, first_name, last_name, is_admin, created_at)
 fitness_activities(id, user_id, activity_type, activity_time, duration_minutes,
-									 distance_km, calories_burned, notes, is_public, created_at)
-audit_logs(id, user_id, action, ip, user_agent, created_at)
+                   distance_km, calories_burned, notes, is_public, created_at)
+email_verifications(id, user_id, new_email, verification_code, 
+                    created_at, expires_at, used_at)
+audit_logs(id, user_id, username, event_type, resource_type, resource_id,
+           changes, ip_address, user_agent, path, method, created_at)
 ```
-Description (<=100 words): users owns many fitness_activities via user_id. audit_logs records security actions (login, account changes, deletes). activity_time stores event timestamp; aggregates use duration_minutes and calories_burned; is_public flags visibility.
+Users have one-to-many relationship with fitness_activities via user_id. email_verifications stores verification codes for email changes and password resets with expires_at controlling expiration. audit_logs records security operations and resource changes with JSON changes field storing detailed modifications, indexed by event_type, user_id, and created_at. Indexes on activity_time, activity_type, and user_id optimize query performance.
 
 ## User Functionality
-**Compulsory pages/features:** home, about, default login (`gold`/`smiths`), database-backed search/filters, MySQL storage, data entry forms, runs on port 8000.
+Application includes home, about, search/filter, data entry, and log viewing pages. Default credentials: `gold`/`smiths`. Admin account: `admin`/`qwerty` with access to audit logs and ability to view/delete all users and activities.
 
-**Authentication & security flows:**
-- Signup/login with bcrypt hashing; sessions via express-session
-- Forgot-password: 3-step (email → verification code → new password) with session state tracking
-- Change-email: 4-step verification flow; Delete-account: multi-step confirmation; both write audit logs
-- CSRF tokens on all forms/AJAX; Helmet headers; express-validator and express-sanitizer on inputs
+Users can register, login, logout, and reset forgotten passwords via email verification codes (using Nodemailer). After login, users can modify profile information, change password, change email, or delete account with critical operations recorded in audit logs.
 
-**Activity management (CRUD):**
-- Create/edit/delete activities: type, date/time, duration, distance, calories, notes, public flag
-- My Activities: table with pagination (10/25/50/100), server-side filtering & sorting, totals (count/duration/distance/calories)
+Search activities page is open to all visitors without login. Supports filtering public activities by activity type, date range, duration range, and calorie range with sorting by date/calories/duration and 10/25/50/100 items per page. Filter conditions persist after page refresh and can be exported directly to CSV.
 
-**Search & filtering:**
-- Filters: activity type, date range, duration range, calorie range; clear button resets
-- Filters persist in URL query params and drive both tables and charts
+Users can create, edit, and delete their own activity records including type, time, duration, distance, calories, notes, and public visibility flag.
 
-**Visualization & export:**
-- Chart.js doughnut (type distribution) and line (daily trend) fed by `/internal/activities/charts/*` with active filters
-- CSV export downloads the currently filtered dataset
-- API Builder (`/api-builder`) documents internal endpoints for quick testing
+On My Activities page, users can view personal activity list with same pagination, filtering, and sorting features as search page, with ability to edit or delete existing activities. Page aggregates current filtered data showing activity count, total duration, total distance, total calories, max intensity, and average intensity, accompanied by doughnut chart (type distribution) and line chart (daily calories).
 
-**Screenshots:** `/screenshots/`: `my-activities.png`, `add-activity.png`, `profile.png`, `change-email.png`.
+Self-service API documentation page at `/api-builder` lists all available endpoints for quick testing and integration.
 
 ## Advanced Techniques
-This section lists capabilities built beyond the baseline coursework.
 
-1. **Reusable Filter Helper Utility (DRY)** – Centralized `utils/filter-helper.js` builds dynamic SQL WHERE clauses reused by page routes and chart APIs; parameterized queries prevent SQL injection.
+**Login/Session & Security Baseline**: Uses bcrypt hashing for password storage, express-session maintains login state; all forms and AJAX requests carry CSRF tokens with Helmet security headers enabled; input validated via express-validator and sanitized with express-sanitizer; sensitive account operations (email change, account deletion) logged to `audit_logs` for tracking. Login and registration endpoints configured with rate limiting to prevent brute force attacks.
+
+**Email Verification & Multi-Step Security Flows**: Forgot password, email change, and account deletion implement multi-step workflows using Nodemailer to send verification codes to user email (development environment uses Ethereal test accounts). Frontend uses `.modal-step` to control step transitions while backend session stores verification codes or temporary email, only submitting final changes after completing all steps; all critical operations logged to audit trail.
+
+**Public Search & Filter Engine**: Public search page and logged-in user activity lists share filter builder `utils/filter-helper.js`, dynamically constructing SQL conditions by activity type, date range, duration range, and calorie range with parameterized queries preventing injection; public search enforces `is_public=1` returning only public activities. Pagination, sorting, and CSV export all operate on same filtered results with URL query parameters persisting filter state.
+
 ```javascript
-// utils/filter-helper.js - reused in routes/main.js and routes/internal.js
+// utils/filter-helper.js (excerpt)
 function addActivityFilters(baseWhere, baseParams, filters) {
   let where = baseWhere;
-  let params = [...baseParams];
-  if (filters.activity_type) {
-    where += ' AND activity_type = ?';
-    params.push(filters.activity_type);
-  }
-  if (filters.date_from) {
-    where += ' AND DATE(activity_time) >= ?';
-    params.push(filters.date_from);
-  }
-  // ... additional filters for date_to, duration_min/max, calories_min/max
+  const params = [...baseParams];
+  if (filters.activity_type) { where += ' AND activity_type = ?'; params.push(filters.activity_type); }
+  if (filters.date_from)    { where += ' AND DATE(activity_time) >= ?'; params.push(filters.date_from); }
+  // Other conditions: date_to, duration_min/max, calories_min/max
   return { whereClause: where, params };
 }
 ```
 
-2. **Multi-Step State Management** – 3-4 step workflows (forgot-password, change-email, delete-account) combine client-side step toggling (`.modal-step`) with server-side session tracking of verification codes and pending email changes. Files: `views/change-email.ejs`, `public/js/modules/account/change-email.js`, `routes/main.js` (lines 180-245).
+**Activity CRUD & Input Validation**: Creating/editing activities validates required fields and numeric ranges (duration, distance, calories), sanitizes notes and text, binds current user on write/update, with `is_public` controlling whether activity is readable by public search.
 
-3. **Chart–Filter Synchronization** – Charts automatically append current URL query params to `/internal/activities/charts/*` calls, so visuals always match filtered data (not just the current page of results).
+**Personal Activity Table, Stats & Chart Alignment**: My Activities table, bottom aggregated statistics (count, duration, distance, calories, max/average intensity), and Chart.js visualizations share same filtered data. Chart endpoints `/internal/activities/charts/*` read current URL query parameters to generate aggregates, ensuring table, statistics, and charts stay consistent.
+
 ```javascript
-// public/js/modules/activity/charts.js
-const urlParams = new URLSearchParams(window.location.search);
-const filterQuery = urlParams.toString();
-fetch('/internal/activities/charts/type-distribution' + (filterQuery ? '?' + filterQuery : ''))
+// public/js/modules/activity/charts.js (excerpt)
+const query = window.location.search;
+fetch('/internal/activities/charts/type-distribution' + query)
   .then(res => res.json())
-  .then(data => { /* render Chart.js with filtered data */ });
+  .then(renderChart);
 ```
 
-4. **Integrated Filter–Pagination–Sort–Export** – Filters, pagination, sorting, and CSV export all operate on the same filtered dataset; URL params preserve state; CSV respects active filters; pagination totals reflect filtered results (`routes/main.js`, `routes/internal.js`).
+**REST API & Bearer Token Authentication**: `/api-builder` page provides interactive testing interface including Bearer Token authentication (`POST /api/auth/token`), activity list (`GET /api/activities`, no token returns public activities, with token returns user's all activities), single query (`GET /api/activities/:id`), statistics aggregation (`GET /api/activities/stats`), create (`POST /api/activities`), update (`PATCH /api/activities/:id`), delete (`DELETE /api/activities/:id`). Each endpoint can generate curl commands or execute directly. API routes configured with independent rate limiting to prevent abuse.
 
-5. **Self-Documenting Public API Builder** – `/api-builder` lists internal endpoints with request/response examples, enabling self-service testing without admin gating.
+## Testing Instructions
+Application deployed at `https://www.doc.gold.ac.uk/usr/347/`. Test credentials listed in User Functionality section above. All functional page links provided in `links.txt` for quick marker access and testing. Database initialization script: `create_db.sql`, test data script: `insert_test_data.sql`.
 
 ## AI Declaration
-AI assistance (GitHub Copilot with Claude Sonnet 4.5) was used for code suggestions, debugging, refactoring ideas, and drafting this report. Specific uses: filter helper structure, fixing modal-step visibility, refactoring modals to pages, chart-filter sync logic, SQL query tuning, and documentation wording. All AI-generated content was reviewed, tested, and integrated by the developer; architecture and feature decisions remained human-directed.
+GitHub Copilot was used as an assistance tool during development. In requirements analysis phase, AI helped organize feature lists and database design ideas; during coding phase provided code completion and syntax suggestions; in debugging phase assisted with identifying problem causes; during refactoring provided code optimization directions; in documentation writing polished expression. All architectural design, feature implementation, and technology selection completed independently by developer, with AI-generated content reviewed, tested, and modified before integration.

@@ -99,7 +99,9 @@
                             }
 
                             try {
-                                const response = await fetch(`/admin/users/${userId}/delete`, {
+                                // Use relative path to preserve proxy prefix (e.g., /usr/347)
+                                // From /admin/users page, delete endpoint is users/:id/delete
+                                const response = await fetch(`users/${userId}/delete`, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',

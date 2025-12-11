@@ -437,7 +437,8 @@ router.patch('/my-activities/:id/edit', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
-            error: errors.array().map(e => e.msg).join('; ')
+            error: errors.array().map(e => e.msg).join('; '),
+            csrfToken: generateToken(req, res)
         });
     }
 

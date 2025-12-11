@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
             duration_minutes: data.duration_minutes,
             distance_km: data.distance_km || null,
             calories_burned: data.calories_burned || null,
-            activity_date: data.activity_date,
+            // Server expects `activity_time` (ISO8601). Some forms use `activity_date`.
+            activity_time: data.activity_time || data.activity_date,
             notes: data.notes || null,
             is_public: data.is_public === 'on' ? 1 : 0
         };
@@ -37,6 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '../my-activities';
                 }, 1500);
             } else {
+                // If server returned a refreshed CSRF token, update hidden inputs/meta
+                if (result && result.csrfToken) {
+                    const meta = document.querySelector('meta[name="csrf-token"]');
+                    const input = document.querySelector('input[name="_csrf"]');
+                    if (meta) meta.setAttribute('content', result.csrfToken);
+                    if (input) input.value = result.csrfToken;
+                }
                 showMessage('message-container', result.error || 'An error occurred', 'error');
             }
         } catch (error) {

@@ -62,7 +62,7 @@ Visit `http://localhost:8000` in your browser.
 **For API Consumers**
 - Full REST API with Bearer token authentication
 - Interactive API documentation at `/api-builder` for testing endpoints
-- Get curl commands or URLs for quick integration
+- Generate curl commands for quick integration
 - All endpoints support filtering, pagination, and sorting
 
 ## Project Structure

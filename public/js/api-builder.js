@@ -123,33 +123,6 @@ document.getElementById('clearListBtn').addEventListener('click', () => {
     hideResult('listResult');
 });
 
-document.getElementById('buildListUrlBtn').addEventListener('click', () => {
-    const params = new URLSearchParams();
-
-    const activityType = document.getElementById('list_activity_type').value;
-    const dateFrom = document.getElementById('list_date_from').value;
-    const dateTo = document.getElementById('list_date_to').value;
-    const durationMin = document.getElementById('list_duration_min').value;
-    const durationMax = document.getElementById('list_duration_max').value;
-    const sort = document.getElementById('list_sort').value;
-    const page = document.getElementById('list_page').value;
-    const pageSize = document.getElementById('list_pageSize').value;
-
-    if (activityType) params.append('activity_type', activityType);
-    if (dateFrom) params.append('date_from', dateFrom);
-    if (dateTo) params.append('date_to', dateTo);
-    if (durationMin) params.append('duration_min', durationMin);
-    if (durationMax) params.append('duration_max', durationMax);
-    if (sort) params.append('sort', sort);
-    if (page) params.append('page', page);
-    if (pageSize) params.append('pageSize', pageSize);
-
-    const queryString = params.toString();
-    const url = `${BASE_URL}/api/activities${queryString ? '?' + queryString : ''}`;
-
-    displayUrlBox('listUrlBox', url);
-});
-
 // ===== Single Activity Section =====
 document.getElementById('buildSingleBtn').addEventListener('click', () => {
     const id = document.getElementById('single_id').value.trim();
@@ -174,19 +147,6 @@ document.getElementById('clearSingleBtn').addEventListener('click', () => {
     document.getElementById('single_token').value = '';
     hideOutput('singleOutput');
     hideResult('singleResult');
-});
-
-document.getElementById('buildSingleUrlBtn').addEventListener('click', () => {
-    const id = document.getElementById('single_id').value.trim();
-
-    if (!id) {
-        alert('Activity ID is required');
-        return;
-    }
-
-    const url = `${BASE_URL}/api/activities/${id}`;
-
-    displayUrlBox('singleUrlBox', url);
 });
 
 // ===== Create Activity Section =====
@@ -337,29 +297,6 @@ document.getElementById('clearDeleteBtn').addEventListener('click', () => {
 });
 
 // ===== Helper Functions =====
-function displayUrlBox(elementId, url) {
-    const urlBox = document.getElementById(elementId);
-    urlBox.classList.remove('empty');
-
-    const html = `
-        <div class="output-header">
-            <span class="output-label">Direct URL</span>
-            <button class="copy-btn" data-target="${elementId}_url">Copy</button>
-        </div>
-        <div class="code-block" id="${elementId}_url">${escapeHtml(url)}</div>
-    `;
-
-    urlBox.innerHTML = html;
-
-    // Attach event listener to the copy button
-    const copyBtn = urlBox.querySelector('.copy-btn');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
-            copyToClipboard(this.dataset.target, this);
-        });
-    }
-}
-
 function displayOutput(elementId, curlCommand, endpoint, payload = null) {
     const outputBox = document.getElementById(elementId);
     outputBox.classList.remove('empty');
@@ -624,37 +561,6 @@ document.getElementById('clearStatsBtn').addEventListener('click', () => {
     document.getElementById('stats_token').value = '';
     hideOutput('statsOutput');
     hideResult('statsResult');
-});
-
-document.getElementById('buildStatsUrlBtn').addEventListener('click', () => {
-    const token = document.getElementById('stats_token').value.trim();
-
-    if (!token) {
-        alert('Bearer Token is required for Stats endpoint');
-        return;
-    }
-
-    const params = new URLSearchParams();
-    const activityType = document.getElementById('stats_activity_type').value;
-    const dateFrom = document.getElementById('stats_date_from').value;
-    const dateTo = document.getElementById('stats_date_to').value;
-    const durationMin = document.getElementById('stats_duration_min').value;
-    const durationMax = document.getElementById('stats_duration_max').value;
-    const caloriesMin = document.getElementById('stats_calories_min').value;
-    const caloriesMax = document.getElementById('stats_calories_max').value;
-
-    if (activityType) params.append('activity_type', activityType);
-    if (dateFrom) params.append('date_from', dateFrom);
-    if (dateTo) params.append('date_to', dateTo);
-    if (durationMin) params.append('duration_min', durationMin);
-    if (durationMax) params.append('duration_max', durationMax);
-    if (caloriesMin) params.append('calories_min', caloriesMin);
-    if (caloriesMax) params.append('calories_max', caloriesMax);
-
-    const queryString = params.toString();
-    const url = `${BASE_URL}/api/activities/stats${queryString ? '?' + queryString : ''}`;
-
-    displayUrlBox('statsUrlBox', url);
 });
 
 document.getElementById('executeStatsBtn').addEventListener('click', async () => {

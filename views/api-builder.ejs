@@ -213,9 +213,7 @@
                             <li><strong>Execute button:</strong> Directly calls the API and shows the response (useful
                                 for testing and seeing actual data)</li>
                             <li><strong>Get curl button:</strong> Generates a curl command that you can copy and use in
-                                your terminal</li>
-                            <li><strong>Get URL button (GET requests only):</strong> For GET endpoints, generates a
-                                direct URL you can paste in your browser</li>
+                                your terminal or integrate into your application</li>
                             <li><strong>Clear button:</strong> Resets the form and clears all results</li>
                         </ul>
                     </div>
@@ -319,11 +317,9 @@
                     <div class="button-group">
                         <button class="btn btn-primary" id="executeListBtn">Execute</button>
                         <button class="btn btn-secondary" id="buildListBtn">Get curl</button>
-                        <button class="btn btn-secondary" id="buildListUrlBtn">Get URL</button>
                         <button class="btn btn-secondary" id="clearListBtn">Clear</button>
                     </div>
                     <div id="listOutput" class="output-box empty"></div>
-                    <div id="listUrlBox" class="output-box empty"></div>
                     <div id="listResult" class="result-box empty"></div>
                 </div>
 
@@ -348,11 +344,9 @@
                     <div class="button-group">
                         <button class="btn btn-primary" id="executeSingleBtn">Execute</button>
                         <button class="btn btn-secondary" id="buildSingleBtn">Get curl</button>
-                        <button class="btn btn-secondary" id="buildSingleUrlBtn">Get URL</button>
                         <button class="btn btn-secondary" id="clearSingleBtn">Clear</button>
                     </div>
                     <div id="singleOutput" class="output-box empty"></div>
-                    <div id="singleUrlBox" class="output-box empty"></div>
                     <div id="singleResult" class="result-box empty"></div>
                 </div>
 
@@ -406,11 +400,9 @@
                     <div class="button-group">
                         <button class="btn btn-primary" id="executeStatsBtn">Execute</button>
                         <button class="btn btn-secondary" id="buildStatsBtn">Get curl</button>
-                        <button class="btn btn-secondary" id="buildStatsUrlBtn">Get URL</button>
                         <button class="btn btn-secondary" id="clearStatsBtn">Clear</button>
                     </div>
                     <div id="statsOutput" class="output-box empty"></div>
-                    <div id="statsUrlBox" class="output-box empty" style="background: #f0f8ff;"></div>
                     <div id="statsResult" class="result-box empty"></div>
                 </div>
 

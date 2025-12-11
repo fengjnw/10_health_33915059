@@ -112,10 +112,10 @@ Response: { token: "jwt_token", expiresIn: 86400 }
 ```
 GET /api/activities              # List all/user activities (requires token for private)
 GET /api/activities/:id          # Get activity details
+GET /api/activities/stats        # Get statistics (requires token)
 POST /api/activities             # Create activity (requires token)
 PATCH /api/activities/:id        # Update activity (requires token)
 DELETE /api/activities/:id       # Delete activity (requires token)
-GET /api/activities/stats        # Get statistics (requires token)
 ```
 
 All GET endpoints support query parameters for filtering: `activity_type`, `date_from`, `date_to`, `duration_min`, `duration_max`, `calories_min`, `calories_max`.

@@ -773,7 +773,7 @@ router.post('/email/request-verification', [
         );
 
         if (existingUsers.length > 0) {
-            return res.status(400).json({ error: 'Email is already in use by another user' });
+            return res.status(400).json({ error: 'Email is already in use by another user', csrfToken: generateToken(req, res) });
         }
 
         // Generate verification code
@@ -854,14 +854,14 @@ router.post('/email/verify-code', [
         );
 
         if (verifications.length === 0) {
-            return res.status(400).json({ error: 'Invalid or expired verification code' });
+            return res.status(400).json({ error: 'Invalid or expired verification code', csrfToken: generateToken(req, res) });
         }
 
         const verification = verifications[0];
 
         // Check if verification has expired
         if (new Date() > new Date(verification.expires_at)) {
-            return res.status(400).json({ error: 'Verification code has expired' });
+            return res.status(400).json({ error: 'Verification code has expired', csrfToken: generateToken(req, res) });
         }
 
         // Mark verification as verified

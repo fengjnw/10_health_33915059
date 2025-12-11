@@ -54,6 +54,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
+        path: '/', // Ensure cookie works across all paths including proxy paths
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
         httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
         secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production

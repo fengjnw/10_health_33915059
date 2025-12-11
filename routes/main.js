@@ -511,7 +511,11 @@ router.patch('/my-activities/:id/edit', [
             { old: oldData, new: newData }
         );
 
-        res.json({ success: true, message: 'Activity updated successfully' });
+        res.json({ 
+            success: true, 
+            message: 'Activity updated successfully',
+            csrfToken: generateToken(req, res)
+        });
     } catch (error) {
         console.error('Edit activity patch error:', error);
         res.status(500).json({

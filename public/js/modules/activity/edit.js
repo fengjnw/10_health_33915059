@@ -37,17 +37,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
 
+            // Always update CSRF token from response if provided (for next request)
+            if (result && result.csrfToken) {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                const input = document.querySelector('input[name="_csrf"]');
+                if (meta) meta.setAttribute('content', result.csrfToken);
+                if (input) input.value = result.csrfToken;
+            }
+
             if (response.ok) {
                 // Stay on the page; just show success message
                 showMessage('message-container', 'Activity updated successfully.', 'success');
             } else {
-                // If server returned a refreshed CSRF token, update hidden inputs/meta
-                if (result && result.csrfToken) {
-                    const meta = document.querySelector('meta[name="csrf-token"]');
-                    const input = document.querySelector('input[name="_csrf"]');
-                    if (meta) meta.setAttribute('content', result.csrfToken);
-                    if (input) input.value = result.csrfToken;
-                }
                 showMessage('message-container', result.error || 'An error occurred', 'error');
             }
         } catch (error) {

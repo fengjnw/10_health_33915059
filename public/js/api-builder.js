@@ -1,6 +1,5 @@
 // API Request Builder - generates curl commands, no execution
-
-const BASE_URL = 'http://localhost:8000';
+// BASE_URL is defined in the EJS template and passed from server
 
 // ===== Bearer Token Section =====
 document.getElementById('buildTokenBtn').addEventListener('click', () => {

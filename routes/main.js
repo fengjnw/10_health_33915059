@@ -1,6 +1,7 @@
 // Import required modules
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
 const { EventTypes, logDataChange } = require('../utils/audit-logger');
 const { requireAdmin } = require('../middleware/admin');
@@ -46,15 +47,104 @@ router.get('/search', async (req, res) => {
         const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 10, 10), 20);
         const offset = (page - 1) * pageSize;
 
-        // Build WHERE clause with filters - only show public activities
-        const { whereClause: filterWhere, params: filterParams } = addActivityFilters(
-            'WHERE fa.is_public = 1',
-            [],
-            req.query
-        );
+        // Validate and sanitize search parameters
+        const validActivityTypes = ['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other', 'all'];
+        const activityTypeValue = req.query.activity_type && validActivityTypes.includes(req.query.activity_type) ? req.query.activity_type : null;
 
-        const whereClause = filterWhere;
-        const params = filterParams;
+        // Validate dates
+        let dateFromValue = null;
+        let dateToValue = null;
+        if (req.query.date_from) {
+            const dateFromParsed = new Date(req.query.date_from);
+            if (!Number.isNaN(dateFromParsed.getTime())) {
+                dateFromValue = req.query.date_from;
+            }
+        }
+        if (req.query.date_to) {
+            const dateToParsed = new Date(req.query.date_to);
+            if (!Number.isNaN(dateToParsed.getTime())) {
+                dateToValue = req.query.date_to;
+            }
+        }
+
+        // Validate numeric parameters
+        const durationMinValue = req.query.duration_min ? parseInt(req.query.duration_min, 10) : null;
+        if (durationMinValue !== null && Number.isNaN(durationMinValue)) {
+            return res.render('search', {
+                title: 'Search Activities - Health & Fitness Tracker',
+                activities: null,
+                searchPerformed: true,
+                error: 'Invalid duration_min parameter',
+                searchParams: req.query,
+                pagination: { page: 1, pageSize: 10, totalCount: 0, totalPages: 1 }
+            });
+        }
+        const durationMaxValue = req.query.duration_max ? parseInt(req.query.duration_max, 10) : null;
+        if (durationMaxValue !== null && Number.isNaN(durationMaxValue)) {
+            return res.render('search', {
+                title: 'Search Activities - Health & Fitness Tracker',
+                activities: null,
+                searchPerformed: true,
+                error: 'Invalid duration_max parameter',
+                searchParams: req.query,
+                pagination: { page: 1, pageSize: 10, totalCount: 0, totalPages: 1 }
+            });
+        }
+        const caloriesMinValue = req.query.calories_min ? parseInt(req.query.calories_min, 10) : null;
+        if (caloriesMinValue !== null && Number.isNaN(caloriesMinValue)) {
+            return res.render('search', {
+                title: 'Search Activities - Health & Fitness Tracker',
+                activities: null,
+                searchPerformed: true,
+                error: 'Invalid calories_min parameter',
+                searchParams: req.query,
+                pagination: { page: 1, pageSize: 10, totalCount: 0, totalPages: 1 }
+            });
+        }
+        const caloriesMaxValue = req.query.calories_max ? parseInt(req.query.calories_max, 10) : null;
+        if (caloriesMaxValue !== null && Number.isNaN(caloriesMaxValue)) {
+            return res.render('search', {
+                title: 'Search Activities - Health & Fitness Tracker',
+                activities: null,
+                searchPerformed: true,
+                error: 'Invalid calories_max parameter',
+                searchParams: req.query,
+                pagination: { page: 1, pageSize: 10, totalCount: 0, totalPages: 1 }
+            });
+        }
+
+        // Build WHERE clause with filters - only show public activities
+        let whereClause = 'WHERE fa.is_public = 1';
+        const params = [];
+
+        if (activityTypeValue && activityTypeValue !== 'all') {
+            whereClause += ' AND fa.activity_type = ?';
+            params.push(activityTypeValue);
+        }
+        if (dateFromValue) {
+            whereClause += ' AND fa.activity_time >= ?';
+            params.push(dateFromValue);
+        }
+        if (dateToValue) {
+            whereClause += ' AND fa.activity_time <= ?';
+            params.push(dateToValue);
+        }
+        if (durationMinValue !== null) {
+            whereClause += ' AND fa.duration_minutes >= ?';
+            params.push(durationMinValue);
+        }
+        if (durationMaxValue !== null) {
+            whereClause += ' AND fa.duration_minutes <= ?';
+            params.push(durationMaxValue);
+        }
+        if (caloriesMinValue !== null) {
+            whereClause += ' AND fa.calories_burned >= ?';
+            params.push(caloriesMinValue);
+        }
+        if (caloriesMaxValue !== null) {
+            whereClause += ' AND fa.calories_burned <= ?';
+            params.push(caloriesMaxValue);
+        }
 
         const countQuery = `SELECT COUNT(*) as total FROM fitness_activities fa ${whereClause}`;
         const [countRows] = await db.query(countQuery, params);
@@ -104,23 +194,46 @@ router.get('/add-activity', (req, res) => {
 });
 
 // Add Activity page route - POST request processes the form
-router.post('/add-activity', async (req, res) => {
+router.post('/add-activity', [
+    body('activity_type')
+        .notEmpty().withMessage('Activity type is required')
+        .trim()
+        .isIn(['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other'])
+        .withMessage('Invalid activity type'),
+    body('duration_minutes')
+        .notEmpty().withMessage('Duration is required')
+        .isInt({ min: 1 }).withMessage('Duration must be at least 1 minute'),
+    body('distance_km')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 }).withMessage('Distance must be a positive number'),
+    body('calories_burned')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0 }).withMessage('Calories must be a non-negative number'),
+    body('activity_time')
+        .notEmpty().withMessage('Activity time is required')
+        .isISO8601().withMessage('Invalid activity time format'),
+    body('notes')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 1000 }).withMessage('Notes must be under 1000 characters')
+], async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
         return res.redirect('/auth/login');
     }
 
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.render('add-activity', {
+            title: 'Add Activity - Health & Fitness Tracker',
+            errors: errors.array().map(e => e.msg),
+            formData: req.body
+        });
+    }
+
     try {
         const { activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes } = req.body;
-
-        // Basic validation
-        if (!activity_type || !duration_minutes || !activity_time) {
-            return res.render('add-activity', {
-                title: 'Add Activity - Health & Fitness Tracker',
-                errors: ['Activity type, duration, and time are required'],
-                formData: req.body
-            });
-        }
 
         // Insert activity into database
         const query = `
@@ -131,9 +244,9 @@ router.post('/add-activity', async (req, res) => {
         const [result] = await db.query(query, [
             req.session.user.id,
             activity_type,
-            duration_minutes,
-            distance_km || null,
-            calories_burned || null,
+            parseInt(duration_minutes, 10),
+            distance_km ? parseFloat(distance_km) : null,
+            calories_burned ? parseInt(calories_burned, 10) : null,
             activity_time,
             notes || null
         ]);
@@ -146,9 +259,9 @@ router.post('/add-activity', async (req, res) => {
             result.insertId,
             {
                 activity_type,
-                duration_minutes,
-                distance_km: distance_km || null,
-                calories_burned: calories_burned || null,
+                duration_minutes: parseInt(duration_minutes, 10),
+                distance_km: distance_km ? parseFloat(distance_km) : null,
+                calories_burned: calories_burned ? parseInt(calories_burned, 10) : null,
                 activity_time,
                 is_public: 0
             }
@@ -289,22 +402,48 @@ router.get('/my-activities/:id/edit', async (req, res) => {
 });
 
 // Edit activity route - PATCH request processes the form
-router.patch('/my-activities/:id/edit', async (req, res) => {
+router.patch('/my-activities/:id/edit', [
+    body('activity_type')
+        .notEmpty().withMessage('Activity type is required')
+        .trim()
+        .isIn(['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other'])
+        .withMessage('Invalid activity type'),
+    body('duration_minutes')
+        .notEmpty().withMessage('Duration is required')
+        .isInt({ min: 1 }).withMessage('Duration must be at least 1 minute'),
+    body('distance_km')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 }).withMessage('Distance must be a positive number'),
+    body('calories_burned')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0 }).withMessage('Calories must be a non-negative number'),
+    body('activity_time')
+        .notEmpty().withMessage('Activity time is required')
+        .isISO8601().withMessage('Invalid activity time format'),
+    body('notes')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 1000 }).withMessage('Notes must be under 1000 characters'),
+    body('is_public')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0, max: 1 }).withMessage('Public flag must be 0 or 1')
+], async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated', csrfToken: generateToken(req, res) });
     }
 
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            error: errors.array().map(e => e.msg).join('; ')
+        });
+    }
+
     try {
         const { id } = req.params;
         const { activity_type, duration_minutes, distance_km, calories_burned, activity_time, notes, is_public } = req.body;
-
-        // Validate required fields
-        if (!activity_type || !duration_minutes || !activity_time) {
-            return res.status(400).json({
-                error: 'Activity type, duration, and time are required'
-            });
-        }
 
         // Get the activity from database
         const getQuery = 'SELECT * FROM fitness_activities WHERE id = ?';
@@ -331,14 +470,34 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
             WHERE id = ?
         `;
 
+        const oldData = {
+            activity_type: activity.activity_type,
+            duration_minutes: activity.duration_minutes,
+            distance_km: activity.distance_km,
+            calories_burned: activity.calories_burned,
+            activity_time: activity.activity_time,
+            notes: activity.notes,
+            is_public: activity.is_public
+        };
+
+        const newData = {
+            activity_type,
+            duration_minutes: parseInt(duration_minutes, 10),
+            distance_km: distance_km ? parseFloat(distance_km) : null,
+            calories_burned: calories_burned ? parseInt(calories_burned, 10) : null,
+            activity_time,
+            notes: notes || null,
+            is_public: is_public ? parseInt(is_public, 10) : 0
+        };
+
         await db.query(updateQuery, [
             activity_type,
-            duration_minutes,
-            distance_km || null,
-            calories_burned || null,
+            parseInt(duration_minutes, 10),
+            distance_km ? parseFloat(distance_km) : null,
+            calories_burned ? parseInt(calories_burned, 10) : null,
             activity_time,
             notes || null,
-            is_public || 0,
+            is_public ? parseInt(is_public, 10) : 0,
             id
         ]);
 
@@ -348,24 +507,7 @@ router.patch('/my-activities/:id/edit', async (req, res) => {
             req,
             'fitness_activity',
             id,
-            {
-                old: {
-                    activity_type: activity.activity_type,
-                    duration_minutes: activity.duration_minutes,
-                    distance_km: activity.distance_km,
-                    calories_burned: activity.calories_burned,
-                    activity_time: activity.activity_time,
-                    is_public: activity.is_public
-                },
-                new: {
-                    activity_type,
-                    duration_minutes,
-                    distance_km: distance_km || null,
-                    calories_burned: calories_burned || null,
-                    activity_time,
-                    is_public: is_public || 0
-                }
-            }
+            { old: oldData, new: newData }
         );
 
         res.json({ success: true, message: 'Activity updated successfully' });
@@ -502,26 +644,38 @@ router.get('/account/delete', (req, res) => {
 
 // PATCH /profile - Update user profile (username, first_name, last_name)
 // Email can only be changed through the email verification process
-router.patch('/profile', async (req, res) => {
+router.patch('/profile', [
+    body('username')
+        .notEmpty().withMessage('Username is required')
+        .trim()
+        .isLength({ min: 3, max: 50 }).withMessage('Username must be between 3 and 50 characters')
+        .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Username can only contain letters, numbers, underscores, and hyphens'),
+    body('first_name')
+        .notEmpty().withMessage('First name is required')
+        .trim()
+        .isLength({ min: 1, max: 50 }).withMessage('First name must be between 1 and 50 characters')
+        .matches(/^[a-zA-Z\s'-]+$/).withMessage('First name can only contain letters, spaces, hyphens, and apostrophes'),
+    body('last_name')
+        .notEmpty().withMessage('Last name is required')
+        .trim()
+        .isLength({ min: 1, max: 50 }).withMessage('Last name must be between 1 and 50 characters')
+        .matches(/^[a-zA-Z\s'-]+$/).withMessage('Last name can only contain letters, spaces, hyphens, and apostrophes')
+], async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            error: errors.array().map(e => e.msg).join('; ')
+        });
+    }
+
     try {
         const { username, first_name, last_name } = req.body;
-
-        // Validate required fields
-        if (!username || !first_name || !last_name) {
-            return res.status(400).json({
-                error: 'Username, first name and last name are required'
-            });
-        }
-
-        // Validate username length
-        if (username.length < 3 || username.length > 50) {
-            return sendValidationError(res, 'Username must be between 3 and 50 characters', req);
-        }
 
         // Get current user data
         const [users] = await db.query('SELECT * FROM users WHERE id = ?', [req.session.user.id]);
@@ -540,7 +694,7 @@ router.patch('/profile', async (req, res) => {
             );
 
             if (existingUsernames.length > 0) {
-                return sendValidationError(res, 'Username is already taken', req);
+                return res.status(400).json({ error: 'Username is already taken' });
             }
         }
 
@@ -589,24 +743,28 @@ router.patch('/profile', async (req, res) => {
 
 // Generate a random verification code
 // Request email verification code
-router.post('/email/request-verification', async (req, res) => {
+router.post('/email/request-verification', [
+    body('newEmail')
+        .notEmpty().withMessage('Email is required')
+        .trim()
+        .isEmail().withMessage('Invalid email format')
+        .normalizeEmail()
+], async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            error: errors.array().map(e => e.msg).join('; ')
+        });
+    }
+
     try {
         const { newEmail } = req.body;
-
-        // Validate email
-        if (!newEmail) {
-            return sendValidationError(res, 'New email is required', req);
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(newEmail)) {
-            return sendValidationError(res, 'Invalid email format', req);
-        }
 
         // Check if email is already in use
         const [existingUsers] = await db.query(
@@ -615,7 +773,7 @@ router.post('/email/request-verification', async (req, res) => {
         );
 
         if (existingUsers.length > 0) {
-            return sendValidationError(res, 'Email is already in use by another user', req);
+            return res.status(400).json({ error: 'Email is already in use by another user' });
         }
 
         // Generate verification code
@@ -662,18 +820,32 @@ router.post('/email/request-verification', async (req, res) => {
 });
 
 // Verify email code and update email
-router.post('/email/verify-code', async (req, res) => {
+router.post('/email/verify-code', [
+    body('verificationCode')
+        .notEmpty().withMessage('Verification code is required')
+        .trim()
+        .matches(/^\d{6}$/).withMessage('Verification code must be 6 digits'),
+    body('newEmail')
+        .notEmpty().withMessage('Email is required')
+        .trim()
+        .isEmail().withMessage('Invalid email format')
+        .normalizeEmail()
+], async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated', csrfToken: generateToken(req, res) });
     }
 
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            error: errors.array().map(e => e.msg).join('; ')
+        });
+    }
+
     try {
         const { verificationCode, newEmail } = req.body;
-
-        if (!verificationCode || !newEmail) {
-            return sendValidationError(res, 'Verification code and email are required', req);
-        }
 
         // Find verification record
         const [verifications] = await db.query(
@@ -682,14 +854,14 @@ router.post('/email/verify-code', async (req, res) => {
         );
 
         if (verifications.length === 0) {
-            return sendValidationError(res, 'Invalid or expired verification code', req);
+            return res.status(400).json({ error: 'Invalid or expired verification code' });
         }
 
         const verification = verifications[0];
 
         // Check if verification has expired
         if (new Date() > new Date(verification.expires_at)) {
-            return sendValidationError(res, 'Verification code has expired', req);
+            return res.status(400).json({ error: 'Verification code has expired' });
         }
 
         // Mark verification as verified
@@ -746,21 +918,56 @@ router.get('/admin/logs', requireAdmin, async (req, res) => {
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 200);
         const offset = (page - 1) * limit;
 
-        // Get filter parameters
+        // Get and validate filter parameters
         const { event_type, user_id } = req.query;
+
+        // Validate event_type - only allow valid event types
+        const validEventTypes = [
+            'REGISTER', 'LOGIN_SUCCESS', 'LOGIN_FAILURE', 'LOGOUT', 'PASSWORD_CHANGE',
+            'ACTIVITY_CREATE', 'ACTIVITY_UPDATE', 'ACTIVITY_DELETE',
+            'PROFILE_UPDATE', 'EMAIL_CHANGE_REQUEST', 'EMAIL_CHANGE_VERIFY',
+            'ACCOUNT_DELETE_REQUEST', 'ACCOUNT_DELETE_VERIFY'
+        ];
+        const eventTypeValue = event_type && validEventTypes.includes(event_type) ? event_type : null;
+
+        // Validate user_id - must be a positive integer if provided
+        let userIdValue = null;
+        if (user_id) {
+            const parsedUserId = parseInt(user_id, 10);
+            if (!Number.isNaN(parsedUserId) && parsedUserId > 0) {
+                userIdValue = parsedUserId;
+            } else if (user_id) {
+                // Invalid user_id provided, show error
+                return res.render('logs', {
+                    title: 'Audit Logs - Health & Fitness Tracker',
+                    logs: [],
+                    pagination: {
+                        page: 1,
+                        limit: 50,
+                        totalCount: 0,
+                        totalPages: 1
+                    },
+                    filterParams: {
+                        event_type: '',
+                        user_id: ''
+                    },
+                    error: 'Invalid user_id parameter'
+                });
+            }
+        }
 
         // Build WHERE clause
         let whereClause = '';
         const params = [];
 
-        if (event_type) {
+        if (eventTypeValue) {
             whereClause = 'WHERE event_type = ?';
-            params.push(event_type);
+            params.push(eventTypeValue);
         }
 
-        if (user_id) {
+        if (userIdValue) {
             whereClause += whereClause ? ' AND user_id = ?' : 'WHERE user_id = ?';
-            params.push(parseInt(user_id, 10));
+            params.push(userIdValue);
         }
 
         // Get total count
@@ -788,8 +995,8 @@ router.get('/admin/logs', requireAdmin, async (req, res) => {
                 totalPages
             },
             filterParams: {
-                event_type: event_type || '',
-                user_id: user_id || ''
+                event_type: eventTypeValue || '',
+                user_id: userIdValue || ''
             }
         });
     } catch (error) {
@@ -855,18 +1062,27 @@ router.post('/account/delete/request-code', async (req, res) => {
 });
 
 // Verify delete account code
-router.post('/account/delete/verify-code', async (req, res) => {
+router.post('/account/delete/verify-code', [
+    body('verificationCode')
+        .notEmpty().withMessage('Verification code is required')
+        .trim()
+        .matches(/^\d{6}$/).withMessage('Verification code must be 6 digits')
+], async (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const { verificationCode } = req.body;
-    if (!verificationCode) {
-        return sendValidationError(res, 'Verification code required', req);
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            error: errors.array().map(e => e.msg).join('; ')
+        });
     }
 
     try {
         const user = req.session.user;
+        const { verificationCode } = req.body;
 
         // Check for valid verification code (allow multiple verification attempts)
         const [records] = await db.query(

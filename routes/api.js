@@ -1,6 +1,7 @@
 // API Routes for Health & Fitness Tracker
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
 const { generateToken } = require('../middleware/csrf');
 const bcrypt = require('bcrypt');
@@ -45,12 +46,22 @@ router.use((req, res, next) => {
 });
 
 // Apply stricter rate limiting to token generation endpoint
-router.post('/auth/token', apiTokenLimiter, async (req, res) => {
+router.post('/auth/token', apiTokenLimiter, [
+    body('username')
+        .trim()
+        .notEmpty().withMessage('Username is required')
+        .isLength({ min: 3, max: 50 }).withMessage('Invalid username'),
+    body('password')
+        .notEmpty().withMessage('Password is required')
+        .isLength({ min: 1 }).withMessage('Invalid password')
+], async (req, res) => {
     try {
-        const { username, password } = req.body || {};
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'Username and password are required' });
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, error: errors.array().map(e => e.msg).join('; ') });
         }
+
+        const { username, password } = req.body;
 
         const [rows] = await db.query('SELECT id, username, password FROM users WHERE username = ?', [username]);
         if (!rows || rows.length === 0) {
@@ -88,13 +99,62 @@ router.get('/activities', async (req, res) => {
             sort = 'date_desc'
         } = req.query;
 
-        // Get userId from session (may be undefined for unauthenticated users)
-        const userId = req.apiUserId || req.session?.user?.id;
-
-        // Validate and normalize pagination parameters
+        // Validate and sanitize query parameters
         const currentPage = Math.max(parseInt(page, 10) || 1, 1);
         const itemsPerPage = Math.min(Math.max(parseInt(pageSize, 10) || 10, 1), 50);
         const offset = (currentPage - 1) * itemsPerPage;
+
+        // Validate sort parameter
+        const validSorts = {
+            'date_desc': 'fa.activity_time DESC',
+            'date_asc': 'fa.activity_time ASC',
+            'calories_desc': 'fa.calories_burned DESC',
+            'calories_asc': 'fa.calories_burned ASC',
+            'duration_desc': 'fa.duration_minutes DESC',
+            'duration_asc': 'fa.duration_minutes ASC'
+        };
+        const sortValue = validSorts[sort] ? sort : 'date_desc';
+
+        // Validate activity_type
+        const validActivityTypes = ['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other', 'all'];
+        const activityTypeValue = activity_type && validActivityTypes.includes(activity_type) ? activity_type : null;
+
+        // Validate date parameters (must be ISO8601 if provided)
+        let dateFromValue = null;
+        let dateToValue = null;
+        if (date_from) {
+            const dateFromParsed = new Date(date_from);
+            if (!Number.isNaN(dateFromParsed.getTime())) {
+                dateFromValue = date_from;
+            }
+        }
+        if (date_to) {
+            const dateToParsed = new Date(date_to);
+            if (!Number.isNaN(dateToParsed.getTime())) {
+                dateToValue = date_to;
+            }
+        }
+
+        // Validate numeric parameters
+        const durationMinValue = duration_min ? parseInt(duration_min, 10) : null;
+        if (durationMinValue !== null && Number.isNaN(durationMinValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid duration_min parameter' });
+        }
+        const durationMaxValue = duration_max ? parseInt(duration_max, 10) : null;
+        if (durationMaxValue !== null && Number.isNaN(durationMaxValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid duration_max parameter' });
+        }
+        const caloriesMinValue = calories_min ? parseInt(calories_min, 10) : null;
+        if (caloriesMinValue !== null && Number.isNaN(caloriesMinValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid calories_min parameter' });
+        }
+        const caloriesMaxValue = calories_max ? parseInt(calories_max, 10) : null;
+        if (caloriesMaxValue !== null && Number.isNaN(caloriesMaxValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid calories_max parameter' });
+        }
+
+        // Get userId from session (may be undefined for unauthenticated users)
+        const userId = req.apiUserId || req.session?.user?.id;
 
         // Build WHERE clause based on authentication status
         let whereClause = '';
@@ -110,54 +170,45 @@ router.get('/activities', async (req, res) => {
         }
 
         // Add filters
-        if (activity_type && activity_type !== 'all') {
+        if (activityTypeValue && activityTypeValue !== 'all') {
             whereClause += ' AND fa.activity_type = ?';
-            params.push(activity_type);
+            params.push(activityTypeValue);
         }
 
-        if (date_from) {
+        if (dateFromValue) {
             whereClause += ' AND fa.activity_time >= ?';
-            params.push(date_from);
+            params.push(dateFromValue);
         }
 
-        if (date_to) {
+        if (dateToValue) {
             whereClause += ' AND fa.activity_time <= ?';
-            params.push(date_to);
+            params.push(dateToValue);
         }
 
-        if (duration_min) {
+        if (durationMinValue !== null) {
             whereClause += ' AND fa.duration_minutes >= ?';
-            params.push(parseInt(duration_min, 10));
+            params.push(durationMinValue);
         }
 
-        if (duration_max) {
+        if (durationMaxValue !== null) {
             whereClause += ' AND fa.duration_minutes <= ?';
-            params.push(parseInt(duration_max, 10));
+            params.push(durationMaxValue);
         }
 
-        if (calories_min) {
+        if (caloriesMinValue !== null) {
             whereClause += ' AND fa.calories_burned >= ?';
-            params.push(parseInt(calories_min, 10));
+            params.push(caloriesMinValue);
         }
 
-        if (calories_max) {
+        if (caloriesMaxValue !== null) {
             whereClause += ' AND fa.calories_burned <= ?';
-            params.push(parseInt(calories_max, 10));
+            params.push(caloriesMaxValue);
         }
 
         // Determine sort order
         let orderBy = 'ORDER BY fa.activity_time DESC'; // default
-        const validSorts = {
-            'date_desc': 'fa.activity_time DESC',
-            'date_asc': 'fa.activity_time ASC',
-            'calories_desc': 'fa.calories_burned DESC',
-            'calories_asc': 'fa.calories_burned ASC',
-            'duration_desc': 'fa.duration_minutes DESC',
-            'duration_asc': 'fa.duration_minutes ASC'
-        };
-
-        if (validSorts[sort]) {
-            orderBy = `ORDER BY ${validSorts[sort]}`;
+        if (validSorts[sortValue]) {
+            orderBy = `ORDER BY ${validSorts[sortValue]}`;
         }
 
         // Get total count
@@ -377,37 +428,64 @@ router.get('/activities/:id', async (req, res) => {
  * Create a new activity (JSON body)
  * Requires authentication
  */
-router.post('/activities', async (req, res) => {
+router.post('/activities', [
+    body('activity_type')
+        .notEmpty().withMessage('Activity type is required')
+        .trim()
+        .isIn(['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other'])
+        .withMessage('Invalid activity type'),
+    body('duration_minutes', 'duration')
+        .notEmpty().withMessage('Duration is required')
+        .isInt({ min: 1 }).withMessage('Duration must be at least 1 minute'),
+    body('distance_km', 'distance')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 }).withMessage('Distance must be a positive number'),
+    body('calories_burned', 'calories')
+        .notEmpty().withMessage('Calories is required')
+        .isInt({ min: 0 }).withMessage('Calories must be a non-negative number'),
+    body('activity_time')
+        .notEmpty().withMessage('Activity time is required')
+        .isISO8601().withMessage('Invalid activity time format'),
+    body('notes')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 1000 }).withMessage('Notes must be under 1000 characters'),
+    body('is_public')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0, max: 1 }).withMessage('Public flag must be 0 or 1')
+], async (req, res) => {
     try {
         const userId = req.apiUserId || req.session?.user?.id;
         if (!userId) {
             return res.status(401).json({ success: false, error: 'Authentication required' });
         }
 
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                error: errors.array().map(e => e.msg).join('; ')
+            });
+        }
+
         const {
             activity_type,
             duration_minutes,
-            duration,  // Accept short form
+            duration,
             distance_km,
-            distance,  // Accept short form
+            distance,
             calories_burned,
-            calories,  // Accept short form
+            calories,
             activity_time,
             notes,
             is_public
         } = req.body || {};
 
-        // Use short form if provided, otherwise use database field name
+        // Use long form field names (already validated above)
         const durationValue = duration_minutes || duration;
         const caloriesValue = calories_burned || calories;
         const distanceValue = distance_km !== undefined ? distance_km : distance;
-
-        if (!activity_type || !durationValue || !caloriesValue || !activity_time) {
-            return res.status(400).json({
-                success: false,
-                error: 'Missing required fields: activity_type, duration, calories, activity_time'
-            });
-        }
 
         const durationParsed = parseInt(durationValue, 10);
         const caloriesParsed = parseInt(caloriesValue, 10);
@@ -415,21 +493,6 @@ router.post('/activities', async (req, res) => {
             ? parseFloat(distanceValue)
             : null;
         const isPublicFlag = is_public === 0 || is_public === '0' ? 0 : 1;
-
-        if (Number.isNaN(durationParsed) || durationParsed <= 0) {
-            return res.status(400).json({ success: false, error: 'duration must be a positive integer' });
-        }
-        if (Number.isNaN(caloriesParsed) || caloriesParsed <= 0) {
-            return res.status(400).json({ success: false, error: 'calories must be a positive integer' });
-        }
-        if (distanceParsed !== null && Number.isNaN(distanceParsed)) {
-            return res.status(400).json({ success: false, error: 'distance must be a number' });
-        }
-
-        const activityDate = new Date(activity_time);
-        if (Number.isNaN(activityDate.getTime())) {
-            return res.status(400).json({ success: false, error: 'activity_time must be a valid date' });
-        }
 
         const insertQuery = `
             INSERT INTO fitness_activities
@@ -443,7 +506,7 @@ router.post('/activities', async (req, res) => {
             durationParsed,
             distanceParsed,
             caloriesParsed,
-            activityDate,
+            activity_time,
             notes || null,
             isPublicFlag
         ];
@@ -489,7 +552,32 @@ router.post('/activities', async (req, res) => {
  * Update an existing activity (owner only)
  * Requires authentication
  */
-router.patch('/activities/:id', async (req, res) => {
+router.patch('/activities/:id', [
+    body('activity_type')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isIn(['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other'])
+        .withMessage('Invalid activity type'),
+    body('duration_minutes', 'duration')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 1 }).withMessage('Duration must be at least 1 minute'),
+    body('distance_km', 'distance')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 }).withMessage('Distance must be a positive number'),
+    body('calories_burned', 'calories')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0 }).withMessage('Calories must be a non-negative number'),
+    body('activity_time')
+        .optional({ checkFalsy: true })
+        .isISO8601().withMessage('Invalid activity time format'),
+    body('notes')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isLength({ max: 1000 }).withMessage('Notes must be under 1000 characters'),
+    body('is_public')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 0, max: 1 }).withMessage('Public flag must be 0 or 1')
+], async (req, res) => {
     try {
         const userId = req.apiUserId || req.session?.user?.id;
         if (!userId) {
@@ -499,6 +587,15 @@ router.patch('/activities/:id', async (req, res) => {
         const activityId = parseInt(req.params.id, 10);
         if (Number.isNaN(activityId) || activityId <= 0) {
             return res.status(400).json({ success: false, error: 'Invalid activity ID' });
+        }
+
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                error: errors.array().map(e => e.msg).join('; ')
+            });
         }
 
         // Check if activity exists and belongs to user
@@ -539,9 +636,6 @@ router.patch('/activities/:id', async (req, res) => {
         const durationValue = duration_minutes || duration;
         if (durationValue !== undefined) {
             const durationParsed = parseInt(durationValue, 10);
-            if (Number.isNaN(durationParsed) || durationParsed <= 0) {
-                return res.status(400).json({ success: false, error: 'duration must be a positive integer' });
-            }
             updates.push('duration_minutes = ?');
             values.push(durationParsed);
         }
@@ -552,9 +646,6 @@ router.patch('/activities/:id', async (req, res) => {
                 updates.push('distance_km = NULL');
             } else {
                 const distanceParsed = parseFloat(distanceValue);
-                if (Number.isNaN(distanceParsed)) {
-                    return res.status(400).json({ success: false, error: 'distance must be a number' });
-                }
                 updates.push('distance_km = ?');
                 values.push(distanceParsed);
             }
@@ -563,20 +654,13 @@ router.patch('/activities/:id', async (req, res) => {
         const caloriesValue = calories_burned || calories;
         if (caloriesValue !== undefined) {
             const caloriesParsed = parseInt(caloriesValue, 10);
-            if (Number.isNaN(caloriesParsed) || caloriesParsed <= 0) {
-                return res.status(400).json({ success: false, error: 'calories must be a positive integer' });
-            }
             updates.push('calories_burned = ?');
             values.push(caloriesParsed);
         }
 
         if (activity_time !== undefined) {
-            const activityDate = new Date(activity_time);
-            if (Number.isNaN(activityDate.getTime())) {
-                return res.status(400).json({ success: false, error: 'activity_time must be a valid date' });
-            }
             updates.push('activity_time = ?');
-            values.push(activityDate);
+            values.push(activity_time);
         }
 
         if (notes !== undefined) {

@@ -242,8 +242,11 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
     try {
         const { username, password } = req.body;
 
-        // Validate input
-        if (!username || !password) {
+        // Validate and sanitize input
+        const usernameValue = username ? String(username).trim() : '';
+        const passwordValue = password || '';
+
+        if (!usernameValue || !passwordValue) {
             // Record failed attempt for rate limiting
             if (req.rateLimit) {
                 req.rateLimit.recordIncrement();
@@ -258,7 +261,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
         // Find user in database
         const [users] = await db.query(
             'SELECT * FROM users WHERE username = ?',
-            [username]
+            [usernameValue]
         );
 
         if (users.length === 0) {
@@ -267,7 +270,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
                 req.rateLimit.recordIncrement();
             }
             // Log failed login attempt
-            await logAuth(EventTypes.LOGIN_FAILURE, req, null, username, 'User not found');
+            await logAuth(EventTypes.LOGIN_FAILURE, req, null, usernameValue, 'User not found');
 
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
@@ -279,7 +282,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
         const user = users[0];
 
         // Compare password with hashed password
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        const passwordMatch = await bcrypt.compare(passwordValue, user.password);
 
         if (!passwordMatch) {
             // Record failed attempt for rate limiting
@@ -287,7 +290,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
                 req.rateLimit.recordIncrement();
             }
             // Log failed login attempt
-            await logAuth(EventTypes.LOGIN_FAILURE, req, user.id, username, 'Invalid password');
+            await logAuth(EventTypes.LOGIN_FAILURE, req, user.id, usernameValue, 'Invalid password');
 
             return res.render('login', {
                 title: 'Login - Health & Fitness Tracker',
@@ -307,7 +310,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
         req.session.isAdmin = user.is_admin || false;
 
         // Log successful login
-        await logAuth(EventTypes.LOGIN_SUCCESS, req, user.id, username);
+        await logAuth(EventTypes.LOGIN_SUCCESS, req, user.id, usernameValue);
 
         // Clear rate limit record on successful login
         if (req.rateLimit) {

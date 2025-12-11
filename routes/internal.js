@@ -38,43 +38,79 @@ router.get('/activities/stats', async (req, res) => {
             calories_max
         } = req.query;
 
+        // Validate and sanitize parameters
+        const validActivityTypes = ['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other', 'all'];
+        const activityTypeValue = activity_type && validActivityTypes.includes(activity_type) ? activity_type : null;
+
+        let dateFromValue = null;
+        let dateToValue = null;
+        if (date_from) {
+            const dateFromParsed = new Date(date_from);
+            if (!Number.isNaN(dateFromParsed.getTime())) {
+                dateFromValue = date_from;
+            }
+        }
+        if (date_to) {
+            const dateToParsed = new Date(date_to);
+            if (!Number.isNaN(dateToParsed.getTime())) {
+                dateToValue = date_to;
+            }
+        }
+
+        const durationMinValue = duration_min ? parseInt(duration_min, 10) : null;
+        if (durationMinValue !== null && Number.isNaN(durationMinValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid duration_min parameter' });
+        }
+        const durationMaxValue = duration_max ? parseInt(duration_max, 10) : null;
+        if (durationMaxValue !== null && Number.isNaN(durationMaxValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid duration_max parameter' });
+        }
+        const caloriesMinValue = calories_min ? parseInt(calories_min, 10) : null;
+        if (caloriesMinValue !== null && Number.isNaN(caloriesMinValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid calories_min parameter' });
+        }
+        const caloriesMaxValue = calories_max ? parseInt(calories_max, 10) : null;
+        if (caloriesMaxValue !== null && Number.isNaN(caloriesMaxValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid calories_max parameter' });
+        }
+
         // Build WHERE clause for authenticated user (only their own activities)
         let whereClause = 'WHERE fa.user_id = ?';
         const params = [userId];
 
-        if (activity_type && activity_type !== 'all') {
+        if (activityTypeValue && activityTypeValue !== 'all') {
             whereClause += ' AND fa.activity_type = ?';
-            params.push(activity_type);
+            params.push(activityTypeValue);
         }
 
-        if (date_from) {
+        if (dateFromValue) {
             whereClause += ' AND fa.activity_time >= ?';
-            params.push(date_from);
+            params.push(dateFromValue);
         }
 
-        if (date_to) {
+        if (dateToValue) {
             whereClause += ' AND fa.activity_time <= ?';
-            params.push(date_to);
+            params.push(dateToValue);
         }
 
-        if (duration_min) {
+        if (durationMinValue !== null) {
             whereClause += ' AND fa.duration_minutes >= ?';
-            params.push(parseInt(duration_min, 10));
+            params.push(durationMinValue);
         }
 
-        if (duration_max) {
+        if (durationMaxValue !== null) {
             whereClause += ' AND fa.duration_minutes <= ?';
-            params.push(parseInt(duration_max, 10));
+            params.push(durationMaxValue);
         }
 
-        if (calories_min) {
+        if (caloriesMinValue !== null) {
             whereClause += ' AND fa.calories_burned >= ?';
-            params.push(parseInt(calories_min, 10));
+            params.push(caloriesMinValue);
         }
 
-        if (calories_max) {
+        if (caloriesMaxValue !== null) {
             whereClause += ' AND fa.calories_burned <= ?';
-            params.push(parseInt(calories_max, 10));
+            params.push(caloriesMaxValue);
         }
 
         // Calculate comprehensive stats
@@ -133,44 +169,43 @@ router.get('/activities/export', async (req, res) => {
             sort = 'date_desc'
         } = req.query;
 
-        let whereClause = 'WHERE fa.user_id = ?';
-        const params = [userId];
+        // Validate and sanitize parameters
+        const validActivityTypes = ['Running', 'Cycling', 'Swimming', 'Gym', 'Yoga', 'Walking', 'Hiking', 'Other', 'all'];
+        const activityTypeValue = activity_type && validActivityTypes.includes(activity_type) ? activity_type : null;
 
-        if (activity_type && activity_type !== 'all') {
-            whereClause += ' AND fa.activity_type = ?';
-            params.push(activity_type);
-        }
-
+        let dateFromValue = null;
+        let dateToValue = null;
         if (date_from) {
-            whereClause += ' AND fa.activity_time >= ?';
-            params.push(date_from);
+            const dateFromParsed = new Date(date_from);
+            if (!Number.isNaN(dateFromParsed.getTime())) {
+                dateFromValue = date_from;
+            }
         }
-
         if (date_to) {
-            whereClause += ' AND fa.activity_time <= ?';
-            params.push(date_to);
+            const dateToParsed = new Date(date_to);
+            if (!Number.isNaN(dateToParsed.getTime())) {
+                dateToValue = date_to;
+            }
         }
 
-        if (duration_min) {
-            whereClause += ' AND fa.duration_minutes >= ?';
-            params.push(parseInt(duration_min, 10));
+        const durationMinValue = duration_min ? parseInt(duration_min, 10) : null;
+        if (durationMinValue !== null && Number.isNaN(durationMinValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid duration_min parameter' });
+        }
+        const durationMaxValue = duration_max ? parseInt(duration_max, 10) : null;
+        if (durationMaxValue !== null && Number.isNaN(durationMaxValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid duration_max parameter' });
+        }
+        const caloriesMinValue = calories_min ? parseInt(calories_min, 10) : null;
+        if (caloriesMinValue !== null && Number.isNaN(caloriesMinValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid calories_min parameter' });
+        }
+        const caloriesMaxValue = calories_max ? parseInt(calories_max, 10) : null;
+        if (caloriesMaxValue !== null && Number.isNaN(caloriesMaxValue)) {
+            return res.status(400).json({ success: false, error: 'Invalid calories_max parameter' });
         }
 
-        if (duration_max) {
-            whereClause += ' AND fa.duration_minutes <= ?';
-            params.push(parseInt(duration_max, 10));
-        }
-
-        if (calories_min) {
-            whereClause += ' AND fa.calories_burned >= ?';
-            params.push(parseInt(calories_min, 10));
-        }
-
-        if (calories_max) {
-            whereClause += ' AND fa.calories_burned <= ?';
-            params.push(parseInt(calories_max, 10));
-        }
-
+        // Validate sort parameter
         const validSorts = {
             'date_desc': 'fa.activity_time DESC',
             'date_asc': 'fa.activity_time ASC',
@@ -179,7 +214,45 @@ router.get('/activities/export', async (req, res) => {
             'duration_desc': 'fa.duration_minutes DESC',
             'duration_asc': 'fa.duration_minutes ASC'
         };
-        const orderBy = validSorts[sort] || 'fa.activity_time DESC';
+        const sortValue = validSorts[sort] || 'fa.activity_time DESC';
+
+        let whereClause = 'WHERE fa.user_id = ?';
+        const params = [userId];
+
+        if (activityTypeValue && activityTypeValue !== 'all') {
+            whereClause += ' AND fa.activity_type = ?';
+            params.push(activityTypeValue);
+        }
+
+        if (dateFromValue) {
+            whereClause += ' AND fa.activity_time >= ?';
+            params.push(dateFromValue);
+        }
+
+        if (dateToValue) {
+            whereClause += ' AND fa.activity_time <= ?';
+            params.push(dateToValue);
+        }
+
+        if (durationMinValue !== null) {
+            whereClause += ' AND fa.duration_minutes >= ?';
+            params.push(durationMinValue);
+        }
+
+        if (durationMaxValue !== null) {
+            whereClause += ' AND fa.duration_minutes <= ?';
+            params.push(durationMaxValue);
+        }
+
+        if (caloriesMinValue !== null) {
+            whereClause += ' AND fa.calories_burned >= ?';
+            params.push(caloriesMinValue);
+        }
+
+        if (caloriesMaxValue !== null) {
+            whereClause += ' AND fa.calories_burned <= ?';
+            params.push(caloriesMaxValue);
+        }
 
         const query = `
             SELECT 
@@ -193,7 +266,7 @@ router.get('/activities/export', async (req, res) => {
                 fa.is_public
             FROM fitness_activities fa
             ${whereClause}
-            ORDER BY ${orderBy}
+            ORDER BY ${sortValue}
         `;
 
         const [rows] = await db.query(query, params);

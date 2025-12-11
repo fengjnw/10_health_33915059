@@ -33,10 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                showMessage('message-container', 'Activity updated successfully! Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = '../my-activities';
-                }, 1500);
+                // Stay on the page; just show success message
+                showMessage('message-container', 'Activity updated successfully.', 'success');
             } else {
                 // If server returned a refreshed CSRF token, update hidden inputs/meta
                 if (result && result.csrfToken) {

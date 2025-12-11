@@ -117,7 +117,7 @@ router.post('/register', registerLimiter, attachRateLimitHelpers(registerStore),
             req.rateLimit.recordSuccess();
         }
 
-        res.redirect('/');
+        res.redirect('../');
     } catch (error) {
         // Record failed attempt on error
         if (req.rateLimit) {
@@ -150,11 +150,11 @@ router.get('/change-password', (req, res) => {
     // Normal mode: requires logged-in user
     if (resetMode) {
         if (!req.session.passwordResetUserId) {
-            return res.redirect('/auth/forgot-password');
+            return res.redirect('forgot-password');
         }
     } else {
         if (!req.session.user) {
-            return res.redirect('/auth/login');
+            return res.redirect('login');
         }
     }
 
@@ -180,7 +180,7 @@ router.post('/change-password', [
         .withMessage('Confirmation password does not match')
 ], async (req, res) => {
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('login');
     }
 
     const errors = validationResult(req);
@@ -317,7 +317,7 @@ router.post('/login', loginLimiter, attachRateLimitHelpers(loginStore), async (r
             req.rateLimit.recordSuccess();
         }
 
-        res.redirect('/');
+        res.redirect('../');
     } catch (error) {
         // Record failed attempt on error
         if (req.rateLimit) {
@@ -346,7 +346,7 @@ router.get('/logout', async (req, res) => {
         if (err) {
             console.error('Logout error:', err);
         }
-        res.redirect('/');
+        res.redirect('../');
     });
 });
 

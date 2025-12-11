@@ -184,7 +184,7 @@ router.get('/search', async (req, res) => {
 router.get('/add-activity', (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('auth/login');
     }
 
     res.render('add-activity', {
@@ -219,7 +219,7 @@ router.post('/add-activity', [
 ], async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('auth/login');
     }
 
     // Check for validation errors
@@ -267,7 +267,7 @@ router.post('/add-activity', [
             }
         );
 
-        res.redirect('/my-activities');
+        res.redirect('my-activities');
     } catch (error) {
         console.error('Add activity error:', error);
         res.render('add-activity', {
@@ -282,7 +282,7 @@ router.post('/add-activity', [
 router.get('/my-activities', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('auth/login');
     }
 
     try {
@@ -354,7 +354,7 @@ router.get('/my-activities', async (req, res) => {
 router.get('/my-activities/:id/edit', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('../auth/login');
     }
 
     try {
@@ -588,7 +588,7 @@ router.delete('/my-activities/:id', async (req, res) => {
 router.get('/profile', async (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('auth/login');
     }
 
     try {
@@ -622,7 +622,7 @@ router.get('/profile', async (req, res) => {
 router.get('/account/change-email', (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('auth/login');
     }
 
     res.render('change-email', {
@@ -634,7 +634,7 @@ router.get('/account/change-email', (req, res) => {
 router.get('/account/delete', (req, res) => {
     // Check if user is logged in
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('auth/login');
     }
 
     res.render('delete-account', {

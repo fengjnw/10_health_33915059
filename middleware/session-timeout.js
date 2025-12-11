@@ -35,7 +35,7 @@ function sessionTimeoutMiddleware(req, res, next) {
             return res.status(401).json({
                 success: false,
                 message: 'Your session has expired due to inactivity. Please log in again.',
-                redirectUrl: '/auth/login'
+                redirectUrl: 'auth/login'
             });
         }
 
@@ -45,7 +45,7 @@ function sessionTimeoutMiddleware(req, res, next) {
             messageType: 'warning',
             messageTitle: 'Session Expired',
             message: 'Your session has expired due to inactivity. You will be redirected to the login page.',
-            redirectUrl: '/auth/login',
+            redirectUrl: 'auth/login',
             redirectDelay: 3
         });
     }
